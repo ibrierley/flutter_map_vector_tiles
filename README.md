@@ -4,7 +4,7 @@ Vector tiles for flutter_map
 
 SEE examples/main.dart for example of how to run it...  
 Main code is in lib/vector_tile_plugin.dart  
-The lib/vector_tile_pb.. files were generated using the vectr_tile.proto file
+The lib/vector_tile_pb.. files were generated using the vector_tile.proto file
 
 I'll try and document the structure of how it works soon..
 
