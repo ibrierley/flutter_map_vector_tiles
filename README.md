@@ -2,6 +2,13 @@
 
 Vector tiles for flutter_map
 
+SEE examples/main.dart for example of how to run it...  
+Main code is in lib/vector_tile_plugin.dart  
+The lib/vector_tile_pb.. files were generated using the vectr_tile.proto file
+
+I'll try and document the structure of how it works soon..
+
+
 This is a proof of concept of using Vector Tiles (currently just Mapbox). It's not ready yet, but it's a base to be explored from.
 
 There are quite a few caveats:
