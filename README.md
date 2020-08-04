@@ -16,9 +16,13 @@ My code isn't well optimised, so there are some potential improvements with norm
 
 Future improvement thoughts....
 
+
 Get custom styling working.
+
 Get an option to work only as a canvas working. There are some issues with getting the flutter_map info into the tile_provider though, thoughts welcome.
+
 Get alternate tiles working, like geojson tiles, and other providers.
+
 Test out if it's possible to batch up draws better, rather than per feature, can we batch them per z-level and style.
 
 
