@@ -24,9 +24,10 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flutter_map: any
-          #git:
-          #url: https://github.com/fleaflet/flutter_map.git
+  flutter_map: #any
+    git:
+      url: https://github.com/maRci002/flutter_map.git
+      #url: https://github.com/fleaflet/flutter_map.git
   retry: any
   fixnum: any
   protobuf: any
@@ -55,6 +56,11 @@ flutter:
   # assets:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
+  #assets: data/questions.json
+  assets:
+    - assets/data/testStyle.json
+    - assets/data/streets.json
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

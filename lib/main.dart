@@ -2,8 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong/latlong.dart';
 import 'vector_tile_plugin.dart';
+import 'package:flutter_map_vector_tile/VectorTileWidget.dart';
+import 'package:flutter/rendering.dart';
+import 'styles.dart';
+
 
 void main() {
+  debugPaintSizeEnabled = true;
+  debugPaintBaselinesEnabled = false;
+  debugPaintLayerBordersEnabled = true;
+  debugPaintPointersEnabled = false;
+  debugRepaintRainbowEnabled = false;
+  debugRepaintTextRainbowEnabled = false;
+  debugCheckElevationsEnabled = false;
+  debugDisableClipLayers = false;
+  debugDisablePhysicalShapeLayers = false;
+  debugDisableOpacityLayers = false;
+
   runApp(MyApp());
 }
 
@@ -33,27 +48,49 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
+  MapController mapController;
+
+  @override
+  void initState() {
+    super.initState();
+    mapController = MapController();
+  }
+
   Widget build(BuildContext context) {
-    return new FlutterMap(
-      options: new MapOptions(
-        plugins: [
-        ],
-        //center: new LatLng(51.5, -0.09),
-        center: new LatLng(50.8323646,-0.1871463),
-        zoom: 15.3,
-      ),
-      layers: [
-        TileLayerOptions(
-            tileProvider: VectorTilesImageProvider(
-              styles: {},
-              tileLayerOptions: new TileLayerOptions(
-                  ///urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                urlTemplate: 'http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?access_token=pk.eyJ1IjoiZ2liYmxlIiwiYSI6ImNqbjBlZDB6ejFrODcza3Fsa3o3eXR1MzkifQ.pC89zLnuSWrRdCkDrsmynQ',
-                  subdomains: ['a', 'b', 'c']
-              ),
+    return FutureBuilder<Map<dynamic,dynamic>>(
+      future: Styles.getJsonTestStyle("assets/data/streets.json"),
+      builder: (BuildContext context, AsyncSnapshot<Map<dynamic,dynamic>> snapshot) {
+        if(snapshot.hasData) {
+          var vectorStyle = snapshot.data;
+          return new FlutterMap(
+            mapController: mapController,
+            options: new MapOptions(
+              plugins: [
+                VectorTilePlugin(),
+              ],
+              center: new LatLng(50.8323646,-0.1871463),
+              zoom: 12.3,
+              ///rotation: 45,
             ),
-        ),
-      ],
+            layers: [
+              VectorTileLayerPluginOptions(
+                urlTemplate: 'http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?access_token=<INSERT YOUR MAPBOX KEY HERE!>',
+                subdomains: ['a', 'b', 'c'],
+                useCanvas: true,
+                useImages: true, //true,
+                useBackupImages: false,
+                usePerspective: false,
+                levelUpDiff: 2,
+                vectorStyle: vectorStyle,
+              ),
+            ],
+          );
+        }
+        return Text("Loading style...");
+      }
     );
   }
+
+
 }
+

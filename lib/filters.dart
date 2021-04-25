@@ -8,7 +8,6 @@ class Filters {
     Map<String, Map<String, bool>> includeExcludeLabels = {
       'layer_names': { 'building': true, 'structure': true, 'transit_stop_label': false, },
       'poi_label':  { 'sport_and_leisure': false, 'food_and_drink': false, 'food_and_drink_stores': false, 'store_like': false  },
-
     };
 
     /// exclude whole label names
@@ -26,4 +25,15 @@ class Filters {
 
     return true;
   }
+
+  static layerDisplaySegments() {
+    return [
+      { 'water': true, 'landuse': true, 'motorway_junction': true, 'road': true, 'aeroway': true, 'structure': true },
+      { 'structure': true, 'waterway': true, 'landuse_overlay' : true },
+      { 'waterway_label': true, 'natural_label': true, 'road_label': true,  },
+    ];
+  }
+
+
+
 }
