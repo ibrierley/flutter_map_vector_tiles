@@ -48,7 +48,7 @@ class _MyHomePageState extends State<MyHomePage> {
               styles: {},
               tileLayerOptions: new TileLayerOptions(
                   ///urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                urlTemplate: 'http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?access_token=pk.eyJ1IjoiZ2liYmxlIiwiYSI6ImNqbjBlZDB6ejFrODcza3Fsa3o3eXR1MzkifQ.pC89zLnuSWrRdCkDrsmynQ',
+                urlTemplate: 'http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?access_token=<INSERT TOKEN>',
                   subdomains: ['a', 'b', 'c']
               ),
             ),
