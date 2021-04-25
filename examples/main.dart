@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong/latlong.dart';
+import 'package:latlong2/latlong.dart';
 import 'vector_tile_plugin.dart';
 import 'package:flutter_map_vector_tile/VectorTileWidget.dart';
 import 'package:flutter/rendering.dart';
@@ -68,13 +68,13 @@ class _MyHomePageState extends State<MyHomePage> {
               plugins: [
                 VectorTilePlugin(),
               ],
-              center: new LatLng(50.8323646,-0.1871463),
+              center: LatLng(50.8323646,-0.1871463),
               zoom: 12.3,
               ///rotation: 45,
             ),
             layers: [
               VectorTileLayerPluginOptions(
-                urlTemplate: 'http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?access_token=<INSERT YOUR MAPBOX KEY HERE!>',
+                urlTemplate: 'https://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?access_token=<INSERT YOUR MAPBOX KEY HERE!>',
                 subdomains: ['a', 'b', 'c'],
                 useCanvas: true,
                 useImages: true, //true,
