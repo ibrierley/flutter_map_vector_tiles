@@ -131,7 +131,8 @@ class Styles {
     paint.strokeWidth = paint.strokeWidth * tileZoom / 16;
     if(diffRatio > 0) paint.strokeWidth = paint.strokeWidth / diffRatio; // hmm not sure this is needed ?
 
-    paint.strokeWidth = paint.strokeWidth * tileZoom / 5;
+    paint.strokeWidth = paint.strokeWidth * tileZoom / 5; // testing https://github.com/flutter/flutter/issues/78543 for performance issues...
+    paint.strokeWidth = paint.strokeWidth > 1.0 ? 1.0 : paint.strokeWidth; // testing performance... maybe remove...
 
     return paint;
   }
@@ -181,7 +182,8 @@ class Styles {
       }
     }
 
-    paint.strokeWidth = paint.strokeWidth / sizeDiffRatio;
+    paint.strokeWidth = paint.strokeWidth / sizeDiffRatio; // testing performance at subpixels ?
+    paint.strokeWidth = paint.strokeWidth > 1.0 ? 1.0 : paint.strokeWidth; // testing performance...
 
     return paint;
   }
