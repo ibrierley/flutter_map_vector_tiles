@@ -8,16 +8,16 @@ import 'styles.dart';
 
 
 void main() {
-  debugPaintSizeEnabled = true;
-  debugPaintBaselinesEnabled = false;
-  debugPaintLayerBordersEnabled = true;
-  debugPaintPointersEnabled = false;
-  debugRepaintRainbowEnabled = false;
-  debugRepaintTextRainbowEnabled = false;
-  debugCheckElevationsEnabled = false;
-  debugDisableClipLayers = false;
-  debugDisablePhysicalShapeLayers = false;
-  debugDisableOpacityLayers = false;
+  //debugPaintSizeEnabled = true;
+  //debugPaintBaselinesEnabled = false;
+  //debugPaintLayerBordersEnabled = true;
+  //debugPaintPointersEnabled = false;
+  //debugRepaintRainbowEnabled = false;
+  //debugRepaintTextRainbowEnabled = false;
+  //debugCheckElevationsEnabled = false;
+  //debugDisableClipLayers = false;
+  //debugDisablePhysicalShapeLayers = false;
+  //debugDisableOpacityLayers = false;
 
   runApp(MyApp());
 }
@@ -68,17 +68,18 @@ class _MyHomePageState extends State<MyHomePage> {
               plugins: [
                 VectorTilePlugin(),
               ],
+              interactiveFlags: InteractiveFlag.all & ~InteractiveFlag.rotate,
               center: LatLng(50.8323646,-0.1871463),
               zoom: 12.3,
               ///rotation: 45,
             ),
             layers: [
               VectorTileLayerPluginOptions(
-                urlTemplate: 'https://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?access_token=<INSERT YOUR MAPBOX KEY HERE!>',
-                subdomains: ['a', 'b', 'c'],
+                urlTemplate: 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?access_token=<INSERT MAPBOX API KEY>',
+                //subdomains: ['a', 'b', 'c'],
                 useCanvas: true,
                 useImages: true, //true,
-                useBackupImages: false,
+                useBackupImages: true,
                 usePerspective: false,
                 levelUpDiff: 2,
                 vectorStyle: vectorStyle,
