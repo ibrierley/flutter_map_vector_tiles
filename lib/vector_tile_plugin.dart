@@ -7,40 +7,27 @@ import 'vector_tile.pb.dart' as vector_tile;
 import 'filters.dart';
 import 'styles.dart';
 import 'package:flutter_map_vector_tile/VectorTileWidget.dart';
+import 'package:flutter_map/flutter_map.dart';
 
 
 int decodeZigZag( int byte ) { /// decodes from mapbox small int style
   return ((byte >> 1) ^ -(byte & 1)).toInt();
 }
 
-class VectorPainter extends CustomPainter {
+String tileCoordsToKey(Coords coords) {
+  return '${coords.x}:${coords.y}:${coords.z}';
+}
 
-  Listenable _repaint;
-  final Map styles;
-  final cachedInfo;
-  final currentTileCoordsToRenderMap;
-  final options;
-  final Map vectorStyles;
-  final tileZoom;
-  ValueNotifier<int>  paintNotifier;
+class MapboxTile {
 
-  TextPainter cachedTextPainter = TextPainter(
-      textDirection: TextDirection.ltr,
-      textAlign: TextAlign.center);
+  static void decode( coordsKey, cachedInfo, options, vectorStyles ) {
 
-  List<Map<String, bool>> layerDisplaySegments = Filters.layerDisplaySegments();
-
-  VectorPainter(this.styles, this.cachedInfo, this.currentTileCoordsToRenderMap, this.options, this.vectorStyles, this.tileZoom, this.paintNotifier) : super(repaint: paintNotifier) {
-    _repaint = paintNotifier;
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
+    print("Decoding....");
 
     vector_tile.Tile vt;
     cachedInfo['paintState'] = 'stillPainting';
 
-    var coordsKey = cachedInfo['coordsKey'];
+    ///var coordsKey = cachedInfo['coordsKey'];
 
     try {
       vt = vector_tile.Tile.fromBuffer(cachedInfo['units']);
@@ -50,7 +37,7 @@ class VectorPainter extends CustomPainter {
 
     int reps = 0;
 
-    Map<String, int> layerOrderMap = styles['defaultLayerOrder'] ?? Styles.defaultLayerOrder();
+    Map<String, int> layerOrderMap = Styles.defaultLayerOrder();
 
     if(layerOrderMap.keys.length > 0) {
       vt.layers.sort((a, b) {
@@ -68,9 +55,9 @@ class VectorPainter extends CustomPainter {
 
     for( var layer in vt.layers) {
 
-      if(!currentTileCoordsToRenderMap.containsKey(coordsKey)) {
-        return;
-      }
+      ///if(!currentTileCoordsToRenderMap.containsKey(coordsKey)) {
+      ///  return;
+      ///}
 
       Map<String, dartui.Path> pathMap = { 'default':  dartui.Path()};
 
@@ -159,36 +146,36 @@ class VectorPainter extends CustomPainter {
             cx += decodeZigZag(geometry[ gIndex ]);
             cy += decodeZigZag(geometry[ gIndex + 1]);
 
-              var ncx, ncy;
-              if (command == 'M' || (command == 'L')) {
-                ncx = (cx.toDouble() / 16).floorToDouble(); // Change /16 to a tileRatio passed in..
-                ncy = (cy.toDouble() / 16).floorToDouble();
+            var ncx, ncy;
+            if (command == 'M' || (command == 'L')) {
+              ncx = (cx.toDouble() / 16).floorToDouble(); // Change /16 to a tileRatio passed in..
+              ncy = (cy.toDouble() / 16).floorToDouble();
+            }
+
+            var type = feature.type.toString();
+            if (command == 'C') { // CLOSE
+            } else if (command == 'M') { // MOVETO
+              if (type == 'POLYGON') {
+                polyPoints = [];
+                polyPoints.add(Offset(ncx, ncy));
+              } else if (type == 'LINESTRING') {
+                if (path == null) path = dartui.Path();
+                path.moveTo(ncx, ncy);
+
+              } else if (type == 'POINT') {
+                pointList.add(Offset(ncx, ncy));
+                labelPointlist.add([Offset(ncx, ncy),layer.name, featureInfo  ]);  /// May want to add a style here, to draw last thing...
               }
 
-              var type = feature.type.toString();
-              if (command == 'C') { // CLOSE
-              } else if (command == 'M') { // MOVETO
-                if (type == 'POLYGON') {
-                  polyPoints = [];
-                  polyPoints.add(Offset(ncx, ncy));
-                } else if (type == 'LINESTRING') {
-                  if (path == null) path = dartui.Path();
-                  path.moveTo(ncx, ncy);
+            } else if (command == 'L') { // LINETO
 
-                } else if (type == 'POINT') {
-                  pointList.add(Offset(ncx, ncy));
-                  labelPointlist.add([Offset(ncx, ncy),layer.name, featureInfo  ]);  /// May want to add a style here, to draw last thing...
-                }
-
-              } else if (command == 'L') { // LINETO
-
-                if (type == 'POLYGON') {
-                  polyPoints.add(Offset(ncx, ncy));
-                } else if (type == 'LINESTRING')
-                  path.lineTo(ncx, ncy);
-              } else {
-                print("Incorrect command string");
-              }
+              if (type == 'POLYGON') {
+                polyPoints.add(Offset(ncx, ncy));
+              } else if (type == 'LINESTRING')
+                path.lineTo(ncx, ncy);
+            } else {
+              print("Incorrect command string");
+            }
 
             gIndex += 2;
             reps--;
@@ -215,27 +202,78 @@ class VectorPainter extends CustomPainter {
         }
       }
 
-      cachedInfo['geomInfo']['paths'].add({'pathMap': pathMap, 'canvas': canvas, 'layerString': layerString, 'diffFactor' : levelUpDiffFactor });
-      drawPaths(pathMap, canvas, layerString, levelUpDiffFactor);
+      cachedInfo['geomInfo']['paths'].add({'pathMap': pathMap, 'layerString': layerString });
+      ///drawPaths(pathMap, canvas, layerString, levelUpDiffFactor);
     } // layer
 
-     if(!options.containsKey('noLabels') && labelPointlist.length != null) {
-       var seenLabel = {}; // prevent dupes...
+    if(!options.containsKey('noLabels') && labelPointlist.length != null) {
+      var seenLabel = {}; // prevent dupes...
 
-       for(var pointInfo in labelPointlist) {
+      for(var pointInfo in labelPointlist) {
 
-         var info = pointInfo[2]['name'];
+        var info = pointInfo[2]['name'];
 
-         if(info != null && !seenLabel.containsKey(info)) {
-           seenLabel[info] = true;
-           _drawTextAt(info.toString(), pointInfo[0], canvas,cachedInfo['levelUpDiffFactor'] );
-           cachedInfo['geomInfo']['text'].add({'text' : info.toString(), 'pointInfo' :pointInfo[0], 'canvas': canvas, 'diffFactor' : levelUpDiffFactor });
-         }
-       }
-     }
+        if(info != null && !seenLabel.containsKey(info)) {
+          seenLabel[info] = true;
+          ///_drawTextAt(info.toString(), pointInfo[0], canvas,cachedInfo['levelUpDiffFactor'] );
+          cachedInfo['geomInfo']['text'].add({'text' : info.toString(), 'pointInfo' :pointInfo[0] });
+        }
+      }
+    }
 
-     cachedInfo['paintedLayerSegments']++;
-     cachedInfo['paintState'] = 'finished';
+    print("Decode done for $coordsKey");
+    print("Cachedinfo is $cachedInfo");
+
+    cachedInfo['paintedLayerSegments']++;
+    cachedInfo['paintState'] = 'finished';
+
+  }
+
+}
+
+
+
+
+class VectorPainter extends CustomPainter {
+
+  final tilesToRender;
+  final tileZoom;
+  final cachedVectorDataMap;
+
+  TextPainter cachedTextPainter = TextPainter(
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center);
+
+  List<Map<String, bool>> layerDisplaySegments = Filters.layerDisplaySegments();
+
+  VectorPainter(List<VTile> this.tilesToRender, this.tileZoom, this.cachedVectorDataMap);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+
+    print("PAINTING!!!!");
+    print("Vectordatamap ${cachedVectorDataMap}");
+
+    for (var tile in tilesToRender) {
+      print("Want to paint ${tile.coords}");
+      print("Cache geomInfo is ${cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']}");
+
+      for (var path in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['paths']) {
+        drawPaths(path['pathMap'], canvas, path['layerString'], 2); /// get rid of need for diffratio.....
+        print("drawing path ${path['pathMap']}");
+      }
+      for (var text in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['text']) {
+        _drawTextAt(text['text'], text['pointInfo'], canvas, 2); /// get rid of need for diffratio.....
+        //print( "Drawing text $text");
+      }
+
+    }
+
+
+      //drawPaths(pathMap, canvas, layerString, levelUpDiffFactor);
+
+          // _drawTextAt(info.toString(), pointInfo[0], canvas,cachedInfo['levelUpDiffFactor'] );
+
 
   }
 
@@ -271,7 +309,8 @@ class VectorPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
+  bool shouldRepaint(CustomPainter oldDelegate) => true;
+
 
 }
 
