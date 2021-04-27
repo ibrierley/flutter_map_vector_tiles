@@ -501,12 +501,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     _tileZoom,
     paintNotifier);
 
-    if( true ) { // testing here....
-      _canvasToPngBuild(coordsKey);
-    } else {
-      print("IGNORING PNG BUILD!!!!!!!!!!!!!!!!!");
-    }
-
     if( true ) {
 
       if(_cachedVectorData[coordsKey]['paintState'] == 'stillPainting') {
@@ -526,86 +520,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     }
   }
 
-
-
-  void _canvasToPngBuild (String coordsKey) {
-    print("Building PNG for $coordsKey");
-
-    if(_cachedVectorData.containsKey(coordsKey) && _cachedVectorData[coordsKey]['imageMemory'] != null) {
-      // _imageBuildingQueue.remove(coordsKey); // hmm cant remember why this is commented out...
-      return;
-    }
-
-
-    if(!currentTileCoordsToRenderMap.containsKey(coordsKey)) {
-      return;
-    }
-
-    if( vectorOptions.useImages || vectorOptions.useBackupImages) {
-      Future.delayed(const Duration(milliseconds: 0), () async {
-        var dpr = dartui.window.devicePixelRatio;
-
-        VectorPainter openPainter = VectorPainter(
-            {}, _cachedVectorData[coordsKey],
-            currentTileCoordsToRenderMap,
-            { 'noLabels' : true},
-            vectorStyle,
-        _tileZoom,
-        paintNotifier);
-
-
-        var width = (vectorOptions.tileSize.toInt() * dpr).ceil();
-        var height = (vectorOptions.tileSize.toInt() * dpr).ceil();
-
-        if (_cachedVectorData[coordsKey]['building'] == true) {
-          return;
-        }
-
-        _cachedVectorData[coordsKey]['building'] = true;
-
-        var bytes;
-        try {
-          dartui.PictureRecorder recorder = dartui.PictureRecorder();
-
-          Canvas canvas = Canvas(recorder);
-
-          var sizeRatio = math.pow(2,levelUpDiff);
-
-          var dpr = dartui.window.devicePixelRatio;
-          canvas.scale(dpr * sizeRatio, dpr * sizeRatio);
-
-          openPainter.paint(canvas, Size(vectorOptions.tileSize * sizeRatio,
-              vectorOptions.tileSize * sizeRatio));
-
-          var im = await recorder.endRecording().toImage(width * sizeRatio, height * sizeRatio);
-
-
-          var byteData = await im.toByteData(
-              format: dartui.ImageByteFormat.png);
-
-          bytes = byteData.buffer.asUint8List();
-
-        } catch (e) {
-          print("Problem recording canvas to image.. $e");
-        }
-
-        try {
-          var memImage = Image.memory(bytes, gaplessPlayback: true,);
-          _cachedVectorData[coordsKey]['imageMemory'] = memImage;
-          if(vectorOptions.useImages || vectorOptions.useBackupImages ) {
-            _recentTilesCompleted[coordsKey] = DateTime.now();
-            _outstandingTileLoads.remove(coordsKey);
-          }
-
-        } catch (e) {
-          print("Problem caching imagememory: $e");
-        }
-
-        _cachedVectorData[coordsKey]['building'] = false;
-
-      });
-    }
-  }
 
   /// ////////////// END MAIN NEW VECTOR CODE ////////////////////////////////////////////////////////////////
 
