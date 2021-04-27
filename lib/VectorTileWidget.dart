@@ -317,17 +317,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       count++;
       var coordsKey = _tileCoordsToKey(tile.coords);
 
-      /* tile widgets swaps from different types "flash", so was an attempted to mitigate this...
-      if(vectorOptions.useBackupImages && _haveBackupTileMap.containsKey(coordsKey)) continue; // have a backup, which means this tile must be still outstanding..
-        _cachedVectorData[coordsKey]['transitioning'] = 10;
-
-      if(_cachedVectorData.containsKey(coordsKey) && _cachedVectorData[coordsKey]['transitioning'] > 0) {
-        ///print("COUNTING DOWN $coordsKey");
-        //_cachedVectorData[coordsKey]['transitioning']--;
-        //tileWidgets.add(_createTileWidget(tile, 'transitionImage'));
-      }
-      */
-
       if (tile.displayedZ != null) {
         tileWidgets.add(_drawTile(tile, 'backupTile'));
       } else {
@@ -342,32 +331,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     _lastBuildTiles = {};
 
-
-    /// Angled attempt like a satnav...needs expansion tiles...
-    if (vectorOptions.usePerspective) {
-      return
-        Opacity(
-          opacity: vectorOptions.opacity,
-          child: Container(
-              color: vectorOptions.backgroundColor,
-              child:
-
-              Transform(
-                transform: Matrix4.identity()
-                  ..setEntry(3, 2, 0.002) // perspective
-                  ..translate(0.0, 0.0, 0.0)
-                  ..rotateX(-0.7),
-
-                alignment: FractionalOffset.center,
-
-                child: Stack(
-                  children: tileWidgets,
-                ),
-              )
-          ),
-        );
-    } else {
-
       return Opacity(
         opacity: vectorOptions.opacity,
         child: Container(
@@ -377,7 +340,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           ),
         ),
       );
-    }
+
   }
 
   Widget _drawTile(tile, [type]) {
@@ -900,52 +863,12 @@ class VectorWidget extends StatefulWidget {
 
 class _VectorWidgetState extends State<VectorWidget> {
 
-  final _cachedTransparentImage = Image.memory(kTransparentImage, gaplessPlayback: true);
-
   @override
   Widget build(BuildContext context) {
 
-    var foreground = null;
-    var background;
-    var child;
-
-    if(!widget.cachedVectorDataMap['buildMap'].containsKey('backupTile') && widget.type == 'backupTile' && (widget.cachedVectorDataMap['backupCompleteWidget'] == null) && (widget.cachedVectorDataMap['imageMemory'] != null)) {
-      widget.cachedVectorDataMap['backupCompleteWidget'] =
-          Container(
-            height: double.infinity,
-            width: double.infinity,
-          child:
-
-          FittedBox(
-              child: Stack(
-                children: <Widget>[
-                ],
-              )
-            )
-          );
-      widget.cachedVectorDataMap['buildMap']['backupTile'] = true;
-    }
-
-    var needsUpdate = false;
-    if(!widget.cachedVectorDataMap['buildMap'].containsKey('imageMemory') && (widget.cachedVectorDataMap['useImages'] || widget.cachedVectorDataMap['useBackupImages'] )
-        && widget.cachedVectorDataMap['imageMemory'] != null) {
-      needsUpdate= true;
-    }
-    if(!widget.cachedVectorDataMap['buildMap'].containsKey('canvas') && (widget.cachedVectorDataMap['painter'] != null) && widget.cachedVectorDataMap['useCanvas']) {
-      needsUpdate = true;
-    }
-    if(!widget.cachedVectorDataMap['buildMap'].containsKey('labelPainter') && widget.cachedVectorDataMap['labelPainter'] != null) {
-      needsUpdate = true;
-    }
-
-    if(needsUpdate || widget.cachedVectorDataMap['completeWidget'] == null) {
-
+    if( true ) {
       List<Widget> myStack = [];
 
-      if(widget.cachedVectorDataMap['imageMemory'] != null && (widget.cachedVectorDataMap['useImages'] || widget.cachedVectorDataMap['useBackupImages'] )) {
-        myStack.add(widget.cachedVectorDataMap['imageMemory']);
-        widget.cachedVectorDataMap['buildMap']['imageMemory'] = true;
-      }
       if(widget.cachedVectorDataMap['painter'] != null && widget.cachedVectorDataMap['useCanvas']) {
         myStack.add(RepaintBoundary(child:  CustomPaint(painter: widget.cachedVectorDataMap['painter'])));
         widget.cachedVectorDataMap['buildMap']['canvas'] = true;
@@ -954,9 +877,6 @@ class _VectorWidgetState extends State<VectorWidget> {
         myStack.add(RepaintBoundary(child: CustomPaint(
             painter: widget.cachedVectorDataMap['labelPainter'])));
         widget.cachedVectorDataMap['buildMap']['labelPainter'] = true;
-      }
-      if(myStack == null) {
-        myStack.add(_cachedTransparentImage);
       }
 
       widget.cachedVectorDataMap['completeWidget'] = FittedBox(
@@ -970,12 +890,7 @@ class _VectorWidgetState extends State<VectorWidget> {
         );
       }
 
-    if(widget.type != 'backupTile' ) {
       return widget.cachedVectorDataMap['completeWidget'];
-    } else {
-      return widget.cachedVectorDataMap['backupCompleteWidget'];
-    }
-
 
   }
 
