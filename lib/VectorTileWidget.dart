@@ -329,9 +329,9 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       */
 
       if (tile.displayedZ != null) {
-        tileWidgets.add(_createTileWidget(tile, 'backupTile'));
+        tileWidgets.add(_drawTile(tile, 'backupTile'));
       } else {
-        tileWidgets.add(_createTileWidget(tile, '*'));
+        tileWidgets.add(_drawTile(tile, '*'));
       }
     }
 
@@ -380,7 +380,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     }
   }
 
-  Widget _createTileWidget(tile, [type]) {
+  Widget _drawTile(tile, [type]) {
     var coords = tile.coords;
     var tilePos = _getTilePos(coords);
     var level = _levels[coords.z]; ///
