@@ -22,6 +22,71 @@ import 'package:retry/retry.dart';
 import 'vector_tile_plugin.dart';
 import 'package:transparent_image/transparent_image.dart';
 
+class VectorWidget extends StatefulWidget {
+  final cachedVectorDataMap;
+  final String type;
+  final List<VTile> tilesToRender;
+  final tileZoom;
+
+  VectorWidget(
+      this.cachedVectorDataMap,
+      this.type,
+      this.tilesToRender,
+      this.tileZoom
+      );
+
+  @override
+  State<StatefulWidget> createState() {
+    return _VectorWidgetState();
+  }
+}
+
+class _VectorWidgetState extends State<VectorWidget> {
+
+  @override
+  Widget build(BuildContext context) {
+
+    //if( true ) {
+    List<Widget> myStack = [];
+
+    print("vector widget state");
+    print("${widget.tilesToRender}");
+    print("${widget.cachedVectorDataMap}");
+
+    /*
+      if(widget.cachedVectorDataMap['painter'] != null && widget.cachedVectorDataMap['useCanvas']) {
+        myStack.add(RepaintBoundary(child:  CustomPaint(painter: widget.cachedVectorDataMap['painter'])));
+        widget.cachedVectorDataMap['buildMap']['canvas'] = true;
+      }
+      if(widget.cachedVectorDataMap['labelPainter'] != null) {
+        myStack.add(RepaintBoundary(child: CustomPaint(
+            painter: widget.cachedVectorDataMap['labelPainter'])));
+        widget.cachedVectorDataMap['buildMap']['labelPainter'] = true;
+      }
+
+      widget.cachedVectorDataMap['completeWidget'] = FittedBox(
+            child: SizedBox(
+                width: 256,
+                height: 256,
+                child: Stack(
+                    children: myStack
+                )
+            )
+        );
+      }
+      */
+    //var widge = RepaintBoundary(child:  CustomPaint(painter: widget.cachedVectorDataMap['painter']));
+
+    return CustomPaint( painter: VectorPainter( widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap ) );
+
+    return Text("Vector Widget");
+
+    return widget.cachedVectorDataMap['completeWidget'];
+
+  }
+
+}
+
 class VectorTilePlugin implements MapPlugin {
 
   @override
@@ -151,6 +216,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     var _transitionTiles = {};
     Map levelupCoordsMap = {};
 
+
+    print("Tilerange $tileRange");
 
     /// Just a little bit of housekeeping we don't need to run too much
     /// to keep an eye on old tiles in a completed tile check
@@ -282,16 +349,22 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       }
     }
 
+    print("Tiles $_tiles");
+
+
     var tilesToRender = <VTile>[];
     for (var tile in _tiles.values) {
       if ((tile.coords.z - _level.zoom).abs() <= 1 + math.pow(2, levelUpDiff)) {
         if (!_cachedVectorData.containsKey(_tileCoordsToKey(tile.coords))) {
+          print("Fetching data");
           fetchData(tile.coords, 1);
         } else {
           tilesToRender.add(tile);
         }
       }
     }
+
+    print("Tiles22 $tilesToRender");
 
     tilesToRender.sort((aTile, bTile) {
       final a = aTile.coords; // TODO there was an implicit casting here.
@@ -309,21 +382,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     var allTilesToRender = backupTilesToRender + tilesToRender;
 
-    var count = 0;
-
-    var tileWidgets = <Widget>[];
-
-    for (var tile in allTilesToRender) {
-      count++;
-      var coordsKey = _tileCoordsToKey(tile.coords);
-
-      if (tile.displayedZ != null) {
-        tileWidgets.add(_drawTile(tile, 'backupTile'));
-      } else {
-        tileWidgets.add(_drawTile(tile, '*'));
-      }
-    }
-
     currentTileCoordsToRenderMap = {};
     for (var tile in tilesToRender) {
       currentTileCoordsToRenderMap[_tileCoordsToKey(tile.coords)] = true;
@@ -331,6 +389,14 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     _lastBuildTiles = {};
 
+    print("In tile sorting, ${allTilesToRender}");
+
+     return Container(
+         child: VectorWidget(_cachedVectorData, 'test', allTilesToRender, _tileZoom  )
+     ); /// //////////////////////////////////////////////////////////////
+
+    return Text("TESTING>........");
+/*
       return Opacity(
         opacity: vectorOptions.opacity,
         child: Container(
@@ -340,42 +406,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           ),
         ),
       );
+      */
 
-  }
-
-  Widget _drawTile(tile, [type]) {
-    var coords = tile.coords;
-    var tilePos = _getTilePos(coords);
-    var level = _levels[coords.z]; ///
-    var tileSize = getTileSize();
-    var pos = (tilePos).multiplyBy(level.scale) + level.translatePoint;
-    var width = tileSize.x * level.scale;
-    var height = tileSize.y * level.scale;
-    var coordsKey = _tileCoordsToKey(coords); /// this is now wrong for a backup tile...
-    var positionedWidget;
-    var type = 'unknown';
-
-    if(_cachedVectorData[coordsKey]['customPaintWidget'] != null) {
-      positionedWidget = _cachedVectorData[coordsKey]['customPaintWidget'];
-    } else {
-      if(!vectorOptions.useCanvas && !vectorOptions.useImages) type = 'transparent'; // testing backupimages
-      if(tile.displayedZ != null) {
-        type = 'backupTile';
-      } else {
-        //
-      }
-
-      positionedWidget = VectorWidget(_cachedVectorData[coordsKey], type);
-    }
-
-      return Positioned(
-        key: ValueKey(coordsKey + ':' + type + (tile.backupCoords != null ? _tileCoordsToKey(tile.backupCoords) : '*')),
-        left: pos.x.toDouble(),
-        top: pos.y.toDouble(),
-        width: width.toDouble(),
-        height: height.toDouble(),
-        child: positionedWidget, ///getCachedWidget(coordsKey), /// //////////////// get cached
-      );
 
   }
 
@@ -430,58 +462,22 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           _cachedVectorData[coordsKey]['units'] = response.body.codeUnits;
           _cachedVectorData[coordsKey]['state'] = 'got';
 
+          MapboxTile.decode(coordsKey, _cachedVectorData[coordsKey], {}, {});
+
+          print("decoded and vals for this tile are ${_cachedVectorData[coordsKey]['geomInfo']}");
+
+          setState(() {
+            // //////////////////////////////////////////////////////////////////////////maybe remove...
+          });
+
         } catch (e) {
           print("$e");
         }
       }
     }
-    createVectorWidget(coordsKey);
+
   }
 
-  void createVectorWidget( coordsKey ) {
-    var dpr = dartui.window.devicePixelRatio;
-
-    if(!currentTileCoordsToRenderMap.containsKey(coordsKey)) {
-      _cachedVectorData.remove(coordsKey);
-      _outstandingTileLoads.remove(coordsKey);
-      return null;
-    }
-
-    if(_cachedVectorData[coordsKey]['useCanvas']) {
-      _cachedVectorData[coordsKey]['painter'] = VectorPainter({},
-          _cachedVectorData[coordsKey],
-          currentTileCoordsToRenderMap,
-          { 'noLabels': true},
-          vectorStyle,
-      _tileZoom,
-          paintNotifier);
-    }
-    _cachedVectorData[coordsKey]['labelPainter'] = VectorPainter({},
-        _cachedVectorData[coordsKey],
-        currentTileCoordsToRenderMap,
-        { 'labelsOnly': true },
-        vectorStyle,
-    _tileZoom,
-    paintNotifier);
-
-    if( true ) {
-
-      if(_cachedVectorData[coordsKey]['paintState'] == 'stillPainting') {
-        return;
-      }
-
-      _cachedVectorData[coordsKey]['paintState'] = 'stillPainting';
-
-      if(vectorOptions.useCanvas) {
-        _cachedVectorData[coordsKey]['customPaintWidget'] =
-            VectorWidget(_cachedVectorData[coordsKey], 'customPaintWidget');
-
-        _recentTilesCompleted[coordsKey] = DateTime.now();
-        _outstandingTileLoads.remove(coordsKey);
-
-      }
-    }
-  }
 
 
   /// ////////////// END MAIN NEW VECTOR CODE ////////////////////////////////////////////////////////////////
@@ -846,55 +842,7 @@ class VTile {
   VTile(this.coords, this.displayedZ, this.current, this.backupCoords);
 }
 
-class VectorWidget extends StatefulWidget {
-  final cachedVectorDataMap;
-  final String type;
 
-  VectorWidget(
-      this.cachedVectorDataMap,
-      this.type
-      );
-
-  @override
-  State<StatefulWidget> createState() {
-    return _VectorWidgetState();
-  }
-}
-
-class _VectorWidgetState extends State<VectorWidget> {
-
-  @override
-  Widget build(BuildContext context) {
-
-    if( true ) {
-      List<Widget> myStack = [];
-
-      if(widget.cachedVectorDataMap['painter'] != null && widget.cachedVectorDataMap['useCanvas']) {
-        myStack.add(RepaintBoundary(child:  CustomPaint(painter: widget.cachedVectorDataMap['painter'])));
-        widget.cachedVectorDataMap['buildMap']['canvas'] = true;
-      }
-      if(widget.cachedVectorDataMap['labelPainter'] != null) {
-        myStack.add(RepaintBoundary(child: CustomPaint(
-            painter: widget.cachedVectorDataMap['labelPainter'])));
-        widget.cachedVectorDataMap['buildMap']['labelPainter'] = true;
-      }
-
-      widget.cachedVectorDataMap['completeWidget'] = FittedBox(
-            child: SizedBox(
-                width: 256,
-                height: 256,
-                child: Stack(
-                    children: myStack
-                )
-            )
-        );
-      }
-
-      return widget.cachedVectorDataMap['completeWidget'];
-
-  }
-
-}
 
 
 
