@@ -180,6 +180,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   }
 
   void _handleMove() {
+    print("handleMOVE!");
     setState(() {
       /// Not needed now, as we don't leave tiles hanging about, we just
       /// try and do the right thing and display, with a strategy to try
@@ -357,10 +358,11 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       if ((tile.coords.z - _level.zoom).abs() <= 1 + math.pow(2, levelUpDiff)) {
         if (!_cachedVectorData.containsKey(_tileCoordsToKey(tile.coords))) {
           print("Fetching data");
-          fetchData(tile.coords, 1);
+          fetchData(tile.coords, 1); ///     possibly also add to tilestorender but exclude later...
         } else {
           tilesToRender.add(tile);
         }
+        _cachedVectorData[_tileCoordsToKey(tile.coords)]['positionInfo'] = _createTilePositionInfo(tile);
       }
     }
 
@@ -408,6 +410,22 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       );
       */
 
+
+  }
+
+  Map<String, dynamic> _createTilePositionInfo( tile ) {
+    var coords = tile.coords;
+    var tilePos = _getTilePos(coords);
+    var level = _levels[coords.z]; ///
+    var tileSize = getTileSize();
+    var pos = (tilePos).multiplyBy(level.scale) + level.translatePoint;
+    var width = tileSize.x * level.scale;
+    var height = tileSize.y * level.scale;
+    var coordsKey = _tileCoordsToKey(coords);
+    var tilePositionInfo = { 'pos' : pos, 'width' : width, 'height': height, 'coordsKey' : coordsKey, 'scale' : width / tileSize.x };
+
+    print ("Tileposinfo $tilePositionInfo");
+    return tilePositionInfo;
 
   }
 
@@ -477,7 +495,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     }
 
   }
-
 
 
   /// ////////////// END MAIN NEW VECTOR CODE ////////////////////////////////////////////////////////////////

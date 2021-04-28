@@ -8,6 +8,7 @@ import 'filters.dart';
 import 'styles.dart';
 import 'package:flutter_map_vector_tile/VectorTileWidget.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 
 int decodeZigZag( int byte ) { /// decodes from mapbox small int style
@@ -257,15 +258,57 @@ class VectorPainter extends CustomPainter {
     for (var tile in tilesToRender) {
       print("Want to paint ${tile.coords}");
       print("Cache geomInfo is ${cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']}");
+      print("Position is ${cachedVectorDataMap[tileCoordsToKey(tile.coords)]['positionInfo']}");
+      var pos = cachedVectorDataMap[tileCoordsToKey(tile.coords)]['positionInfo'];
+
+      print(" X IS ${pos['pos'].x}");
+      print("SCALE IS ${pos['scale']}");
+      var matrix = Matrix4.identity()..translate(  pos['pos'].x,  pos['pos'].y )..scale( pos['scale'] );
+      print("$matrix");
+      //print("matrix is $matrix");
+
+      //matrix = cachedVectorDataMap[tileCoordsToKey(tile.coords)]['positionInfo']; /// ///////////////////////////////////
+
 
       for (var path in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['paths']) {
-        drawPaths(path['pathMap'], canvas, path['layerString'], 2); /// get rid of need for diffratio.....
+        ///var transformedPath = path['pathMap'].transform(matrix);
+        ///print("TRANSPATH $transformedPath");
+        ///drawPaths(path['pathMap'], canvas, path['layerString'], 2); /// get rid of need for diffratio.....
         print("drawing path ${path['pathMap']}");
+        for(var className in path['pathMap'].keys) {
+
+          print("Classname $className");
+          if (Styles.includeFeature(path['layerString'], '', className, 2)) {
+            print("here2");
+            var paintStyle = Styles.getStyle2(
+                path['layerString'], 'path', className, tileZoom, 2);
+            print("here3");
+
+            path['pathMap'].forEach(( key, value ){
+              //print("kv $key, $value");
+              //canvas.drawPath(value, paintStyle);
+              print("val $value, matrix $matrix");
+              canvas.drawPath(value.transform(matrix.storage), paintStyle);
+            });
+            //print("${path['pathMap']['layerString']}");
+            //var tpath = path['pathMap'];
+            //var tpath = path['layerString'][className].transform(matrix);
+            //if( path['layerString'].containsKey(className) ) {
+            //  print("Want to do ${path['layerString']['pathMap']}");
+            //  canvas.drawPath(path['layerString']['pathMap'][className], paintStyle);
+            //}
+          }
+        }
       }
+      print("here6");
+      canvas.save();
+      canvas.transform(matrix.storage);
       for (var text in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['text']) {
-        _drawTextAt(text['text'], text['pointInfo'], canvas, 2); /// get rid of need for diffratio.....
+        //_drawTextAt(text['text'], text['pointInfo'], canvas, 2); /// get rid of need for diffratio.....
+        _drawTextAt(text['text'], text['pointInfo'], canvas, 2, matrix);
         //print( "Drawing text $text");
       }
+      canvas.restore();
 
     }
 
@@ -286,10 +329,14 @@ class VectorPainter extends CustomPainter {
     }
   }
 
-  void _drawTextAt(String text, Offset position, Canvas canvas, diffRatio) {
+  void _drawTextAt(String text, Offset position, Canvas canvas, diffRatio, matrix) {
+
+    //canvas.save();
+    //canvas.transform(matrix.storage);
+
     TextStyle textStyle = TextStyle(
       color: Colors.black,
-      fontSize: 12 / diffRatio,
+      fontSize: 2, // diffratio
     );
     TextSpan textSpan = TextSpan(
       text: text,
@@ -306,6 +353,8 @@ class VectorPainter extends CustomPainter {
     Offset drawPosition =
     Offset(position.dx - textPainter.width / 2, position.dy + (textPainter.height/2));
     textPainter.paint(canvas, drawPosition);
+
+    //canvas.restore();
   }
 
   @override
