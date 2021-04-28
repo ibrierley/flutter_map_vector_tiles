@@ -28,8 +28,6 @@ class MapboxTile {
     vector_tile.Tile vt;
     cachedInfo['paintState'] = 'stillPainting';
 
-    ///var coordsKey = cachedInfo['coordsKey'];
-
     try {
       vt = vector_tile.Tile.fromBuffer(cachedInfo['units']);
     } catch (e) {
@@ -55,10 +53,6 @@ class MapboxTile {
     var levelUpDiffFactor = cachedInfo['levelUpDiffFactor'] ?? 0; // move outside loop, pass in;
 
     for( var layer in vt.layers) {
-
-      ///if(!currentTileCoordsToRenderMap.containsKey(coordsKey)) {
-      ///  return;
-      ///}
 
       Map<String, dartui.Path> pathMap = { 'default':  dartui.Path()};
 
@@ -252,70 +246,36 @@ class VectorPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
 
-    print("PAINTING!!!!");
-    print("Vectordatamap ${cachedVectorDataMap}");
 
     for (var tile in tilesToRender) {
-      print("Want to paint ${tile.coords}");
-      print("Cache geomInfo is ${cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']}");
-      print("Position is ${cachedVectorDataMap[tileCoordsToKey(tile.coords)]['positionInfo']}");
       var pos = cachedVectorDataMap[tileCoordsToKey(tile.coords)]['positionInfo'];
 
-      print(" X IS ${pos['pos'].x}");
-      print("SCALE IS ${pos['scale']}");
       var matrix = Matrix4.identity()..translate(  pos['pos'].x,  pos['pos'].y )..scale( pos['scale'] );
-      print("$matrix");
-      //print("matrix is $matrix");
-
-      //matrix = cachedVectorDataMap[tileCoordsToKey(tile.coords)]['positionInfo']; /// ///////////////////////////////////
-
 
       for (var path in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['paths']) {
-        ///var transformedPath = path['pathMap'].transform(matrix);
-        ///print("TRANSPATH $transformedPath");
-        ///drawPaths(path['pathMap'], canvas, path['layerString'], 2); /// get rid of need for diffratio.....
+
         print("drawing path ${path['pathMap']}");
         for(var className in path['pathMap'].keys) {
 
-          print("Classname $className");
           if (Styles.includeFeature(path['layerString'], '', className, 2)) {
-            print("here2");
             var paintStyle = Styles.getStyle2(
                 path['layerString'], 'path', className, tileZoom, 2);
-            print("here3");
-
             path['pathMap'].forEach(( key, value ){
-              //print("kv $key, $value");
-              //canvas.drawPath(value, paintStyle);
-              print("val $value, matrix $matrix");
               canvas.drawPath(value.transform(matrix.storage), paintStyle);
             });
-            //print("${path['pathMap']['layerString']}");
-            //var tpath = path['pathMap'];
-            //var tpath = path['layerString'][className].transform(matrix);
-            //if( path['layerString'].containsKey(className) ) {
-            //  print("Want to do ${path['layerString']['pathMap']}");
-            //  canvas.drawPath(path['layerString']['pathMap'][className], paintStyle);
-            //}
+
           }
         }
       }
-      print("here6");
+
       canvas.save();
       canvas.transform(matrix.storage);
       for (var text in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['text']) {
-        //_drawTextAt(text['text'], text['pointInfo'], canvas, 2); /// get rid of need for diffratio.....
         _drawTextAt(text['text'], text['pointInfo'], canvas, 2, matrix);
-        //print( "Drawing text $text");
       }
       canvas.restore();
 
     }
-
-
-      //drawPaths(pathMap, canvas, layerString, levelUpDiffFactor);
-
-          // _drawTextAt(info.toString(), pointInfo[0], canvas,cachedInfo['levelUpDiffFactor'] );
 
 
   }

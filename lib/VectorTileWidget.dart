@@ -53,35 +53,14 @@ class _VectorWidgetState extends State<VectorWidget> {
     print("${widget.tilesToRender}");
     print("${widget.cachedVectorDataMap}");
 
-    /*
-      if(widget.cachedVectorDataMap['painter'] != null && widget.cachedVectorDataMap['useCanvas']) {
-        myStack.add(RepaintBoundary(child:  CustomPaint(painter: widget.cachedVectorDataMap['painter'])));
-        widget.cachedVectorDataMap['buildMap']['canvas'] = true;
-      }
-      if(widget.cachedVectorDataMap['labelPainter'] != null) {
-        myStack.add(RepaintBoundary(child: CustomPaint(
-            painter: widget.cachedVectorDataMap['labelPainter'])));
-        widget.cachedVectorDataMap['buildMap']['labelPainter'] = true;
-      }
+    //return Text("TEST");
 
-      widget.cachedVectorDataMap['completeWidget'] = FittedBox(
-            child: SizedBox(
-                width: 256,
-                height: 256,
-                child: Stack(
-                    children: myStack
-                )
-            )
-        );
-      }
-      */
-    //var widge = RepaintBoundary(child:  CustomPaint(painter: widget.cachedVectorDataMap['painter']));
-
-    return CustomPaint( painter: VectorPainter( widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap ) );
-
-    return Text("Vector Widget");
-
-    return widget.cachedVectorDataMap['completeWidget'];
+    print("need to detect size here....");
+    return SizedBox(
+      width: 1024,
+        height: 1024,
+        child: CustomPaint( painter: VectorPainter( widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap ) )
+    );
 
   }
 
@@ -393,8 +372,12 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     print("In tile sorting, ${allTilesToRender}");
 
-     return Container(
-         child: VectorWidget(_cachedVectorData, 'test', allTilesToRender, _tileZoom  )
+     return Opacity(
+       opacity: 0.5,
+         child: Container(
+           color: Colors.cyan,
+         child: Stack( children: [VectorWidget(_cachedVectorData, 'test', allTilesToRender, _tileZoom  ) ], )
+         )
      ); /// //////////////////////////////////////////////////////////////
 
     return Text("TESTING>........");
