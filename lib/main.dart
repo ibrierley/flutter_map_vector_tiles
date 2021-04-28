@@ -8,9 +8,9 @@ import 'styles.dart';
 
 
 void main() {
-  debugPaintSizeEnabled = true;
-  debugPaintBaselinesEnabled = false;
-  debugPaintLayerBordersEnabled = true;
+  //debugPaintSizeEnabled = true;
+  //debugPaintBaselinesEnabled = false;
+  //debugPaintLayerBordersEnabled = true;
   //debugPaintPointersEnabled = false;
   //debugRepaintRainbowEnabled = false;
   //debugRepaintTextRainbowEnabled = false;
@@ -57,12 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<dynamic,dynamic>>(
-      future: Styles.getJsonTestStyle("assets/data/streets.json"),
-      builder: (BuildContext context, AsyncSnapshot<Map<dynamic,dynamic>> snapshot) {
-        if(snapshot.hasData) {
-          var vectorStyle = snapshot.data;
-          return new FlutterMap(
+    return FlutterMap(
             mapController: mapController,
             options: new MapOptions(
               plugins: [
@@ -75,21 +70,20 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             layers: [
               VectorTileLayerPluginOptions(
-                urlTemplate: 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?access_token=pk.eyJ1IjoiZ2liYmxlIiwiYSI6ImNqbjBlZDB6ejFrODcza3Fsa3o3eXR1MzkifQ.pC89zLnuSWrRdCkDrsmynQ',
+                urlTemplate: 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?access_token=<INSERT KEY HERE>',
                 //subdomains: ['a', 'b', 'c'],
                 useCanvas: true,
                 useImages: false, //disabled,
                 useBackupImages: false, //disabled
                 usePerspective: false,
                 levelUpDiff: 2,
-                vectorStyle: vectorStyle,
+                //vectorStyle: vectorStyle,
               ),
             ],
           );
-        }
+
         return Text("Loading style...");
-      }
-    );
+
   }
 
 
