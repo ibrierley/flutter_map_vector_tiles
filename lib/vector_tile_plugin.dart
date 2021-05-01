@@ -24,6 +24,7 @@ class MapboxTile {
   static void decode( coordsKey, cachedInfo, options, vectorStyles ) {
 
     print("Decoding....");
+    var start = DateTime.now();
 
     vector_tile.Tile vt;
     cachedInfo['paintState'] = 'stillPainting';
@@ -180,13 +181,13 @@ class MapboxTile {
         var includeFeature = Styles.includeFeature(layerString, type, featureInfo);
         var thisClass = featureInfo['class'] ?? 'default';
 
-        if (!options.containsKey('labelsOnly') && pointList.length != 0) {
-          var paintStyle = Styles.getStyle(layerString, type, featureInfo, styleInfo, cachedInfo['levelUpDiffFactor']);
-          if(includeFeature) {
+        //if (!options.containsKey('labelsOnly') && pointList.length != 0) {
+          ///var paintStyle = Styles.getStyle(layerString, type, featureInfo, styleInfo, cachedInfo['levelUpDiffFactor']);
+        //  if(includeFeature) {
             //todo
-          }
-          pointList = [];
-        }
+        //  }
+        //  pointList = [];
+        //}
 
         if (!options.containsKey('labelsOnly') && path != null) {
           if(includeFeature) {
@@ -198,7 +199,6 @@ class MapboxTile {
       }
 
       cachedInfo['geomInfo']['paths'].add({'pathMap': pathMap, 'layerString': layerString });
-      ///drawPaths(pathMap, canvas, layerString, levelUpDiffFactor);
     } // layer
 
     if(!options.containsKey('noLabels') && labelPointlist.length != null) {
@@ -210,14 +210,15 @@ class MapboxTile {
 
         if(info != null && !seenLabel.containsKey(info)) {
           seenLabel[info] = true;
-          ///_drawTextAt(info.toString(), pointInfo[0], canvas,cachedInfo['levelUpDiffFactor'] );
           cachedInfo['geomInfo']['text'].add({'text' : info.toString(), 'pointInfo' :pointInfo[0] });
         }
       }
     }
 
+    var end = DateTime.now().difference(start).inMicroseconds;
+
+    print("TIMING! Mapbox tile decode took us $end");
     print("Decode done for $coordsKey");
-    print("Cachedinfo is $cachedInfo");
 
     cachedInfo['paintedLayerSegments']++;
     cachedInfo['paintState'] = 'finished';
@@ -245,58 +246,82 @@ class VectorPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-
+    var paintTimeStart =  DateTime.now();
 
     for (var tile in tilesToRender) {
       var pos = cachedVectorDataMap[tileCoordsToKey(tile.coords)]['positionInfo'];
 
-      var matrix = Matrix4.identity()..translate(  pos['pos'].x,  pos['pos'].y )..scale( pos['scale'] );
+      var strokeScale = 1; /// use pos['scale'] if scaling the whole canvas....
+
+      var matrix = Matrix4.identity()
+        ..translate(  pos['pos'].x,  pos['pos'].y )
+        ..scale( pos['scale'] );
+
+      var start = DateTime.now();
+
+      var end = DateTime.now().difference(start).inMicroseconds;
+
+      start = DateTime.now();
+
+      var runningTotal = { 'pathCount' : 0, 'intPathCount': 0 };
 
       for (var path in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['paths']) {
-
-        print("drawing path ${path['pathMap']}");
+        runningTotal['pathCount']++;
         for(var className in path['pathMap'].keys) {
-
           if (Styles.includeFeature(path['layerString'], '', className, 2)) {
-            var paintStyle = Styles.getStyle2(
-                path['layerString'], 'path', className, tileZoom, 2);
-            path['pathMap'].forEach(( key, value ){
-              canvas.drawPath(value.transform(matrix.storage), paintStyle);
-            });
 
+            var paintStyle = Styles.getStyle2(
+                path['layerString'], 'path', className, tileZoom, strokeScale, 2);
+            path['pathMap'].forEach(( key, value ){
+
+              canvas.drawPath(value.transform(matrix.storage), paintStyle);
+
+              /// canvas.drawPath( value.shift((Offset(pos['pos'].x,pos['pos'].y))), paintStyle );
+              /// canvas.drawPath(value, paintStyle);
+            });
           }
         }
       }
+      end = DateTime.now().difference(start).inMicroseconds;
 
-      canvas.save();
-      canvas.transform(matrix.storage);
+      print("TIMING! Canvas paths drawing time μs:  $end");
+
+      start = DateTime.now();
       for (var text in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['text']) {
-        _drawTextAt(text['text'], text['pointInfo'], canvas, 2, matrix);
+       // _drawTextAt(text['text'], text['pointInfo'], canvas, pos['scale'], 2, matrix);
       }
-      canvas.restore();
+      end = DateTime.now().difference(start).inMicroseconds;
+      print("TIMING! Canvas text drawing time μs:  $end");
+      start = DateTime.now();
+
+      end = DateTime.now().difference(start).inMicroseconds;
+      print("TIMING! Canvas restore time μs:  $end");
+
+      end = DateTime.now().difference(paintTimeStart).inMicroseconds;
+      print("TIMING! Canvas whole paint time μs:  $end");
 
     }
 
 
   }
 
+  /*
   void drawPaths(Map pathMap, canvas, layerString, [diffRatio = 0]) { /// need to turn into a list...?
     for(var className in pathMap.keys) {
       if(Styles.includeFeature(layerString, '', className, diffRatio)) {
-        var paintStyle = Styles.getStyle2(layerString, 'path', className, tileZoom, diffRatio);
-        canvas.drawPath(pathMap[className], paintStyle);
+        //var paintStyle = Styles.getStyle2(layerString, 'path', className, strokeScale,  diffRatio);
+        //canvas.drawPath(pathMap[className], paintStyle);
       }
     }
   }
+  */
 
-  void _drawTextAt(String text, Offset position, Canvas canvas, diffRatio, matrix) {
 
-    //canvas.save();
-    //canvas.transform(matrix.storage);
+  void _drawTextAt(String text, Offset position, Canvas canvas, scale, diffRatio, matrix) {
 
     TextStyle textStyle = TextStyle(
       color: Colors.black,
-      fontSize: 2, // diffratio
+      fontSize: scale == 1 ? scale : 16 / scale, // diffratio, wondering if this may give an none fraction optimisations..
     );
     TextSpan textSpan = TextSpan(
       text: text,
@@ -314,7 +339,6 @@ class VectorPainter extends CustomPainter {
     Offset(position.dx - textPainter.width / 2, position.dy + (textPainter.height/2));
     textPainter.paint(canvas, drawPosition);
 
-    //canvas.restore();
   }
 
   @override

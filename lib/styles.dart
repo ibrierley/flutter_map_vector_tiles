@@ -108,7 +108,7 @@ class Styles {
     return includeFeature;
   }
 
-  static Paint getStyle2(layerString, type, className, tileZoom, diffRatio) {
+  static Paint getStyle2(layerString, type, className, tileZoom, scale, diffRatio) {
     var paint = defaultPaint;
     var styleInfo = classColorStyles;
 
@@ -128,62 +128,12 @@ class Styles {
       paint.strokeWidth = classStrokeWidthClasses['default']['default'];
     }
 
-    paint.strokeWidth = paint.strokeWidth * tileZoom / 16;
-    if(diffRatio > 0) paint.strokeWidth = paint.strokeWidth / diffRatio; // hmm not sure this is needed ?
-
-    paint.strokeWidth = paint.strokeWidth * tileZoom / 5; // testing https://github.com/flutter/flutter/issues/78543 for performance issues...
-    paint.strokeWidth = paint.strokeWidth > 1.0 ? 1.0 : paint.strokeWidth; // testing performance... maybe remove...
-
-    return paint;
-  }
-
-  static Paint getStyle(layerString, type, featureInfo, styleInfo, [sizeDiffRatio = 1]) {
-
-    /// See https://docs.mapbox.com/vector-tiles/reference/mapbox-streets-v7/#water
-    ///
-    /// see style json at https://github.com/openmaptiles/maptiler-basic-gl-style/blob/master/style.json for thoughts...
-
-    var paint = defaultPaint;
-    if(styleInfo == null) {
-      styleInfo = classColorStyles;
-    } else {
-      if(styleInfo.containsKey('type')) {
-        if(styleInfo['type'] == 'line') {
-          paint.style = PaintingStyle.stroke;
-          stringToHsl(styleInfo['paint']['line-color']);
-        } else if(styleInfo['type'] == 'fill') {
-          paint.style = PaintingStyle.fill;
-        }
-      }
-    }
-
-    if (type == 'POLYGON' || type == 'POINT') {
-      paint.style = PaintingStyle.fill;
-    } else {
-      paint.style = PaintingStyle.stroke;
-    }
-
-    // bit ugly below, needs rejigging
-    if(classColorStyles.containsKey(layerString)) {
-      if(classColorStyles[layerString].containsKey(featureInfo['class'])) {
-        paint.color = classColorStyles[layerString][featureInfo['class']];
-      } else {
-        paint.color = classColorStyles[layerString]['default'];
-      }
-    } else {
-      ///print("NOTHING FOUND FOR $layerString with class ${featureInfo['class']}");
-    }
-
-    if(classStrokeWidthClasses.containsKey(layerString)) {
-      if(classStrokeWidthClasses[layerString].containsKey(featureInfo['class'])) {
-        paint.strokeWidth = classStrokeWidthClasses[layerString][featureInfo['class']];
-      } else {
-        paint.strokeWidth = classStrokeWidthClasses[layerString]['default'];
-      }
-    }
-
-    paint.strokeWidth = paint.strokeWidth / sizeDiffRatio; // testing performance at subpixels ?
-    paint.strokeWidth = paint.strokeWidth > 1.0 ? 1.0 : paint.strokeWidth; // testing performance...
+    //paint.strokeWidth = paint.strokeWidth * tileZoom / 16;
+    //if(diffRatio > 0) paint.strokeWidth = paint.strokeWidth / diffRatio; // hmm not sure this is needed ?
+    //paint.strokeWidth = paint.strokeWidth * tileZoom / 5; // testing https://github.com/flutter/flutter/issues/78543 for performance issues...
+    //paint.strokeWidth = paint.strokeWidth > 1.0 ? 1.0 : paint.strokeWidth; // testing performance... maybe remove...
+    paint.strokeWidth =  paint.strokeWidth / scale;
+    ///paint.strokeWidth =  0; //testing issue with pixel performance problem on larger stroke
 
     return paint;
   }
