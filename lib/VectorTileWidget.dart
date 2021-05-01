@@ -49,19 +49,21 @@ class _VectorWidgetState extends State<VectorWidget> {
     //if( true ) {
     List<Widget> myStack = [];
 
-    print("vector widget state");
-    print("${widget.tilesToRender}");
-    print("${widget.cachedVectorDataMap}");
+    print("VectorWidgetState Building");
+    print("need to grab size here....");
+    var start = DateTime.now();
 
-    //return Text("TEST");
-
-    print("need to detect size here....");
-    return SizedBox(
+    var box = SizedBox(
       width: 1024,
         height: 1024,
-        child: CustomPaint( painter: VectorPainter( widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap ) )
+        child: RepaintBoundary (
+          child: CustomPaint( painter: VectorPainter( widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap ) )
+        )
     );
 
+    var end = DateTime.now().difference(start).inMicroseconds;
+    print("TIMING! VectorWidgetState total microsecs $end");
+    return box;
   }
 
 }
@@ -159,7 +161,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   }
 
   void _handleMove() {
-    print("handleMOVE!");
     setState(() {
       /// Not needed now, as we don't leave tiles hanging about, we just
       /// try and do the right thing and display, with a strategy to try
@@ -186,6 +187,9 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
   @override
   Widget build(BuildContext context) {
+
+    var start = DateTime.now();
+
     var pixelBounds = _getTiledPixelBounds(map.center);
     var tileRange = _pxBoundsToTileRange(pixelBounds);
     var tileCenter = tileRange.getCenter();
@@ -345,8 +349,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       }
     }
 
-    print("Tiles22 $tilesToRender");
-
     tilesToRender.sort((aTile, bTile) {
       final a = aTile.coords; // TODO there was an implicit casting here.
       final b = bTile.coords;
@@ -370,16 +372,21 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     _lastBuildTiles = {};
 
-    print("In tile sorting, ${allTilesToRender}");
+    var end = DateTime.now().difference(start).inMicroseconds;
+    print("TIMING! initial part of VectorTileBuild is $end");
 
-     return Opacity(
+    var widg = Opacity(
        opacity: 0.5,
          child: Container(
            color: Colors.cyan,
          child: Stack( children: [VectorWidget(_cachedVectorData, 'test', allTilesToRender, _tileZoom  ) ], )
          )
      ); /// //////////////////////////////////////////////////////////////
+    ///
+    var end2 = DateTime.now().difference(start).inMicroseconds;
+    print("TIMING! And VectorTileWidgetTotal is $end2");
 
+    return widg;
     return Text("TESTING>........");
 /*
       return Opacity(
@@ -416,6 +423,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   void fetchData(coords, method) async {
     var url = vectorOptions.tileProvider.getTileUrl(
         coords, vectorOptions);
+
+    print("FETCHING DATA!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 
     var coordsKey = _tileCoordsToKey(coords);
 
