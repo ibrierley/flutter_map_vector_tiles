@@ -21,9 +21,11 @@ String tileCoordsToKey(Coords coords) {
 
 class MapboxTile {
 
-  static void decode( coordsKey, cachedInfo, options, vectorStyles ) {
+  static void decode( coordsKey, cachedInfo, options, vectorStyles, tileZoom ) {
 
-    print("Decoding....");
+    print("Decoding....$options ${cachedInfo.keys}");
+    var includeSummary = {};
+    var excludeSummary = {};
     var start = DateTime.now();
 
     vector_tile.Tile vt;
@@ -60,6 +62,7 @@ class MapboxTile {
       var layerString = layer.name.toString();
 
       var styleInfo;
+
       if(vectorStyles.containsKey(layerString)) { /// maybe not needed..
         styleInfo = vectorStyles[layerString];
       }
@@ -178,25 +181,19 @@ class MapboxTile {
           }
         }
 
-        var includeFeature = Styles.includeFeature(layerString, type, featureInfo);
+        var includeFeature = Styles.includeFeature(layerString, type, featureInfo['class'], tileZoom);
         var thisClass = featureInfo['class'] ?? 'default';
-        print("CLASS IS $thisClass $layerString type $type");
-
-        //if (!options.containsKey('labelsOnly') && pointList.length != 0) {
-          ///var paintStyle = Styles.getStyle(layerString, type, featureInfo, styleInfo, cachedInfo['levelUpDiffFactor']);
-        //  if(includeFeature) {
-            //todo
-        //  }
-        //  pointList = [];
-        //}
+        //print("ReturnedVal: Zoom is $tileZoom, $layerString $thisClass $type, includeFeature is $includeFeature");
 
         if (!options.containsKey('labelsOnly') && path != null) {
           if(includeFeature) {
-            print("Including $thisClass");
+            //print("Including $tileZoom $layerString $thisClass");
             if(!pathMap.containsKey(thisClass)) pathMap[thisClass] = dartui.Path();
             pathMap[thisClass].addPath(path,Offset(0,0));
+            includeSummary[ layerString + "_" + thisClass +"_" + tileZoom.toString() ] = true;
           } else {
-            print("Excluding $thisClass");
+            //print("Excluding $tileZoom $layerString $thisClass");
+            excludeSummary[ layerString + "_" + thisClass + "_" + tileZoom.toString() ] = true;
           }
           path = null;
         }
@@ -209,7 +206,6 @@ class MapboxTile {
       var seenLabel = {}; // prevent dupes...
 
       for(var pointInfo in labelPointlist) {
-
         var info = pointInfo[2]['name'];
 
         if(info != null && !seenLabel.containsKey(info)) {
@@ -226,6 +222,11 @@ class MapboxTile {
 
     cachedInfo['paintedLayerSegments']++;
     cachedInfo['paintState'] = 'finished';
+
+    print("INCLUDES");
+    print("$includeSummary");
+    print("EXCLUDES");
+    print("$excludeSummary");
 
   }
 
@@ -268,13 +269,13 @@ class VectorPainter extends CustomPainter {
 
         for(var className in layer['pathMap'].keys) {
 
-          if (Styles.includeFeature(layerName, '', className, 2)) {
+          ///if (Styles.includeFeature(layerName, '', className, 2)) {
               var paintStyle = Styles.getStyle2(
                      layerName, 'path', className, tileZoom,
                      strokeScale, 2);
 
               canvas.drawPath(layer['pathMap'][className].transform(matrix.storage), paintStyle);
-          }
+          ///}
         }
       }
       var end = DateTime.now().difference(start).inMicroseconds;
@@ -283,7 +284,12 @@ class VectorPainter extends CustomPainter {
 
       start = DateTime.now();
       for (var text in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['text']) {
-       // _drawTextAt(text['text'], text['pointInfo'], canvas, pos['scale'], 2, matrix);
+
+        var translatedPos = text['pointInfo']
+            .scale(pos['scale'],pos['scale'])
+            .translate(pos['pos'].x,  pos['pos'].y);
+
+        _drawTextAt(text['text'], translatedPos, canvas, pos['scale'], 2, matrix); // we don't want to scale text
       }
       end = DateTime.now().difference(start).inMicroseconds;
       //print("TIMING! Canvas text drawing time μs:  $end");
@@ -316,7 +322,7 @@ class VectorPainter extends CustomPainter {
 
     TextStyle textStyle = TextStyle(
       color: Colors.black,
-      fontSize: scale == 1 ? scale : 16 / scale, // diffratio, wondering if this may give an none fraction optimisations..
+      fontSize: 16 //scale == 1 ? scale : 16 / scale, // diffratio, wondering if this may give an none fraction optimisations..
     );
     TextSpan textSpan = TextSpan(
       text: text,
@@ -331,7 +337,7 @@ class VectorPainter extends CustomPainter {
     ..text = textSpan;
 
     Offset drawPosition =
-    Offset(position.dx - textPainter.width / 2, position.dy + (textPainter.height/2));
+      Offset(position.dx - textPainter.width / 2, position.dy + (textPainter.height/2));
     textPainter.paint(canvas, drawPosition);
 
   }
