@@ -44,6 +44,7 @@ class Styles {
   }
 
   static Map<String, Map<String, dynamic>> classColorStyles = {
+
     "default": {
       'include': false,
       'default': { 'color': Colors.grey, 'min': 0, 'max': 21},
@@ -75,10 +76,12 @@ class Styles {
       'construction': { 'color': Colors.brown,      'min': 14, 'max' : 21 },
       'ferry':        { 'color': Colors.brown,      'min': 13, 'max' : 21 },
     },
+
     "motorway_junction": {
       'include': true,
       'default': { 'color': Colors.deepPurple, 'min': 0, 'max' : 21 },
       },
+
       "landuse": {
         'include': true,
         'default':  { 'color': Colors.lightGreen, 'min': 14, 'max': 21},
@@ -102,6 +105,7 @@ class Styles {
         'default': { 'color': Colors.green, 'min': 0, 'max': 21},
         "national_park": { 'color': Colors.green, 'min': 15, 'max': 21},
       },
+
       "water": {
         'include': true,
         'default': { 'color': Colors.blue, 'min': 11, 'max': 21},
@@ -114,8 +118,7 @@ class Styles {
       },
       "transit_stop": {
           'include': true,
-          "default": {
-          'color': Colors.deepOrange, 'min': 13, 'max': 21
+          "default": { 'color': Colors.deepOrange, 'min': 13, 'max': 21 }
       },
 
       "building": {
@@ -143,7 +146,7 @@ class Styles {
         'include': false,
         'default': { 'color': Colors.orangeAccent, 'min': 15, 'max': 21},
       },
-      'transit_stop_label': {
+      "transit_stop_label": {
         'include': true,
         'default': { 'color': Colors.black54, 'min': 15, 'max': 21},
       },
@@ -163,10 +166,16 @@ class Styles {
         'include': true,
         'default': { 'color': Colors.brown, 'min': 15, 'max': 21},
       },
-      "place_label": {
+
+
+      'place_label': {
         'include': true,
-        'default': { 'color': Colors.grey, 'min': 0, 'max': 21},
+        'default':    { 'color': Colors.grey, 'min': 0, 'max': 21},
+        'settlement': { 'color': Colors.grey, 'min': 9, 'max': 21},
+        'settlement_subdivision': { 'color': Colors.grey, 'min': 14, 'max': 21},
+        'park_like':  { 'color': Colors.grey, 'min': 14, 'max': 21},
       },
+
       "airport_label": {
         'include': true,
         'default': { 'color': Colors.grey, 'min': 0, 'max': 21},
@@ -180,11 +189,11 @@ class Styles {
         'default': { 'color': Colors.brown, 'min': 16, 'max': 21},
       },
       "state_label": {
-        'include': false,
+        'include': true,
         'default': { 'color': Colors.grey, 'min': 13, 'max': 21},
       },
       "marine_label": {
-        'include': false,
+        'include': true,
         'default': { 'color': Colors.blueGrey, 'min': 0, 'max': 21},
       },
       "country_label": {
@@ -215,8 +224,8 @@ class Styles {
       },
       'hillshade': {
         'include': false,
-        'default': { 'color': Colors.grey, 'min': 0, 'max': 21},
-        'shadow': { 'color': Colors.grey}, 'min': 0, 'max': 21},
+        'default': { 'color': Colors.grey, 'min': 0, 'max': 21 },
+        'shadow': { 'color': Colors.grey, 'min': 0, 'max': 21 },
       },
       ///tegola   https://tegola.io/styles/hot-osm.json
      'buildings': {
@@ -251,6 +260,7 @@ class Styles {
         'include': true,
         'default': { 'color': Colors.white60, 'min': 0, 'max': 21},
       },
+
   };
 
   static Map<String, Map<String, double>> classStrokeWidthClasses = { /// maybe move this into colorstyles above and rename
@@ -270,6 +280,8 @@ class Styles {
         classOptions = classColorStyles[layerString][thisClass];
       }
 
+      print("$classOptions");
+
       if( includeFeature && classOptions.containsKey('min') ) {
         if( zoom < classOptions['min'] ) {
           includeFeature = false;
@@ -281,6 +293,8 @@ class Styles {
           includeFeature = false;
         }
       }
+    } else {
+      print("[$layerString] is NOT in styling list");
     }
 
     return includeFeature;
