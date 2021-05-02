@@ -333,7 +333,10 @@ class VectorPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => true;
+  bool shouldRepaint(VectorPainter oldDelegate) =>
+      tilesToRender != oldDelegate.tilesToRender ||
+          tileZoom != oldDelegate.tileZoom ||
+          cachedVectorDataMap != oldDelegate.cachedVectorDataMap;
 
 
 }
