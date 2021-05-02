@@ -280,8 +280,6 @@ class Styles {
         classOptions = classColorStyles[layerString][thisClass];
       }
 
-      print("$classOptions");
-
       if( includeFeature && classOptions.containsKey('min') ) {
         if( zoom < classOptions['min'] ) {
           includeFeature = false;
@@ -303,8 +301,6 @@ class Styles {
   static Paint getStyle2(layerString, type, className, tileZoom, scale, diffRatio) {
     var paint = defaultPaint;
     var styleInfo = classColorStyles;
-
-    print("TYPE IS $type!!!!!!!!!!!!");
 
     if(type == 'path' || type == 'line')    paint.style = PaintingStyle.stroke; // are roads filled ?
     if(type == 'polygon' || type == 'fill') paint.style = PaintingStyle.fill;
