@@ -251,7 +251,6 @@ class VectorPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    var paintTimeStart =  DateTime.now();
 
     for (var tile in tilesToRender) {
       var pos = cachedVectorDataMap[tileCoordsToKey(tile.coords)]['positionInfo'];
@@ -262,27 +261,18 @@ class VectorPainter extends CustomPainter {
         ..translate(  pos['pos'].x,  pos['pos'].y )
         ..scale( pos['scale'] );
 
-      var start = DateTime.now();
-
       for (var layer in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['paths']) {
         var layerName = layer['layerString'];
 
         for(var className in layer['pathMap'].keys) {
-
-          ///if (Styles.includeFeature(layerName, '', className, 2)) {
               var paintStyle = Styles.getStyle2(
                      layerName, 'path', className, tileZoom,
                      strokeScale, 2);
 
               canvas.drawPath(layer['pathMap'][className].transform(matrix.storage), paintStyle);
-          ///}
         }
       }
-      var end = DateTime.now().difference(start).inMicroseconds;
 
-      //print("TIMING! Canvas paths drawing time μs:  $end");
-
-      start = DateTime.now();
       for (var text in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['text']) {
 
         var translatedPos = text['pointInfo']
@@ -291,19 +281,7 @@ class VectorPainter extends CustomPainter {
 
         _drawTextAt(text['text'], translatedPos, canvas, pos['scale'], 2, matrix); // we don't want to scale text
       }
-      end = DateTime.now().difference(start).inMicroseconds;
-      //print("TIMING! Canvas text drawing time μs:  $end");
-      start = DateTime.now();
-
-      end = DateTime.now().difference(start).inMicroseconds;
-      //print("TIMING! Canvas restore time μs:  $end");
-
-      end = DateTime.now().difference(paintTimeStart).inMicroseconds;
-      //print("TIMING! Canvas whole paint time μs:  $end");
-
     }
-
-
   }
 
   /*
