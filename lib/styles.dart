@@ -108,11 +108,11 @@ class Styles {
 
       "water": {
         'include': true,
-        'default': { 'color': Colors.blue, 'min': 11, 'max': 21},
+        'default': { 'color': Colors.blue, 'min': 13, 'max': 21},
       },
       "waterway": {
         'include': true,
-        'default': { 'color': Colors.blue, 'min': 11, 'max': 21},
+        'default': { 'color': Colors.blue, 'min': 13, 'max': 21},
         'river':   { 'color': Colors.blue, 'min': 13, 'max': 21},
         'canal': { 'color': Colors.blue, 'min': 13, 'max': 21},
       },
@@ -174,6 +174,15 @@ class Styles {
         'settlement': { 'color': Colors.grey, 'min': 9, 'max': 21},
         'settlement_subdivision': { 'color': Colors.grey, 'min': 14, 'max': 21},
         'park_like':  { 'color': Colors.grey, 'min': 14, 'max': 21},
+        // types, refine by class doesn't reduce labels enough, but types is useful here..
+        'types' : {
+          'village':  { 'color': Colors.grey, 'min': 15, 'max': 21},
+          'suburb':   { 'color': Colors.grey, 'min': 15, 'max': 21},
+          'hamlet':   { 'color': Colors.grey, 'min': 15, 'max': 21},
+          'city':     { 'color': Colors.grey, 'min': 11, 'max': 21},
+          'town':     { 'color': Colors.grey, 'min': 12, 'max': 21},
+        }
+
       },
 
       "airport_label": {
@@ -274,9 +283,12 @@ class Styles {
     if(classColorStyles.containsKey(layerString)) {
       includeFeature = classColorStyles[layerString]['include'];
 
-      var classOptions = classColorStyles['default'];
+      var classOptions = classColorStyles[layerString]['default'];
 
-      if( classColorStyles[layerString].containsKey(thisClass) ) {
+      if( classColorStyles[layerString].containsKey('types') && classColorStyles[layerString]['types'].containsKey(type)) { // types match in styling
+        classOptions = classColorStyles[layerString]['types'][type];
+        
+      } else if( classColorStyles[layerString].containsKey(thisClass) ) { // normal class match in styling
         classOptions = classColorStyles[layerString][thisClass];
       }
 

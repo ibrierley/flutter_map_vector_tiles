@@ -212,6 +212,8 @@ class MapboxTile {
         var thisClass = pointInfo[2]['class'] ?? 'default';
         var includeFeature = Styles.includeFeature(layerString, pointInfo[2]['type'], thisClass, tileZoom);
 
+        ///print("INCLUDE $pointInfo");
+
         if( includeFeature ) {
           var info = pointInfo[2]['name'];
 
