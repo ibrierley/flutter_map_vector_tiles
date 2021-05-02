@@ -13,8 +13,8 @@ class Styles {
     ..style = PaintingStyle.stroke
     ..color = Colors.grey
     ..strokeWidth = 2
-    ..strokeCap = StrokeCap.round
-    ..isAntiAlias = true;
+    ///..strokeCap = StrokeCap.round
+    ..isAntiAlias = false;
 
   static TextPainter defaultTextPainter = TextPainter(
       text: TextSpan(
@@ -50,7 +50,7 @@ class Styles {
       'secondary_link': Colors.orangeAccent,'tertiary': Colors.yellow, 'tertiary_link': Colors.yellow,
       "path": Colors.white54, 'track': Colors.white38, 'residential': Colors.white54, 'major_rail': Colors.black, 'minor_rail': Colors.black12, 'service_rail': Colors.black, 'construction': Colors.brown },
     "motorway_junction": {'include': true, 'default': Colors.deepPurple },
-    "landuse": {'include': false, 'default': Colors.lightGreen, 'sand': Colors.amber, 'playground': Colors.blueGrey, 'grass': Colors.lightGreen, 'park': Colors.lightGreen, 'pitch': Colors.green,
+    "landuse": {'include': true, 'default': Colors.lightGreen, 'sand': Colors.amber, 'playground': Colors.blueGrey, 'grass': Colors.lightGreen, 'park': Colors.lightGreen, 'pitch': Colors.green,
       'parking': Colors.blueGrey, 'wood': Colors.green, 'agriculture': Colors.brown, 'school': Colors.grey,  },
     "landuse_overlay" : { 'include': false,'default': Colors.green, "national_park": Colors.green },
     "water": { 'include': true,'default': Colors.blue },
@@ -58,7 +58,7 @@ class Styles {
     "transit_stop": { 'include': true,"default": Colors.deepOrange},
     "building": { 'include': false, "default": Colors.blueGrey },
     "structure": { 'include': false, "default": Colors.blueGrey, 'fence': Colors.brown },
-    "barrierline": {'include': false, "default": Colors.purple },
+    "barrierline": {'include': true, "default": Colors.purple },
     "aeroway": { 'include': true, "default": Colors.orange },
     "waterway_label": { 'include': false, 'default': Colors.black54 },
     "poi_label": { 'include': false, 'default': Colors.orangeAccent },
@@ -122,6 +122,9 @@ class Styles {
         paint.color = styleInfo[layerString]['default'];
       }
     }
+
+    ///print("getstyle paintcolour for $layerString $type $className  is ${paint.color}");
+
     if(classStrokeWidthClasses.containsKey(layerString)) {
       paint.strokeWidth = classStrokeWidthClasses[layerString][className] ?? classStrokeWidthClasses[layerString]['default'];
     } else {
@@ -132,7 +135,7 @@ class Styles {
     //if(diffRatio > 0) paint.strokeWidth = paint.strokeWidth / diffRatio; // hmm not sure this is needed ?
     //paint.strokeWidth = paint.strokeWidth * tileZoom / 5; // testing https://github.com/flutter/flutter/issues/78543 for performance issues...
     //paint.strokeWidth = paint.strokeWidth > 1.0 ? 1.0 : paint.strokeWidth; // testing performance... maybe remove...
-    paint.strokeWidth =  paint.strokeWidth / scale;
+    paint.strokeWidth =  (paint.strokeWidth / scale); ///.ceilToDouble();
     ///paint.strokeWidth =  0; //testing issue with pixel performance problem on larger stroke
 
     return paint;
