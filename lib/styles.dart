@@ -261,29 +261,22 @@ class Styles {
   static bool includeFeature(layerString, type, thisClass, zoom) { //reduce code...
     var includeFeature = classColorStyles['default']['include'];
 
-
-    //print("inside includecheck $layerString, type=$type, thisClass=$thisClass, zoom=$zoom");
-
     if(classColorStyles.containsKey(layerString)) {
       includeFeature = classColorStyles[layerString]['include'];
-      //print("inside2 include is $includeFeature");
 
       var classOptions = classColorStyles['default'];
 
       if( classColorStyles[layerString].containsKey(thisClass) ) {
         classOptions = classColorStyles[layerString][thisClass];
-        //print("classOptions is $classOptions");
       }
 
       if( includeFeature && classOptions.containsKey('min') ) {
-        //print("We have a min to check! ${classOptions['min']}");
         if( zoom < classOptions['min'] ) {
           includeFeature = false;
         }
       }
 
       if( includeFeature && classOptions.containsKey('max') ) {
-        //print("We have a max to check! ${classOptions['max']}");
         if( zoom > classOptions['max'] ) {
           includeFeature = false;
         }
@@ -296,6 +289,8 @@ class Styles {
   static Paint getStyle2(layerString, type, className, tileZoom, scale, diffRatio) {
     var paint = defaultPaint;
     var styleInfo = classColorStyles;
+
+    print("TYPE IS $type!!!!!!!!!!!!");
 
     if(type == 'path' || type == 'line')    paint.style = PaintingStyle.stroke; // are roads filled ?
     if(type == 'polygon' || type == 'fill') paint.style = PaintingStyle.fill;
@@ -329,7 +324,6 @@ class Styles {
 }
 
 void checkMapboxFilters(Map<dynamic,dynamic> style, String haveLayer,Map featureInfo) {
-  var paintType = PaintingStyle.stroke;
 
   try {
     for (var layer in style['layers']) {
@@ -351,7 +345,6 @@ void checkMapboxFilters(Map<dynamic,dynamic> style, String haveLayer,Map feature
 
       if(layer.containsKey('type')) {
         if(layer['type'] == 'line') {
-          paintType = PaintingStyle.stroke;
           if(layer.containsKey('paint')) {
             stringToHsl(layer['paint']['line-color']);
           }
@@ -360,8 +353,6 @@ void checkMapboxFilters(Map<dynamic,dynamic> style, String haveLayer,Map feature
           if(layer.containsKey('paint')) {
             stringToHsl(layer['paint']['fill-color']);
           }
-
-          paintType = PaintingStyle.stroke;
         } else if(layer['type'] == 'symbol') {
           // todo
         }
@@ -372,10 +363,6 @@ void checkMapboxFilters(Map<dynamic,dynamic> style, String haveLayer,Map feature
   } catch(e) {
     print("exception $e");
   }
-
-
-
-
 }
 
 List stringToHsl(string) {
