@@ -202,15 +202,27 @@ class MapboxTile {
       cachedInfo['geomInfo']['paths'].add({'layerString': layerString, 'pathMap': pathMap });
     } // layer
 
+
     if(!options.containsKey('noLabels') && labelPointlist.length != null) {
       var seenLabel = {}; // prevent dupes...
 
       for(var pointInfo in labelPointlist) {
-        var info = pointInfo[2]['name'];
+        var layerString = pointInfo[1];
 
-        if(info != null && !seenLabel.containsKey(info)) {
-          seenLabel[info] = true;
-          cachedInfo['geomInfo']['text'].add({'text' : info.toString(), 'pointInfo' :pointInfo[0] });
+        var thisClass = pointInfo[2]['class'] ?? 'default';
+        var includeFeature = Styles.includeFeature(layerString, pointInfo[2]['type'], thisClass, tileZoom);
+
+        if( includeFeature ) {
+          var info = pointInfo[2]['name'];
+
+          if (info != null && !seenLabel.containsKey(info)) {
+            seenLabel[info] = true;
+            cachedInfo['geomInfo']['text'].add(
+                {'text': info.toString(), 'pointInfo': pointInfo[0]});
+          }
+          includeSummary[ layerString + "_" + thisClass +"_" + tileZoom.toString() ] = true;
+        } else {
+          excludeSummary[ layerString + "_" + thisClass + "_" + tileZoom.toString() ] = true;
         }
       }
     }
