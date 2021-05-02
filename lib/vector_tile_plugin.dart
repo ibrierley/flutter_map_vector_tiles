@@ -55,7 +55,7 @@ class MapboxTile {
 
     for( var layer in vt.layers) {
 
-      Map<String, dartui.Path> pathMap = { 'default':  dartui.Path()};
+      Map<String, dartui.Path> pathMap = { };  //class
 
       var layerString = layer.name.toString();
 
@@ -180,6 +180,7 @@ class MapboxTile {
 
         var includeFeature = Styles.includeFeature(layerString, type, featureInfo);
         var thisClass = featureInfo['class'] ?? 'default';
+        print("CLASS IS $thisClass $layerString type $type");
 
         //if (!options.containsKey('labelsOnly') && pointList.length != 0) {
           ///var paintStyle = Styles.getStyle(layerString, type, featureInfo, styleInfo, cachedInfo['levelUpDiffFactor']);
@@ -191,14 +192,17 @@ class MapboxTile {
 
         if (!options.containsKey('labelsOnly') && path != null) {
           if(includeFeature) {
+            print("Including $thisClass");
             if(!pathMap.containsKey(thisClass)) pathMap[thisClass] = dartui.Path();
             pathMap[thisClass].addPath(path,Offset(0,0));
+          } else {
+            print("Excluding $thisClass");
           }
           path = null;
         }
       }
 
-      cachedInfo['geomInfo']['paths'].add({'pathMap': pathMap, 'layerString': layerString });
+      cachedInfo['geomInfo']['paths'].add({'layerString': layerString, 'pathMap': pathMap });
     } // layer
 
     if(!options.containsKey('noLabels') && labelPointlist.length != null) {
@@ -251,7 +255,7 @@ class VectorPainter extends CustomPainter {
     for (var tile in tilesToRender) {
       var pos = cachedVectorDataMap[tileCoordsToKey(tile.coords)]['positionInfo'];
 
-      var strokeScale = 1; /// use pos['scale'] if scaling the whole canvas....
+      var strokeScale = 1; /// debug try both 1 & 16 use pos['scale'] if scaling the whole canvas....
 
       var matrix = Matrix4.identity()
         ..translate(  pos['pos'].x,  pos['pos'].y )
@@ -259,46 +263,37 @@ class VectorPainter extends CustomPainter {
 
       var start = DateTime.now();
 
-      var end = DateTime.now().difference(start).inMicroseconds;
+      for (var layer in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['paths']) {
+        var layerName = layer['layerString'];
 
-      start = DateTime.now();
+        for(var className in layer['pathMap'].keys) {
 
-      var runningTotal = { 'pathCount' : 0, 'intPathCount': 0 };
+          if (Styles.includeFeature(layerName, '', className, 2)) {
+              var paintStyle = Styles.getStyle2(
+                     layerName, 'path', className, tileZoom,
+                     strokeScale, 2);
 
-      for (var path in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['paths']) {
-        runningTotal['pathCount']++;
-        for(var className in path['pathMap'].keys) {
-          if (Styles.includeFeature(path['layerString'], '', className, 2)) {
-
-            var paintStyle = Styles.getStyle2(
-                path['layerString'], 'path', className, tileZoom, strokeScale, 2);
-            path['pathMap'].forEach(( key, value ){
-
-              canvas.drawPath(value.transform(matrix.storage), paintStyle);
-
-              /// canvas.drawPath( value.shift((Offset(pos['pos'].x,pos['pos'].y))), paintStyle );
-              /// canvas.drawPath(value, paintStyle);
-            });
+              canvas.drawPath(layer['pathMap'][className].transform(matrix.storage), paintStyle);
           }
         }
       }
-      end = DateTime.now().difference(start).inMicroseconds;
+      var end = DateTime.now().difference(start).inMicroseconds;
 
-      print("TIMING! Canvas paths drawing time μs:  $end");
+      //print("TIMING! Canvas paths drawing time μs:  $end");
 
       start = DateTime.now();
       for (var text in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['text']) {
        // _drawTextAt(text['text'], text['pointInfo'], canvas, pos['scale'], 2, matrix);
       }
       end = DateTime.now().difference(start).inMicroseconds;
-      print("TIMING! Canvas text drawing time μs:  $end");
+      //print("TIMING! Canvas text drawing time μs:  $end");
       start = DateTime.now();
 
       end = DateTime.now().difference(start).inMicroseconds;
-      print("TIMING! Canvas restore time μs:  $end");
+      //print("TIMING! Canvas restore time μs:  $end");
 
       end = DateTime.now().difference(paintTimeStart).inMicroseconds;
-      print("TIMING! Canvas whole paint time μs:  $end");
+      //print("TIMING! Canvas whole paint time μs:  $end");
 
     }
 
