@@ -333,8 +333,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       }
     }
 
-    print("Tiles $_tiles");
-
+    ///print("Tiles $_tiles");
 
     var tilesToRender = <VTile>[];
     for (var tile in _tiles.values) {
@@ -414,7 +413,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     var coordsKey = _tileCoordsToKey(coords);
     var tilePositionInfo = { 'pos' : pos, 'width' : width, 'height': height, 'coordsKey' : coordsKey, 'scale' : width / tileSize.x };
 
-    print ("Tileposinfo $tilePositionInfo");
     return tilePositionInfo;
 
   }
@@ -472,7 +470,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           _cachedVectorData[coordsKey]['units'] = response.body.codeUnits;
           _cachedVectorData[coordsKey]['state'] = 'got';
 
-          MapboxTile.decode(coordsKey, _cachedVectorData[coordsKey], {}, {});
+          MapboxTile.decode(coordsKey, _cachedVectorData[coordsKey], {}, {}, _tileZoom);
 
           print("decoded and vals for this tile are ${_cachedVectorData[coordsKey]['geomInfo']}");
 
