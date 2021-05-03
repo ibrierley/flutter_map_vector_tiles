@@ -26,7 +26,7 @@ class Styles {
   static Map<String, Map<String, dynamic>> classColorStyles = {
 
     "default": {
-      'include': false,
+      'include': true,
       'default': { 'color': Colors.grey, 'min': 0, 'max': 21},
     },
 
@@ -81,7 +81,7 @@ class Styles {
         'rock' :    { 'color': Colors.grey,       'min': 13, 'max': 21},
       },
       "landuse_overlay": {
-        'include': false,
+        'include': true,
         'default': { 'color': Colors.green, 'min': 0, 'max': 21},
         "national_park": { 'color': Colors.green, 'min': 8, 'max': 21},
         "wetland_noveg" : { 'color': Colors.blueGrey, 'min': 8, 'max': 21},
@@ -100,17 +100,17 @@ class Styles {
       },
       "transit_stop": {
           'include': true,
-          "default": { 'color': Colors.deepOrange, 'min': 13, 'max': 21 }
+          "default": { 'color': Colors.deepOrange, 'min': 14, 'max': 21 }
       },
 
       "building": {
-        'include': false,
-        "default": { 'color': Colors.blueGrey, 'min': 14, 'max': 21 },
+        'include': true,
+        "default": { 'color': Colors.blueGrey, 'min': 16, 'max': 21 },
       },
       "structure": {
-        'include': false,
-        "default": { 'color': Colors.blueGrey, 'min': 14, 'max': 21 },
-        'fence': { 'color': Colors.brown, 'min': 14, 'max': 21 },
+        'include': true,
+        "default": { 'color': Colors.blueGrey, 'min': 15, 'max': 21 },
+        'fence': { 'color': Colors.brown, 'min': 15, 'max': 21 },
       },
       "barrierline": {
         'include': true,
@@ -121,12 +121,12 @@ class Styles {
         "default": { 'color': Colors.orange, 'min': 11, 'max': 21},
       },
       "waterway_label": {
-        'include': false,
-        'default': { 'color': Colors.black, 'min': 13, 'max': 21},
+        'include': true,
+        'default': { 'color': Colors.black, 'min': 15, 'max': 21},
       },
       "poi_label": {
-        'include': false,
-        'default': { 'color': Colors.orangeAccent, 'min': 14, 'max': 21},
+        'include': true,
+        'default': { 'color': Colors.orangeAccent, 'min': 15, 'max': 21},
       },
       "transit_stop_label": {
         'include': true,
