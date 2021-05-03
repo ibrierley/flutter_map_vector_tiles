@@ -183,13 +183,8 @@ class MapboxTile {
             /// otherwise water can end up on top of a road for example
 
             if(!pathMap.containsKey(key)) {
-              var style = Styles.getStyle2( layerString, type, thisClass, tileZoom, strokeScale, 2 );
-
               pathMap[key] = { 'path': dartui.Path(), 'class' : thisClass, 'type' : type, 'layerString' : layerString,
-                'count' : 1, 'style' : style, 'color': style.color }; // init
-            } else {
-              //pathMap[key]['path'].addPath(path, Offset(0, 0));
-              //pathMap[key]['count']++;
+                'count' : 1, }; // init
             }
             pathMap[key]['path'].addPath(path, Offset(0, 0));
             pathMap[key]['count']++;
@@ -258,6 +253,8 @@ class VectorPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
 
+    var strokeScale = 1.0;
+
     for (var tile in tilesToRender) {
       var pos = cachedVectorDataMap[tileCoordsToKey(tile.coords)]['positionInfo'];
 
@@ -271,9 +268,10 @@ class VectorPainter extends CustomPainter {
 
           var pathMap = layer['pathMap'][layerKey];
 
-          if( pathMap.containsKey('path') && pathMap.containsKey('style')) {
+          if( pathMap.containsKey('path') ) {
 
-            var style = pathMap['style'];
+            ///var style = pathMap['style'];
+            var style = Styles.getStyle2( pathMap['layerString'], pathMap['type'], pathMap['class'], tileZoom, strokeScale, 2 );
             canvas.drawPath(
                 pathMap['path'].transform(matrix.storage), style);
           } else {
