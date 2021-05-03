@@ -8,25 +8,6 @@ import 'package:flutter/services.dart' show rootBundle;
 
 class Styles {
 
-  /*static Paint defaultPaint = Paint()
-    ..style = PaintingStyle.stroke
-    ..color = Colors.grey
-    ..strokeWidth = 2
-    ///..strokeCap = StrokeCap.round
-    ..isAntiAlias = false;*/
-
-  static TextPainter defaultTextPainter = TextPainter(
-      text: TextSpan(
-        text: '',
-        style: TextStyle(
-          color: Colors.black,
-          fontSize: 12,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-      textAlign: TextAlign.center);
-
-
   static Map<String, int> defaultLayerOrder() {
     return {
       'water' : 15,
@@ -52,28 +33,28 @@ class Styles {
     ///mapbox streets
     "road": {
       'include': true,
-      'default':      { 'color': Colors.white,  'min': 15, 'max' : 21 },
-      'service':      { 'color':  Colors.white, 'min': 14, 'max' : 21 },
-      'street':       { 'color': Colors.white,  'min': 15, 'max' : 21 },
-      'pedestrian':   { 'color': Colors.white,  'min': 15, 'max' : 21 },
-      'street_limited': { 'color': Colors.white, 'min': 15, 'max' : 21 },
-      'motorway' :    { 'color': Colors.white, 'min': 9, 'max' : 21 },
-      'trunk':        { 'color': Colors.white, 'min': 10, 'max' : 21 },
-      'trunk_link':   { 'color': Colors.white, 'min': 10, 'max' : 21 },
-      'primary' :     { 'color': Colors.white,     'min': 11, 'max' : 21 },
-      'primary_link': { 'color': Colors.white,     'min': 11, 'max' : 21 },
-      'secondary':    { 'color': Colors.white, 'min': 12, 'max' : 21 },
-      'secondary_link': { 'color': Colors.white, 'min': 12, 'max' : 21 },
-      'tertiary':     { 'color': Colors.white,     'min': 13, 'max' : 21 },
-      'tertiary_link': { 'color': Colors.white,    'min': 13, 'max' : 21 },
-      "path":         { 'color': Colors.white,    'min': 16, 'max' : 21 },
-      'track':        { 'color': Colors.white,    'min': 16, 'max' : 21 },
-      'residential':  { 'color': Colors.white,    'min': 16, 'max' : 21 },
-      'major_rail':   { 'color': Colors.black,      'min': 10, 'max' : 21 },
-      'minor_rail':   { 'color': Colors.black,    'min': 11, 'max' : 21 },
-      'service_rail': { 'color': Colors.black,      'min': 10, 'max' : 21 },
-      'construction': { 'color': Colors.brown,      'min': 14, 'max' : 21 },
-      'ferry':        { 'color': Colors.brown,      'min': 13, 'max' : 21 },
+      'default':      { 'color': Colors.grey,  'min': 15, 'max' : 21 },
+      'service':      { 'color':  Colors.grey, 'min': 14, 'max' : 21 },
+      'street':       { 'color': Colors.grey,  'min': 15, 'max' : 21 },
+      'pedestrian':   { 'color': Colors.grey,  'min': 15, 'max' : 21 },
+      'street_limited': { 'color': Colors.grey, 'min': 15, 'max' : 21 },
+      'motorway' :    { 'color': Colors.green,   'min': 9, 'max' : 21 },
+      'trunk':        { 'color': Colors.grey,   'min': 10, 'max' : 21 },
+      'trunk_link':   { 'color': Colors.grey,   'min': 10, 'max' : 21 },
+      'primary' :     { 'color': Colors.green,   'min': 9, 'max' : 21 },
+      'primary_link': { 'color': Colors.green,   'min': 9, 'max' : 21 },
+      'secondary':    { 'color': Colors.grey,    'min': 12, 'max' : 21 },
+      'secondary_link': { 'color': Colors.grey,  'min': 12, 'max' : 21 },
+      'tertiary':     { 'color': Colors.grey,    'min': 13, 'max' : 21 },
+      'tertiary_link': { 'color': Colors.grey,   'min': 13, 'max' : 21 },
+      "path":         { 'color': Colors.grey,    'min': 16, 'max' : 21 },
+      'track':        { 'color': Colors.grey,    'min': 16, 'max' : 21 },
+      'residential':  { 'color': Colors.grey,    'min': 16, 'max' : 21 },
+      'major_rail':   { 'color': Colors.grey,    'min': 13, 'max' : 21 }, // make prob darker than roads...
+      'minor_rail':   { 'color': Colors.grey,    'min': 14, 'max' : 21 },
+      'service_rail': { 'color': Colors.grey,    'min': 13, 'max' : 21 },
+      'construction': { 'color': Colors.brown,    'min': 14, 'max' : 21 },
+      'ferry':        { 'color': Colors.brown,    'min': 13, 'max' : 21 },
     },
 
     "motorway_junction": {
@@ -141,7 +122,7 @@ class Styles {
       },
       "waterway_label": {
         'include': false,
-        'default': { 'color': Colors.black54, 'min': 15, 'max': 21},
+        'default': { 'color': Colors.black, 'min': 15, 'max': 21},
       },
       "poi_label": {
         'include': false,
@@ -149,11 +130,11 @@ class Styles {
       },
       "transit_stop_label": {
         'include': true,
-        'default': { 'color': Colors.black54, 'min': 15, 'max': 21},
+        'default': { 'color': Colors.black, 'min': 15, 'max': 21},
       },
       "road_point": {
         'include': true,
-        'default': { 'color': Colors.black54, 'min': 15, 'max': 21},
+        'default': { 'color': Colors.black, 'min': 15, 'max': 21},
       },
       "road_label": {
         'include': true,
@@ -219,8 +200,8 @@ class Styles {
         'default': { 'color': Colors.blueGrey, 'min': 15, 'max': 21},
         'primary': { 'color': Colors.blue, 'min': 15, 'max': 21},
         'secondary': { 'color': Colors.blue, 'min': 15, 'max': 21},
-        'tertiary': { 'color': Colors.black38, 'min': 15, 'max': 21},
-        'street': { 'color': Colors.black26, 'min': 15, 'max': 21},
+        'tertiary': { 'color': Colors.grey, 'min': 15, 'max': 21},
+        'street': { 'color': Colors.grey, 'min': 15, 'max': 21},
       },
 
       ///mapbox terrain
@@ -266,11 +247,11 @@ class Styles {
       },
       'transport_lines': {
         'include': true,
-        'default': { 'color': Colors.white60, 'min': 0, 'max': 21},
+        'default': { 'color': Colors.grey, 'min': 0, 'max': 21},
       },
      'amenity_points' : {
         'include': true,
-        'default': { 'color': Colors.white60, 'min': 0, 'max': 21},
+        'default': { 'color': Colors.grey, 'min': 0, 'max': 21},
       },
 
   };

@@ -24,15 +24,15 @@ import 'package:transparent_image/transparent_image.dart';
 
 class VectorWidget extends StatefulWidget {
   final cachedVectorDataMap;
-  final String type;
   final List<VTile> tilesToRender;
   final tileZoom;
+  final levelUpDiff;
 
   VectorWidget(
       this.cachedVectorDataMap,
-      this.type,
       this.tilesToRender,
-      this.tileZoom
+      this.tileZoom,
+      this.levelUpDiff,
       );
 
   @override
@@ -45,21 +45,17 @@ class _VectorWidgetState extends State<VectorWidget> {
 
   @override
   Widget build(BuildContext context) {
-    print("VectorWidgetState Building");
-    var start = DateTime.now();
 
     var box = SizedBox(
-      width: 1024,
-        height: 1024,
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height,
         child: RepaintBoundary (
           child: CustomPaint(
             isComplex: true, //Tells flutter to cache the painter.
-            painter: VectorPainter( widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap ) )
+            painter: VectorPainter( widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap, widget.levelUpDiff ) )
         )
     );
 
-    var end = DateTime.now().difference(start).inMicroseconds;
-    print("TIMING! VectorWidgetState total microsecs $end");
     return box;
   }
 
@@ -121,7 +117,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   Map<String, Map<String, dynamic>>_cachedVectorData = {};
   Timer _housekeepingTimer;
 
-  Map currentTileCoordsToRenderMap = {};
+  ///Map currentTileCoordsToRenderMap = {};
 
   Map<String, DateTime> _outstandingTileLoads = {};
   Map<String, DateTime> _recentTilesCompleted = {};
@@ -197,9 +193,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     var _transitionTiles = {};
     Map levelupCoordsMap = {};
 
-
-    print("Tilerange $tileRange");
-
     /// Just a little bit of housekeeping we don't need to run too much
     /// to keep an eye on old tiles in a completed tile check
     if (DateTime.now().difference(_lastTileListCleanupTime) >
@@ -209,7 +202,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     _setView(map.center, map.zoom);
 
-    int miny = tileRange.min.y - 0;
+    int miny = tileRange.min.y - 0; // leaving these in there as was playing to adjust with extra tile loading
     int maxy = tileRange.max.y + 0;
     int minx = tileRange.min.x - 0;
     int maxx = tileRange.max.x + 0;
@@ -257,7 +250,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
         var debugBackupTiles = false;
 
         if (
-        vectorOptions.useBackupImages &&
+        vectorOptions.useBackupTiles &&
             (!_recentTilesCompleted.containsKey(coordsKey) ||
                 debugBackupTiles)) {
           Coords backupCoords;
@@ -330,18 +323,15 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       }
     }
 
-    ///print("Tiles $_tiles");
-
     var tilesToRender = <VTile>[];
     for (var tile in _tiles.values) {
       if ((tile.coords.z - _level.zoom).abs() <= 1 + math.pow(2, levelUpDiff)) {
         if (!_cachedVectorData.containsKey(_tileCoordsToKey(tile.coords))) {
-          print("Fetching data");
-          fetchData(tile.coords, 1); ///     possibly also add to tilestorender but exclude later...
+          print("Fetching data fir ${tile.coords}");
+          fetchData(tile.coords, 1);
         } else {
           tilesToRender.add(tile);
         }
-        _cachedVectorData[_tileCoordsToKey(tile.coords)]['positionInfo'] = _createTilePositionInfo(tile);
       }
     }
 
@@ -361,22 +351,16 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     var allTilesToRender = backupTilesToRender + tilesToRender;
 
-    currentTileCoordsToRenderMap = {};
-    for (var tile in tilesToRender) {
-      currentTileCoordsToRenderMap[_tileCoordsToKey(tile.coords)] = true;
+    for (var tile in allTilesToRender) {
+      _cachedVectorData[_tileCoordsToKey(tile.coords)]['positionInfo'] = _createTilePositionInfo(tile); /// need to recreate backup tile info on diff zoom...
     }
 
     _lastBuildTiles = {};
 
-    var widg =
-         Container(
-           color: Colors.cyan,
-         child: VectorWidget(_cachedVectorData, 'test', allTilesToRender, _tileZoom  )
-
+    return Container(
+           color: Colors.blueGrey,
+         child: VectorWidget(_cachedVectorData, allTilesToRender, _tileZoom, levelUpDiff  )
      );
-
-    return widg;
-
   }
 
   Map<String, dynamic> _createTilePositionInfo( tile ) {
@@ -427,7 +411,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           'levelUpDiffFactor' : math.pow(2,levelUpDiff).toInt(),
           'useCanvas' : vectorOptions.useCanvas,
           'useImages' : vectorOptions.useImages,
-          'useBackupImages' : vectorOptions.useBackupImages,
+          'useBackupTiles' : vectorOptions.useBackupTiles,
           'tileZoom' : _tileZoom,
           'completeWidget' : null,
           'backupCompleteWidget' : null,
@@ -447,7 +431,10 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
           MapboxTile.decode(coordsKey, _cachedVectorData[coordsKey], {}, {}, _tileZoom);
 
-          print("decoded and vals for this tile are ${_cachedVectorData[coordsKey]['geomInfo']}");
+          _recentTilesCompleted[coordsKey] = DateTime.now(); ///backup tiles uses these to know which it can use as a backup
+          _outstandingTileLoads.remove(coordsKey);
+
+          print("decoded $coordsKey}");
 
           setState(() {
             
@@ -770,7 +757,7 @@ class VectorTileLayerPluginOptions extends TileLayerOptions {
 
   bool useImages;
   bool useCanvas;
-  bool useBackupImages;
+  bool useBackupTiles;
   bool usePerspective;
   Map vectorStyle;
   int levelUpDiff;
@@ -794,7 +781,7 @@ class VectorTileLayerPluginOptions extends TileLayerOptions {
     this.backupTileExpansionStrategy = const [1, 2, 3, -1, -2],
     this.useImages = true,
     this.useCanvas = true,
-    this.useBackupImages = true,
+    this.useBackupTiles = true,
     this.usePerspective = false,
     this.vectorStyle,
     this.levelUpDiff,
