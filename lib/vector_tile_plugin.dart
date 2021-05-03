@@ -285,38 +285,20 @@ class VectorPainter extends CustomPainter {
         ..scale( pos['scale'] );
 
       for (var layer in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['paths']) {
-        ///var layerName = layer['layerString'];
 
-        print("LAYERKEY $layer");
 
         for (var layerKey in layer['pathMap'].keys) { /// we have a map for each layer, paths should be combined to same style/type
-          print("layerKey is $layerKey");
+
           var pathMap = layer['pathMap'][layerKey];
-          print("pathmap is $pathMap");
+
           if( pathMap.containsKey('path') && pathMap.containsKey('style')) {
 
             var style = pathMap['style'];
-            print("Drawing!!! style $style ${style.color}");
             canvas.drawPath(
                 pathMap['path'].transform(matrix.storage), style);
           } else {
-            print("STUFF MISSING $layer");
           }
         }
-
-
-
-        ///for(var layer in layer['pathMap'].keys) { //rewrite
-          //print("LOOP $key ");
-              ///var paintStyle = Styles.getStyle2(
-              ///       layerName, 'path', className, tileZoom,
-              ///       strokeScale, 2);
-
-              ///canvas.drawPath(layer['pathMap'][className].transform(matrix.storage), paintStyle);
-          ///if( )
-          ///   canvas.drawPath(layer['pathMap']['path'].transform(matrix.storage), layer['pathMap']['style']);
-
-        ///}
       }
 
       for (var text in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['text']) {
@@ -329,17 +311,6 @@ class VectorPainter extends CustomPainter {
       }
     }
   }
-
-  /*
-  void drawPaths(Map pathMap, canvas, layerString, [diffRatio = 0]) { /// need to turn into a list...?
-    for(var className in pathMap.keys) {
-      if(Styles.includeFeature(layerString, '', className, diffRatio)) {
-        //var paintStyle = Styles.getStyle2(layerString, 'path', className, strokeScale,  diffRatio);
-        //canvas.drawPath(pathMap[className], paintStyle);
-      }
-    }
-  }
-  */
 
 
   void _drawTextAt(String text, Offset position, Canvas canvas, scale, diffRatio, matrix) {
