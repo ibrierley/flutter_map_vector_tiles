@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Vector Tile Demo',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.grey,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: MyHomePage(title: 'Vector Tile Demo'),
@@ -75,10 +75,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 urlTemplate: 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?access_token=pk.eyJ1IjoiZ2liYmxlIiwiYSI6ImNqbjBlZDB6ejFrODcza3Fsa3o3eXR1MzkifQ.pC89zLnuSWrRdCkDrsmynQ',
                 //subdomains: ['a', 'b', 'c'],
                 useCanvas: true,
-                useImages: false, //disabled,
-                useBackupImages: false, //disabled
+                useImages: false, //disabled, code currently removed,
+                useBackupTiles: true, //use a previously loaded tile if current one not available yet
                 usePerspective: false,
-                levelUpDiff: 1,
+                levelUpDiff: 0, // needs renaming, how many zoom levels above current one to use instead
                 //vectorStyle: vectorStyle,
               ),
             ],

@@ -1,5 +1,6 @@
 import 'dart:ui' as dartui;
 import 'dart:ui';
+import 'dart:math' as math;
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'vector_tile.pb.dart' as vector_tile;
@@ -22,11 +23,8 @@ class MapboxTile {
 
   static void decode( coordsKey, cachedInfo, options, vectorStyles, tileZoom ) {
 
-    print("Decoding....$options ${cachedInfo.keys}");
     var includeSummary = {};
     var excludeSummary = {};
-
-    //var start = DateTime.now();
 
     var strokeScale = 1.0;
 
@@ -59,12 +57,6 @@ class MapboxTile {
       Map<String, dynamic> pathMap = { };  //path => path, class => class, type => type, layer => layer
 
       var layerString = layer.name.toString();
-
-      // var styleInfo;
-
-      // if(vectorStyles.containsKey(layerString)) { /// maybe not needed..
-      //   styleInfo = vectorStyles[layerString];
-      // }
 
       if(layerSummary.containsKey(layerString)) {
         layerSummary[layerString]++;
@@ -235,20 +227,12 @@ class MapboxTile {
       }
     }
 
-    //var end = DateTime.now().difference(start).inMicroseconds;
-    //print("TIMING! Mapbox tile decode took us $end");
-    print("Decode done for $coordsKey");
-
     cachedInfo['paintedLayerSegments']++;
     cachedInfo['paintState'] = 'finished';
 
-    print("INCLUDES");
-    print("$includeSummary");
-    print("EXCLUDES");
-    print("$excludeSummary");
-
+    print("INCLUDES: $includeSummary");
+    print("EXCLUDES $excludeSummary");
   }
-
 }
 
 
@@ -259,6 +243,7 @@ class VectorPainter extends CustomPainter {
   final tilesToRender;
   final tileZoom;
   final cachedVectorDataMap;
+  final levelUpDiff;
 
   TextPainter cachedTextPainter = TextPainter(
       textDirection: TextDirection.ltr,
@@ -266,7 +251,7 @@ class VectorPainter extends CustomPainter {
 
   List<Map<String, bool>> layerDisplaySegments = Filters.layerDisplaySegments();
 
-  VectorPainter(List<VTile> this.tilesToRender, this.tileZoom, this.cachedVectorDataMap);
+  VectorPainter(List<VTile> this.tilesToRender, this.tileZoom, this.cachedVectorDataMap, this.levelUpDiff);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -276,7 +261,8 @@ class VectorPainter extends CustomPainter {
 
       var matrix = Matrix4.identity()
         ..translate(  pos['pos'].x,  pos['pos'].y )
-        ..scale( pos['scale'] );
+        ..scale( pos['scale']  )
+      ;
 
       for (var layer in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['paths']) {
 
@@ -300,13 +286,13 @@ class VectorPainter extends CustomPainter {
             .scale(pos['scale'],pos['scale'])
             .translate(pos['pos'].x,  pos['pos'].y);
 
-        _drawTextAt(text['text'], translatedPos, canvas, pos['scale'], 2, matrix); // we don't want to scale text
+        _drawTextAt(text['text'], translatedPos, canvas, pos['scale'], matrix); // we don't want to scale text
       }
     }
   }
 
 
-  void _drawTextAt(String text, Offset position, Canvas canvas, scale, diffRatio, matrix) {
+  void _drawTextAt(String text, Offset position, Canvas canvas, scale, matrix) {
 
     TextStyle textStyle = TextStyle(
       color: Colors.black,
