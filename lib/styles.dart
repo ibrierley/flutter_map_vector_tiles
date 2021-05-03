@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
