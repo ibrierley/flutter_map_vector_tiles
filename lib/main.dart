@@ -87,7 +87,6 @@ class _MyHomePageState extends State<MyHomePage> {
         var end = DateTime.now().difference(start).inMicroseconds;
         print ("TIMING! Flutter_map main end time took $end");
         return fmap;
-        return Text("Loading style...");
 
   }
 

@@ -1,6 +1,5 @@
 import 'dart:ui' as dartui;
 import 'dart:ui';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'vector_tile.pb.dart' as vector_tile;
@@ -26,7 +25,8 @@ class MapboxTile {
     print("Decoding....$options ${cachedInfo.keys}");
     var includeSummary = {};
     var excludeSummary = {};
-    var start = DateTime.now();
+
+    //var start = DateTime.now();
 
     var strokeScale = 1.0;
 
@@ -50,12 +50,9 @@ class MapboxTile {
       });
     }
 
-    var layerCount = 0;
-
     Map layerSummary = {};
 
     List labelPointlist = [];
-    var levelUpDiffFactor = cachedInfo['levelUpDiffFactor'] ?? 0; // move outside loop, pass in;
 
     for( var layer in vt.layers) {
 
@@ -63,11 +60,11 @@ class MapboxTile {
 
       var layerString = layer.name.toString();
 
-      var styleInfo;
+      // var styleInfo;
 
-      if(vectorStyles.containsKey(layerString)) { /// maybe not needed..
-        styleInfo = vectorStyles[layerString];
-      }
+      // if(vectorStyles.containsKey(layerString)) { /// maybe not needed..
+      //   styleInfo = vectorStyles[layerString];
+      // }
 
       if(layerSummary.containsKey(layerString)) {
         layerSummary[layerString]++;
@@ -238,8 +235,7 @@ class MapboxTile {
       }
     }
 
-    var end = DateTime.now().difference(start).inMicroseconds;
-
+    //var end = DateTime.now().difference(start).inMicroseconds;
     //print("TIMING! Mapbox tile decode took us $end");
     print("Decode done for $coordsKey");
 
@@ -278,14 +274,11 @@ class VectorPainter extends CustomPainter {
     for (var tile in tilesToRender) {
       var pos = cachedVectorDataMap[tileCoordsToKey(tile.coords)]['positionInfo'];
 
-      var strokeScale = 1; /// debug try both 1 & 16 use pos['scale'] if scaling the whole canvas....
-
       var matrix = Matrix4.identity()
         ..translate(  pos['pos'].x,  pos['pos'].y )
         ..scale( pos['scale'] );
 
       for (var layer in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['paths']) {
-
 
         for (var layerKey in layer['pathMap'].keys) { /// we have a map for each layer, paths should be combined to same style/type
 
@@ -317,7 +310,7 @@ class VectorPainter extends CustomPainter {
 
     TextStyle textStyle = TextStyle(
       color: Colors.black,
-      fontSize: 16 //scale == 1 ? scale : 16 / scale, // diffratio, wondering if this may give an none fraction optimisations..
+      fontSize: 14 //scale == 1 ? scale : 16 / scale, // diffratio, wondering if this may give an none fraction optimisations..
     );
     TextSpan textSpan = TextSpan(
       text: text,
