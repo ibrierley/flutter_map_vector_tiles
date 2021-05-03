@@ -78,7 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 useImages: false, //disabled,
                 useBackupImages: false, //disabled
                 usePerspective: false,
-                levelUpDiff: 0,
+                levelUpDiff: 1,
                 //vectorStyle: vectorStyle,
               ),
             ],

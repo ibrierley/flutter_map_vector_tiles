@@ -28,6 +28,8 @@ class MapboxTile {
     var excludeSummary = {};
     var start = DateTime.now();
 
+    var strokeScale = 1.0;
+
     vector_tile.Tile vt;
     cachedInfo['paintState'] = 'stillPainting';
 
@@ -57,7 +59,7 @@ class MapboxTile {
 
     for( var layer in vt.layers) {
 
-      Map<String, dartui.Path> pathMap = { };  //class
+      Map<String, dynamic> pathMap = { };  //path => path, class => class, type => type, layer => layer
 
       var layerString = layer.name.toString();
 
@@ -153,6 +155,7 @@ class MapboxTile {
 
             var type = feature.type.toString();
             if (command == 'C') { // CLOSE
+
             } else if (command == 'M') { // MOVETO
               if (type == 'POLYGON') {
                 polyPoints = [];
@@ -183,17 +186,25 @@ class MapboxTile {
 
         var includeFeature = Styles.includeFeature(layerString, type, featureInfo['class'], tileZoom);
         var thisClass = featureInfo['class'] ?? 'default';
-        //print("ReturnedVal: Zoom is $tileZoom, $layerString $thisClass $type, includeFeature is $includeFeature");
+        var key = "$layerString|$type|$thisClass";
 
         if (!options.containsKey('labelsOnly') && path != null) {
           if(includeFeature) {
-            //print("Including $tileZoom $layerString $thisClass");
-            if(!pathMap.containsKey(thisClass)) pathMap[thisClass] = dartui.Path();
-            pathMap[thisClass].addPath(path,Offset(0,0));
-            includeSummary[ layerString + "_" + thisClass +"_" + tileZoom.toString() ] = true;
+            /// we're keeping layers separate, as we need to know which layers are "on top" of which others,
+            /// otherwise water can end up on top of a road for example
+
+            if(!pathMap.containsKey(key)) {
+              var style = Styles.getStyle2( layerString, type, thisClass, tileZoom, strokeScale, 2 );
+
+              pathMap[key] = { 'path': dartui.Path(), 'class' : thisClass, 'type' : type, 'layerString' : layerString,
+                'count' : 1, 'style' : style, 'color': style.color }; // init
+            } else {
+              pathMap[key]['path'].addPath(path, Offset(0, 0));
+              pathMap[key]['count']++;
+            }
+            includeSummary[ key + "|" + tileZoom.toString() ] = true;
           } else {
-            //print("Excluding $tileZoom $layerString $thisClass");
-            excludeSummary[ layerString + "_" + thisClass + "_" + tileZoom.toString() ] = true;
+            excludeSummary[ key + "|" + tileZoom.toString() ] = true;
           }
           path = null;
         }
@@ -212,8 +223,6 @@ class MapboxTile {
         var thisClass = pointInfo[2]['class'] ?? 'default';
         var includeFeature = Styles.includeFeature(layerString, pointInfo[2]['type'], thisClass, tileZoom);
 
-        ///print("INCLUDE $pointInfo");
-
         if( includeFeature ) {
           var info = pointInfo[2]['name'];
 
@@ -231,7 +240,7 @@ class MapboxTile {
 
     var end = DateTime.now().difference(start).inMicroseconds;
 
-    print("TIMING! Mapbox tile decode took us $end");
+    //print("TIMING! Mapbox tile decode took us $end");
     print("Decode done for $coordsKey");
 
     cachedInfo['paintedLayerSegments']++;
@@ -276,15 +285,38 @@ class VectorPainter extends CustomPainter {
         ..scale( pos['scale'] );
 
       for (var layer in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['paths']) {
-        var layerName = layer['layerString'];
+        ///var layerName = layer['layerString'];
 
-        for(var className in layer['pathMap'].keys) {
-              var paintStyle = Styles.getStyle2(
-                     layerName, 'path', className, tileZoom,
-                     strokeScale, 2);
+        print("LAYERKEY $layer");
 
-              canvas.drawPath(layer['pathMap'][className].transform(matrix.storage), paintStyle);
+        for (var layerKey in layer['pathMap'].keys) { /// we have a map for each layer, paths should be combined to same style/type
+          print("layerKey is $layerKey");
+          var pathMap = layer['pathMap'][layerKey];
+          print("pathmap is $pathMap");
+          if( pathMap.containsKey('path') && pathMap.containsKey('style')) {
+
+            var style = pathMap['style'];
+            print("Drawing!!! style $style ${style.color}");
+            canvas.drawPath(
+                pathMap['path'].transform(matrix.storage), style);
+          } else {
+            print("STUFF MISSING $layer");
+          }
         }
+
+
+
+        ///for(var layer in layer['pathMap'].keys) { //rewrite
+          //print("LOOP $key ");
+              ///var paintStyle = Styles.getStyle2(
+              ///       layerName, 'path', className, tileZoom,
+              ///       strokeScale, 2);
+
+              ///canvas.drawPath(layer['pathMap'][className].transform(matrix.storage), paintStyle);
+          ///if( )
+          ///   canvas.drawPath(layer['pathMap']['path'].transform(matrix.storage), layer['pathMap']['style']);
+
+        ///}
       }
 
       for (var text in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['text']) {
