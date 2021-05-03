@@ -188,9 +188,11 @@ class MapboxTile {
               pathMap[key] = { 'path': dartui.Path(), 'class' : thisClass, 'type' : type, 'layerString' : layerString,
                 'count' : 1, 'style' : style, 'color': style.color }; // init
             } else {
-              pathMap[key]['path'].addPath(path, Offset(0, 0));
-              pathMap[key]['count']++;
+              //pathMap[key]['path'].addPath(path, Offset(0, 0));
+              //pathMap[key]['count']++;
             }
+            pathMap[key]['path'].addPath(path, Offset(0, 0));
+            pathMap[key]['count']++;
             includeSummary[ key + "|" + tileZoom.toString() ] = true;
           } else {
             excludeSummary[ key + "|" + tileZoom.toString() ] = true;
@@ -204,7 +206,7 @@ class MapboxTile {
 
 
     if(!options.containsKey('noLabels') && labelPointlist.length != null) {
-      var seenLabel = {}; // prevent dupes...
+      var seenLabel = {}; // prevent dupes...prob needs hash moving outside of this method and reset after a build ?
 
       for(var pointInfo in labelPointlist) {
         var layerString = pointInfo[1];
@@ -261,8 +263,7 @@ class VectorPainter extends CustomPainter {
 
       var matrix = Matrix4.identity()
         ..translate(  pos['pos'].x,  pos['pos'].y )
-        ..scale( pos['scale']  )
-      ;
+        ..scale( pos['scale']  );
 
       for (var layer in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['paths']) {
 
