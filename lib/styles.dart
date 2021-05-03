@@ -9,12 +9,12 @@ import 'package:flutter/services.dart' show rootBundle;
 
 class Styles {
 
-  static Paint defaultPaint = Paint()
+  /*static Paint defaultPaint = Paint()
     ..style = PaintingStyle.stroke
     ..color = Colors.grey
     ..strokeWidth = 2
     ///..strokeCap = StrokeCap.round
-    ..isAntiAlias = false;
+    ..isAntiAlias = false;*/
 
   static TextPainter defaultTextPainter = TextPainter(
       text: TextSpan(
@@ -58,7 +58,7 @@ class Styles {
       'street':       { 'color': Colors.white54,  'min': 15, 'max' : 21 },
       'pedestrian':   { 'color': Colors.white54,  'min': 15, 'max' : 21 },
       'street_limited': { 'color': Colors.white54, 'min': 15, 'max' : 21 },
-      'motorway' :    { 'color': Colors.deepPurple, 'min': 10, 'max' : 21 },
+      'motorway' :    { 'color': Colors.deepPurple, 'min': 9, 'max' : 21 },
       'trunk':        { 'color': Colors.deepPurple, 'min': 10, 'max' : 21 },
       'trunk_link':   { 'color': Colors.deepPurple, 'min': 10, 'max' : 21 },
       'primary' :     { 'color': Colors.yellow,     'min': 11, 'max' : 21 },
@@ -89,21 +89,23 @@ class Styles {
         'hospital': { 'color': Colors.grey,       'min': 14, 'max': 21},
         'sand':     { 'color': Colors.amber,      'min': 14, 'max': 21},
         'playground': { 'color': Colors.blueGrey, 'min': 14, 'max': 21},
-        'grass':    { 'color': Colors.lightGreen, 'min': 14, 'max': 21},
+        'grass':    { 'color': Colors.lightGreen, 'min': 8, 'max': 21},
         'park':     { 'color': Colors.lightGreen, 'min': 14, 'max': 21},
         'pitch':    { 'color': Colors.green,      'min': 14, 'max': 21},
         'parking':  { 'color': Colors.blueGrey,   'min': 14, 'max': 21},
         'wood':     { 'color': Colors.green,      'min': 14, 'max': 21},
         'agriculture': { 'color': Colors.brown,   'min': 14, 'max': 21},
         'school':   { 'color': Colors.grey,       'min': 14, 'max': 21},
-        'scrub' :   { 'color': Colors.grey,       'min': 14, 'max': 21},
+        'scrub' :   { 'color': Colors.grey,       'min': 8, 'max': 21},
         'cemetery': { 'color': Colors.grey,       'min': 14, 'max': 21},
         'rock' :    { 'color': Colors.grey,       'min': 14, 'max': 21},
       },
       "landuse_overlay": {
         'include': false,
         'default': { 'color': Colors.green, 'min': 0, 'max': 21},
-        "national_park": { 'color': Colors.green, 'min': 15, 'max': 21},
+        "national_park": { 'color': Colors.green, 'min': 8, 'max': 21},
+        "wetland_noveg" : { 'color': Colors.blueGrey, 'min': 8, 'max': 21},
+        "wetland" : { 'color': Colors.blueGrey, 'min': 8, 'max': 21},
       },
 
       "water": {
@@ -165,6 +167,8 @@ class Styles {
       "natural_label": {
         'include': true,
         'default': { 'color': Colors.brown, 'min': 15, 'max': 21},
+        'landform': { 'color': Colors.brown, 'min': 7, 'max': 21},
+        'sea': { 'color': Colors.lightBlueAccent, 'min': 7, 'max': 21},
       },
 
 
@@ -287,7 +291,7 @@ class Styles {
 
       if( classColorStyles[layerString].containsKey('types') && classColorStyles[layerString]['types'].containsKey(type)) { // types match in styling
         classOptions = classColorStyles[layerString]['types'][type];
-        
+
       } else if( classColorStyles[layerString].containsKey(thisClass) ) { // normal class match in styling
         classOptions = classColorStyles[layerString][thisClass];
       }
@@ -311,11 +315,18 @@ class Styles {
   }
 
   static Paint getStyle2(layerString, type, className, tileZoom, scale, diffRatio) {
-    var paint = defaultPaint;
+
+    var paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..color = Colors.grey
+      ..strokeWidth = 2
+    ///..strokeCap = StrokeCap.round
+      ..isAntiAlias = false;
     var styleInfo = classColorStyles;
 
-    if(type == 'path' || type == 'line')    paint.style = PaintingStyle.stroke; // are roads filled ?
-    if(type == 'polygon' || type == 'fill') paint.style = PaintingStyle.fill;
+
+    if(type == 'LINESTRING' || type == 'line') paint.style = PaintingStyle.stroke; // are roads filled ?
+    if(type == 'POLYGON'    || type == 'fill') paint.style = PaintingStyle.fill;
 
     if(styleInfo.containsKey(layerString)) {
       if(styleInfo[layerString].containsKey(className)) {

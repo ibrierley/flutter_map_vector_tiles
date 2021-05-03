@@ -371,34 +371,14 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     _lastBuildTiles = {};
 
-    var end = DateTime.now().difference(start).inMicroseconds;
-    print("TIMING! initial part of VectorTileBuild is $end");
-
-    var widg = Opacity(
-       opacity: 0.5,
-         child: Container(
+    var widg =
+         Container(
            color: Colors.cyan,
-         child: Stack( children: [VectorWidget(_cachedVectorData, 'test', allTilesToRender, _tileZoom  ) ], )
-         )
-     ); /// //////////////////////////////////////////////////////////////
-    ///
-    var end2 = DateTime.now().difference(start).inMicroseconds;
-    print("TIMING! And VectorTileWidgetTotal is $end2");
+         child: VectorWidget(_cachedVectorData, 'test', allTilesToRender, _tileZoom  )
+
+     );
 
     return widg;
-    return Text("TESTING>........");
-/*
-      return Opacity(
-        opacity: vectorOptions.opacity,
-        child: Container(
-          color: vectorOptions.backgroundColor,
-          child: Stack(
-            children: tileWidgets,
-          ),
-        ),
-      );
-      */
-
 
   }
 
@@ -422,9 +402,9 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     var url = vectorOptions.tileProvider.getTileUrl(
         coords, vectorOptions);
 
-    print("FETCHING DATA!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-
     var coordsKey = _tileCoordsToKey(coords);
+
+    print("FETCHING DATA for $coordsKey!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 
     if (!_recentTilesCompleted.containsKey(coordsKey))
       _outstandingTileLoads[coordsKey] = DateTime.now();
@@ -485,7 +465,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     }
 
   }
-
 
   /// ////////////// END MAIN NEW VECTOR CODE ////////////////////////////////////////////////////////////////
 
