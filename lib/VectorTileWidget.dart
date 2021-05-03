@@ -405,7 +405,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           'customPaintWidget' : null,
           'state': 'gettingHttp',
           'paintedLayerSegments': -1,
-          'paintState': 'readying',
           'coordsKey': coordsKey,
           'transitioning' : 0,
           'levelUpDiffFactor' : math.pow(2,levelUpDiff).toInt(),

@@ -25,11 +25,9 @@ class MapboxTile {
 
     var includeSummary = {};
     var excludeSummary = {};
-
-    var strokeScale = 1.0;
+    var objectStats = { 'labels': 0, 'paths': 0, 'polys' : 0, 'points': 0, 'labelPoints': 0, 'polyPoints': 0, 'linePoints': 0 } ;
 
     vector_tile.Tile vt;
-    cachedInfo['paintState'] = 'stillPainting';
 
     try {
       vt = vector_tile.Tile.fromBuffer(cachedInfo['units']);
@@ -122,6 +120,7 @@ class MapboxTile {
               if (feature.type.toString() == 'POLYGON') {
                 if (path == null) path = dartui.Path();
                 path.addPolygon(polyPoints, true);
+                objectStats['polys']++;
                 polyPoints = [];
               } else {
                 path.close();
@@ -149,6 +148,7 @@ class MapboxTile {
               if (type == 'POLYGON') {
                 polyPoints = [];
                 polyPoints.add(Offset(ncx, ncy));
+                objectStats['polyPoints']++;
               } else if (type == 'LINESTRING') {
                 if (path == null) path = dartui.Path();
                 path.moveTo(ncx, ncy);
@@ -156,14 +156,19 @@ class MapboxTile {
               } else if (type == 'POINT') {
                 pointList.add(Offset(ncx, ncy));
                 labelPointlist.add([Offset(ncx, ncy),layer.name, featureInfo  ]);  /// May want to add a style here, to draw last thing...
+                objectStats['points']++;
+                objectStats['labelPoints']++;
               }
 
             } else if (command == 'L') { // LINETO
 
               if (type == 'POLYGON') {
                 polyPoints.add(Offset(ncx, ncy));
-              } else if (type == 'LINESTRING')
+                objectStats['polyPoints']++;
+              } else if (type == 'LINESTRING') {
                 path.lineTo(ncx, ncy);
+                objectStats['linePoints']++;
+              }
             } else {
               print("Incorrect command string");
             }
@@ -188,6 +193,7 @@ class MapboxTile {
             }
             pathMap[key]['path'].addPath(path, Offset(0, 0));
             pathMap[key]['count']++;
+            objectStats['paths']++;
             includeSummary[ key + "|" + tileZoom.toString() ] = true;
           } else {
             excludeSummary[ key + "|" + tileZoom.toString() ] = true;
@@ -216,6 +222,7 @@ class MapboxTile {
             seenLabel[info] = true;
             cachedInfo['geomInfo']['text'].add(
                 {'text': info.toString(), 'pointInfo': pointInfo[0]});
+            objectStats['labels']++;
           }
           includeSummary[ layerString + "_" + thisClass +"_" + tileZoom.toString() ] = true;
         } else {
@@ -225,8 +232,8 @@ class MapboxTile {
     }
 
     cachedInfo['paintedLayerSegments']++;
-    cachedInfo['paintState'] = 'finished';
 
+    print("ObjectStats is $objectStats");
     print("INCLUDES: $includeSummary");
     print("EXCLUDES $excludeSummary");
   }
