@@ -15,10 +15,10 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:tuple/tuple.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:http/retry.dart' as retry;
 import 'vector_tile.pb.dart' as vector_tile;
 import 'filters.dart';
 import 'styles.dart';
-import 'package:retry/retry.dart';
 import 'vector_tile_plugin.dart';
 import 'package:transparent_image/transparent_image.dart';
 
@@ -45,19 +45,16 @@ class _VectorWidgetState extends State<VectorWidget> {
 
   @override
   Widget build(BuildContext context) {
-
-    //if( true ) {
-    List<Widget> myStack = [];
-
     print("VectorWidgetState Building");
-    print("need to grab size here....");
     var start = DateTime.now();
 
     var box = SizedBox(
       width: 1024,
         height: 1024,
         child: RepaintBoundary (
-          child: CustomPaint( painter: VectorPainter( widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap ) )
+          child: CustomPaint(
+            isComplex: true, //Tells flutter to cache the painter.
+            painter: VectorPainter( widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap ) )
         )
     );
 
@@ -441,10 +438,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
       if (_cachedVectorData[coordsKey]['state'] == 'gettingHttp') {
 
-        var response = await retry(
-              () => http.get(Uri.parse(url)).timeout(Duration(seconds: 20)),
-          retryIf: (e) => e is TimeoutException,
-        );
+        
+        var response = await retry.RetryClient(http.Client()).get(Uri.parse(url));
 
         try {
           _cachedVectorData[coordsKey]['units'] = response.body.codeUnits;
@@ -455,7 +450,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           print("decoded and vals for this tile are ${_cachedVectorData[coordsKey]['geomInfo']}");
 
           setState(() {
-            // //////////////////////////////////////////////////////////////////////////maybe remove...
+            
           });
 
         } catch (e) {
@@ -483,8 +478,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
         _levels[z].zIndex = maxZoom = (zoom - z).abs();
       }
     }
-
-    var map = this.map;
 
     var max = vectorOptions.maxZoom != null ? vectorOptions.maxZoom + levelUpDiff : 18.0;
 
