@@ -78,7 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 useImages: false, //disabled, code currently removed,
                 useBackupTiles: true, //use a previously loaded tile if current one not available yet
                 usePerspective: false,
-                levelUpDiff: 0, // needs renaming, how many zoom levels above current one to use instead
+                levelUpDiff: 1, // needs renaming, how many zoom levels above current one to use instead
                 //vectorStyle: vectorStyle,
               ),
             ],
