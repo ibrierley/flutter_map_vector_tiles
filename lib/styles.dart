@@ -70,15 +70,15 @@ class Styles {
         'sand':     { 'color': Colors.amber,      'min': 14, 'max': 21},
         'playground': { 'color': Colors.blueGrey, 'min': 14, 'max': 21},
         'grass':    { 'color': Colors.lightGreen, 'min': 8, 'max': 21},
-        'park':     { 'color': Colors.lightGreen, 'min': 14, 'max': 21},
-        'pitch':    { 'color': Colors.green,      'min': 14, 'max': 21},
+        'park':     { 'color': Colors.lightGreen, 'min': 10, 'max': 21},
+        'pitch':    { 'color': Colors.green,      'min': 10, 'max': 21},
         'parking':  { 'color': Colors.blueGrey,   'min': 14, 'max': 21},
-        'wood':     { 'color': Colors.green,      'min': 14, 'max': 21},
-        'agriculture': { 'color': Colors.brown,   'min': 14, 'max': 21},
-        'school':   { 'color': Colors.grey,       'min': 14, 'max': 21},
+        'wood':     { 'color': Colors.green,      'min': 10, 'max': 21},
+        'agriculture': { 'color': Colors.brown,   'min': 10, 'max': 21},
+        'school':   { 'color': Colors.grey,       'min': 13, 'max': 21},
         'scrub' :   { 'color': Colors.grey,       'min': 8, 'max': 21},
         'cemetery': { 'color': Colors.grey,       'min': 14, 'max': 21},
-        'rock' :    { 'color': Colors.grey,       'min': 14, 'max': 21},
+        'rock' :    { 'color': Colors.grey,       'min': 13, 'max': 21},
       },
       "landuse_overlay": {
         'include': false,
@@ -105,12 +105,12 @@ class Styles {
 
       "building": {
         'include': false,
-        "default": { 'color': Colors.blueGrey, 'min': 16, 'max': 21 },
+        "default": { 'color': Colors.blueGrey, 'min': 14, 'max': 21 },
       },
       "structure": {
         'include': false,
-        "default": { 'color': Colors.blueGrey, 'min': 16, 'max': 21 },
-        'fence': { 'color': Colors.brown, 'min': 17, 'max': 21 },
+        "default": { 'color': Colors.blueGrey, 'min': 14, 'max': 21 },
+        'fence': { 'color': Colors.brown, 'min': 14, 'max': 21 },
       },
       "barrierline": {
         'include': true,
@@ -122,31 +122,31 @@ class Styles {
       },
       "waterway_label": {
         'include': false,
-        'default': { 'color': Colors.black, 'min': 15, 'max': 21},
+        'default': { 'color': Colors.black, 'min': 13, 'max': 21},
       },
       "poi_label": {
         'include': false,
-        'default': { 'color': Colors.orangeAccent, 'min': 15, 'max': 21},
+        'default': { 'color': Colors.orangeAccent, 'min': 14, 'max': 21},
       },
       "transit_stop_label": {
         'include': true,
-        'default': { 'color': Colors.black, 'min': 15, 'max': 21},
+        'default': { 'color': Colors.black, 'min': 14, 'max': 21},
       },
       "road_point": {
         'include': true,
-        'default': { 'color': Colors.black, 'min': 15, 'max': 21},
+        'default': { 'color': Colors.black, 'min': 14, 'max': 21},
       },
       "road_label": {
         'include': true,
-        "default": { 'color': Colors.black, 'min': 15, 'max': 21},
+        "default": { 'color': Colors.black, 'min': 14, 'max': 21},
       },
       "rail_station_label": {
         'include': true,
-        "default": { 'color': Colors.black, 'min': 15, 'max': 21},
+        "default": { 'color': Colors.black, 'min': 14, 'max': 21},
       },
       "natural_label": {
         'include': true,
-        'default': { 'color': Colors.brown, 'min': 15, 'max': 21},
+        'default': { 'color': Colors.brown, 'min': 14, 'max': 21},
         'landform': { 'color': Colors.brown, 'min': 7, 'max': 21},
         'sea': { 'color': Colors.lightBlueAccent, 'min': 7, 'max': 21},
       },
