@@ -212,7 +212,6 @@ class MapboxTile {
 
 
     if(!options.containsKey('noLabels') && labelPointlist.length != null) {
-      var seenLabel = {}; // prevent dupes...prob needs hash moving outside of this method and reset after a build ?
 
       for(var pointInfo in labelPointlist) {
         var layerString = pointInfo[1];
@@ -223,12 +222,33 @@ class MapboxTile {
         if( includeFeature ) {
           var info = pointInfo[2]['name'];
 
-          if (info != null && !seenLabel.containsKey(info)) {
-            seenLabel[info] = true;
+          if (info != null) {
+
+            TextStyle textStyle = TextStyle(
+                color: Colors.black,
+                fontSize: 14 //scale == 1 ? scale : 16 / scale, // diffratio, wondering if this may give an none fraction optimisations..
+            );
+            TextSpan textSpan = TextSpan(
+              text: info.toString(),
+              style: textStyle,
+            );
+
+            var textPainter = TextPainter(
+                text: textSpan,
+                textDirection: TextDirection.ltr,
+                textAlign: TextAlign.center)
+              ..layout(minWidth: 0, maxWidth: double.infinity)
+              ..text = textSpan;
+
             cachedInfo['geomInfo']['text'].add(
-                {'text': info.toString(), 'pointInfo': pointInfo[0]});
-            objectStats['labels']++;
+                {
+                  'text': info.toString(),
+                  'pointInfo': pointInfo[0],
+                  'textPainter': textPainter
+                });
           }
+          objectStats['labels']++;
+
           includeSummary[ layerString + "_" + thisClass +"_" + tileZoom.toString() ] = true;
         } else {
           excludeSummary[ layerString + "_" + thisClass + "_" + tileZoom.toString() ] = true;
@@ -266,6 +286,7 @@ class VectorPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
 
     var strokeScale = 1.0;
+    var seenLabel = {};
 
     for (var tile in tilesToRender) {
       var pos = cachedVectorDataMap[tileCoordsToKey(tile.coords)]['positionInfo'];
@@ -279,7 +300,7 @@ class VectorPainter extends CustomPainter {
         for (var layerKey in layer['pathMap'].keys) { /// we have a map for each layer, paths should be combined to same style/type
 
           var pathMap = layer['pathMap'][layerKey];
-          
+
           if( pathMap.containsKey('path') ) {
             var style = Styles.getStyle2( pathMap['layerString'], pathMap['type'], pathMap['class'], tileZoom, strokeScale, 2 );
             canvas.drawPath(
@@ -288,17 +309,6 @@ class VectorPainter extends CustomPainter {
           }
         }
       }
-/*
-      for (var text in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['text']) {
-
-        var translatedPos = text['pointInfo']
-            .scale(pos['scale'],pos['scale'])
-            .translate(pos['pos'].x,  pos['pos'].y);
-
-        _drawTextAt(text['text'], translatedPos, canvas, pos['scale'], matrix); // we don't want to scale text
-      }
-      */
-
     }
 
     /// All labels should come on top of paths etc, so moved loop out here
@@ -311,22 +321,27 @@ class VectorPainter extends CustomPainter {
         ..scale(pos['scale']);
 
       for (var text in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['text']) {
-        var translatedPos = text['pointInfo']
-            .scale(pos['scale'], pos['scale'])
-            .translate(pos['pos'].x, pos['pos'].y);
+        /// prevent dupe labels from different tiles
+        if(!seenLabel.containsKey(text['text'])) {
 
-        _drawTextAt(text['text'], translatedPos, canvas, pos['scale'],
-            matrix); // we don't want to scale text
+          var translatedPos = text['pointInfo']
+              .scale(pos['scale'], pos['scale'])
+              .translate(pos['pos'].x, pos['pos'].y);
+
+          _drawTextAt(text['text'], translatedPos, canvas, pos['scale'],
+              matrix, text['textPainter']); // we don't want to scale text
+          seenLabel[text['text']] = true;
+        }
       }
     }
+  }
 
 
-    }
+  void _drawTextAt(String text, Offset position, Canvas canvas, scale, matrix, textPainterTEST) {
 
-
-  void _drawTextAt(String text, Offset position, Canvas canvas, scale, matrix) {
-
-    TextStyle textStyle = TextStyle(
+    /// trying to reuse an existing textPainter so layouts arent recalculated, so passing it in. Leave this
+    /// here in case we need to reuse until we're happy
+    /*TextStyle textStyle = TextStyle(
       color: Colors.black,
       fontSize: 14 //scale == 1 ? scale : 16 / scale, // diffratio, wondering if this may give an none fraction optimisations..
     );
@@ -340,11 +355,11 @@ class VectorPainter extends CustomPainter {
         textDirection: TextDirection.ltr,
         textAlign: TextAlign.center)
     ..layout(minWidth: 0, maxWidth: double.infinity)
-    ..text = textSpan;
+    ..text = textSpan;*/
 
     Offset drawPosition =
-      Offset(position.dx - textPainter.width / 2, position.dy + (textPainter.height/2));
-    textPainter.paint(canvas, drawPosition);
+      Offset(position.dx - textPainterTEST.width / 2, position.dy + (textPainterTEST.height/2));
+    textPainterTEST.paint(canvas, drawPosition);
 
   }
 
