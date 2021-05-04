@@ -279,10 +279,8 @@ class VectorPainter extends CustomPainter {
         for (var layerKey in layer['pathMap'].keys) { /// we have a map for each layer, paths should be combined to same style/type
 
           var pathMap = layer['pathMap'][layerKey];
-
+          
           if( pathMap.containsKey('path') ) {
-
-            ///var style = pathMap['style'];
             var style = Styles.getStyle2( pathMap['layerString'], pathMap['type'], pathMap['class'], tileZoom, strokeScale, 2 );
             canvas.drawPath(
                 pathMap['path'].transform(matrix.storage), style);
@@ -290,7 +288,7 @@ class VectorPainter extends CustomPainter {
           }
         }
       }
-
+/*
       for (var text in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['text']) {
 
         var translatedPos = text['pointInfo']
@@ -299,8 +297,31 @@ class VectorPainter extends CustomPainter {
 
         _drawTextAt(text['text'], translatedPos, canvas, pos['scale'], matrix); // we don't want to scale text
       }
+      */
+
     }
-  }
+
+    /// All labels should come on top of paths etc, so moved loop out here
+    for (var tile in tilesToRender) {
+      var pos = cachedVectorDataMap[tileCoordsToKey(
+          tile.coords)]['positionInfo'];
+
+      var matrix = Matrix4.identity()
+        ..translate(pos['pos'].x, pos['pos'].y)
+        ..scale(pos['scale']);
+
+      for (var text in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['text']) {
+        var translatedPos = text['pointInfo']
+            .scale(pos['scale'], pos['scale'])
+            .translate(pos['pos'].x, pos['pos'].y);
+
+        _drawTextAt(text['text'], translatedPos, canvas, pos['scale'],
+            matrix); // we don't want to scale text
+      }
+    }
+
+
+    }
 
 
   void _drawTextAt(String text, Offset position, Canvas canvas, scale, matrix) {
