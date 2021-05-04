@@ -202,14 +202,16 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     _setView(map.center, map.zoom);
 
+
+    /// We try and preload some tiles if option set, so with panning there isn't such
+    /// a delay in loading the next tile.
+
     int miny = tileRange.min.y - 0; // leaving these in there as was playing to adjust with extra tile loading
     int maxy = tileRange.max.y + 0;
     int minx = tileRange.min.x - 0;
     int maxx = tileRange.max.x + 0;
 
-    /// We try and preload some tiles if option set, so with panning there isn't such
-    /// a delay in loading the next tile.
-    ///
+
     _prevCenter ??= map.center;
 
     var adjustedZoom = _tileZoom - levelUpDiff;
@@ -325,7 +327,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     var tilesToRender = <VTile>[];
     for (var tile in _tiles.values) {
-      if ((tile.coords.z - _level.zoom).abs() <= 1 + math.pow(2, levelUpDiff)) {
+      if ((_level != null) && (tile.coords.z - _level.zoom).abs() <= 1 + math.pow(2, levelUpDiff)) {
         if (!_cachedVectorData.containsKey(_tileCoordsToKey(tile.coords))) {
           print("Fetching data fir ${tile.coords}");
           fetchData(tile.coords, 1);
@@ -465,7 +467,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       }
     }
 
-    var max = vectorOptions.maxZoom != null ? vectorOptions.maxZoom + levelUpDiff : 18.0;
+    var max = vectorOptions.maxZoom + levelUpDiff;
 
     for(var tempZoom in [for(var i=1.0; i<max; i+=1.0) i]) {
 

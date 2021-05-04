@@ -180,12 +180,14 @@ class MapboxTile {
           }
         }
 
+        /// Note "type" is a bit confusing, as there seems to be a feature type eg "track",
+        /// and a shape type eg "LINESTRING" when decoding
+
         var includeFeature = Styles.includeFeature(layerString, type, featureInfo['class'], tileZoom);
         var thisClass = featureInfo['class'] ?? 'default';
+        var detailType = featureInfo['type'] ?? 'default'; // this may be a track (which is listed as a road and has a type of track)
+
         var key = "$layerString|$type|$thisClass";
-        //var stylePaint = Styles.getStyle2( pathMap['layerString'], pathMap['type'], pathMap['class'], tileZoom, strokeScale, 2 );
-        ///var key = "$layerString|$type|${stylePaint.color}|${stylePaint.strokeWidth}|${stylePaint.style}"; /// maybe optimise with preset classes in styles
-        ///print("KEY IS $Key");
 
         if (!options.containsKey('labelsOnly') && path != null) {
           if(includeFeature) {
@@ -196,6 +198,7 @@ class MapboxTile {
               pathMap[key] = { 'path': dartui.Path(), 'class' : thisClass, 'type' : type, 'layerString' : layerString,
                 'count' : 1,  }; // init
             }
+
             pathMap[key]['path'].addPath(path, Offset(0, 0));
             pathMap[key]['count']++;
             objectStats['paths']++;
@@ -296,7 +299,6 @@ class VectorPainter extends CustomPainter {
         ..scale( pos['scale']  );
 
       for (var layer in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['paths']) {
-
         for (var layerKey in layer['pathMap'].keys) { /// we have a map for each layer, paths should be combined to same style/type
 
           var pathMap = layer['pathMap'][layerKey];
@@ -337,30 +339,11 @@ class VectorPainter extends CustomPainter {
   }
 
 
-  void _drawTextAt(String text, Offset position, Canvas canvas, scale, matrix, textPainterTEST) {
-
-    /// trying to reuse an existing textPainter so layouts arent recalculated, so passing it in. Leave this
-    /// here in case we need to reuse until we're happy
-    /*TextStyle textStyle = TextStyle(
-      color: Colors.black,
-      fontSize: 14 //scale == 1 ? scale : 16 / scale, // diffratio, wondering if this may give an none fraction optimisations..
-    );
-    TextSpan textSpan = TextSpan(
-      text: text,
-      style: textStyle,
-    );
-
-    var textPainter = TextPainter(
-        text: textSpan,
-        textDirection: TextDirection.ltr,
-        textAlign: TextAlign.center)
-    ..layout(minWidth: 0, maxWidth: double.infinity)
-    ..text = textSpan;*/
+  void _drawTextAt(String text, Offset position, Canvas canvas, scale, matrix, textPainter) {
 
     Offset drawPosition =
-      Offset(position.dx - textPainterTEST.width / 2, position.dy + (textPainterTEST.height/2));
-    textPainterTEST.paint(canvas, drawPosition);
-
+      Offset(position.dx - textPainter.width / 2, position.dy + (textPainter.height/2));
+    textPainter.paint(canvas, drawPosition);
   }
 
   @override
