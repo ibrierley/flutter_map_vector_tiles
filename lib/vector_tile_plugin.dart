@@ -27,6 +27,8 @@ class MapboxTile {
     var excludeSummary = {};
     var objectStats = { 'labels': 0, 'paths': 0, 'polys' : 0, 'points': 0, 'labelPoints': 0, 'polyPoints': 0, 'linePoints': 0 } ;
 
+    var strokeScale = 2.0; /// remove the need for this hardcoded here
+
     vector_tile.Tile vt;
 
     try {
@@ -181,6 +183,9 @@ class MapboxTile {
         var includeFeature = Styles.includeFeature(layerString, type, featureInfo['class'], tileZoom);
         var thisClass = featureInfo['class'] ?? 'default';
         var key = "$layerString|$type|$thisClass";
+        //var stylePaint = Styles.getStyle2( pathMap['layerString'], pathMap['type'], pathMap['class'], tileZoom, strokeScale, 2 );
+        ///var key = "$layerString|$type|${stylePaint.color}|${stylePaint.strokeWidth}|${stylePaint.style}"; /// maybe optimise with preset classes in styles
+        ///print("KEY IS $Key");
 
         if (!options.containsKey('labelsOnly') && path != null) {
           if(includeFeature) {
@@ -189,7 +194,7 @@ class MapboxTile {
 
             if(!pathMap.containsKey(key)) {
               pathMap[key] = { 'path': dartui.Path(), 'class' : thisClass, 'type' : type, 'layerString' : layerString,
-                'count' : 1, }; // init
+                'count' : 1,  }; // init
             }
             pathMap[key]['path'].addPath(path, Offset(0, 0));
             pathMap[key]['count']++;
