@@ -31,30 +31,31 @@ class Styles {
     },
 
     ///mapbox streets
+    ///hairline = switch to a hairline width of 0 for optimisation at low zoom levels where we dont care
     "road": {
       'include': true,
-      'default':      { 'color': Colors.grey,  'min': 15, 'max' : 21 },
-      'service':      { 'color':  Colors.grey, 'min': 14, 'max' : 21 },
-      'street':       { 'color': Colors.grey,  'min': 15, 'max' : 21 },
-      'pedestrian':   { 'color': Colors.grey,  'min': 15, 'max' : 21 },
-      'street_limited': { 'color': Colors.grey, 'min': 15, 'max' : 21 },
-      'motorway' :    { 'color': Colors.green,   'min': 5, 'max' : 21 },
-      'trunk':        { 'color': Colors.grey,   'min': 5, 'max' : 21 },
-      'trunk_link':   { 'color': Colors.grey,   'min': 5, 'max' : 21 },
-      'primary' :     { 'color': Colors.green,   'min': 9, 'max' : 21 },
-      'primary_link': { 'color': Colors.green,   'min': 9, 'max' : 21 },
-      'secondary':    { 'color': Colors.grey,    'min': 12, 'max' : 21 },
-      'secondary_link': { 'color': Colors.grey,  'min': 12, 'max' : 21 },
-      'tertiary':     { 'color': Colors.grey,    'min': 13, 'max' : 21 },
-      'tertiary_link': { 'color': Colors.grey,   'min': 13, 'max' : 21 },
-      "path":         { 'color': Colors.grey,    'min': 16, 'max' : 21 },
-      'track':        { 'color': Colors.grey,    'min': 16, 'max' : 21 },
-      'residential':  { 'color': Colors.grey,    'min': 16, 'max' : 21 },
-      'major_rail':   { 'color': Colors.grey,    'min': 13, 'max' : 21 }, // make prob darker than roads...
-      'minor_rail':   { 'color': Colors.grey,    'min': 14, 'max' : 21 },
-      'service_rail': { 'color': Colors.grey,    'min': 13, 'max' : 21 },
-      'construction': { 'color': Colors.brown,    'min': 14, 'max' : 21 },
-      'ferry':        { 'color': Colors.brown,    'min': 13, 'max' : 21 },
+      'default':      { 'color': Colors.grey,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
+      'service':      { 'color':  Colors.grey, 'min': 14, 'max' : 21, 'hairline': { "<" : 14 } },
+      'street':       { 'color': Colors.grey,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
+      'pedestrian':   { 'color': Colors.grey,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
+      'street_limited': { 'color': Colors.grey, 'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
+      'motorway' :    { 'color': Colors.blueGrey.shade800,   'min': 5, 'max' : 21, 'hairline': { "<" : 0 } },
+      'trunk':        { 'color': Colors.blueGrey.shade700,   'min': 5, 'max' : 21, 'hairline':  { "<" : 0 } },
+      'trunk_link':   { 'color': Colors.blueGrey.shade700,   'min': 5, 'max' : 21, 'hairline':  { "<" : 0 } },
+      'primary' :     { 'color': Colors.blueGrey.shade600,   'min': 9, 'max' : 21, 'hairline': { "<" : 13 } },
+      'primary_link': { 'color': Colors.blueGrey.shade600,   'min': 9, 'max' : 21, 'hairline': { "<" : 13 } },
+      'secondary':    { 'color': Colors.blueGrey.shade500,    'min': 12, 'max' : 21, 'hairline': { "<" : 14 } },
+      'secondary_link': { 'color': Colors.blueGrey.shade500,  'min': 12, 'max' : 21, 'hairline': { "<" : 14 } },
+      'tertiary':     { 'color': Colors.blueGrey.shade400,    'min': 13, 'max' : 21, 'hairline': { "<" : 14 } },
+      'tertiary_link': { 'color': Colors.blueGrey.shade400,   'min': 13, 'max' : 21, 'hairline': { "<" : 14 } },
+      "path":         { 'color': Colors.grey,    'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
+      'track':        { 'color': Colors.grey,    'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
+      'residential':  { 'color': Colors.grey,    'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
+      'major_rail':   { 'color': Colors.blueGrey.shade900,    'min': 13, 'max' : 21, 'hairline': { "<" : 12 } }, // make prob darker than roads...
+      'minor_rail':   { 'color': Colors.blueGrey.shade600,    'min': 14, 'max' : 21, 'hairline': { "<" : 13 } },
+      'service_rail': { 'color': Colors.grey,    'min': 13, 'max' : 21, 'hairline': { "<" : 13 } },
+      'construction': { 'color': Colors.brown,    'min': 14, 'max' : 21, 'hairline': { "<" : 13 } },
+      'ferry':        { 'color': Colors.brown,    'min': 13, 'max' : 21, 'hairline': { "<" : 13 } },
     },
 
     "motorway_junction": {
@@ -68,13 +69,13 @@ class Styles {
         'airport':  { 'color': Colors.grey,       'min': 5, 'max': 21},
         'hospital': { 'color': Colors.grey,       'min': 14, 'max': 21},
         'sand':     { 'color': Colors.amber,      'min': 9, 'max': 21},
-        'playground': { 'color': Colors.blueGrey, 'min': 14, 'max': 21},
+        'playground': { 'color': Colors.green.shade400, 'min': 14, 'max': 21},
         'grass':    { 'color': Colors.lightGreen, 'min': 0, 'max': 21},
         'park':     { 'color': Colors.lightGreen, 'min': 12, 'max': 21},
         'pitch':    { 'color': Colors.green,      'min': 12, 'max': 21},
-        'parking':  { 'color': Colors.blueGrey,   'min': 14, 'max': 21},
+        'parking':  { 'color': Colors.green.shade100,   'min': 14, 'max': 21},
         'wood':     { 'color': Colors.green,      'min': 5, 'max': 21},
-        'agriculture': { 'color': Colors.brown,   'min': 5, 'max': 21},
+        'agriculture': { 'color': Colors.green.shade700,   'min': 5, 'max': 21},
         'school':   { 'color': Colors.grey,       'min': 13, 'max': 21},
         'scrub' :   { 'color': Colors.grey,       'min': 5, 'max': 21},
         'cemetery': { 'color': Colors.grey,       'min': 14, 'max': 21},
@@ -91,13 +92,13 @@ class Styles {
 
       "water": {
         'include': true,
-        'default': { 'color': Colors.blue, 'min': 0, 'max': 21},
+        'default': { 'color': Colors.blue.shade500, 'min': 0, 'max': 21},
       },
       "waterway": {
         'include': true,
-        'default': { 'color': Colors.blue, 'min': 13, 'max': 21},
-        'river':   { 'color': Colors.blue, 'min': 12, 'max': 21},
-        'canal': { 'color': Colors.blue, 'min': 9, 'max': 21},
+        'default': { 'color': Colors.blue.shade700, 'min': 13, 'max': 21},
+        'river':   { 'color': Colors.blue.shade600, 'min': 12, 'max': 21},
+        'canal': { 'color': Colors.blue.shade600, 'min': 9, 'max': 21},
       },
       "transit_stop": {
           'include': true,
@@ -210,12 +211,6 @@ class Styles {
         'include': false,
         'default': { 'color': Colors.grey, 'min': 0, 'max': 21},
       },
-      'landcover': {
-        'include': false,
-        'default': { 'color': Colors.grey, 'min': 0, 'max': 21 },
-        'grass': {   'color': Colors.green, 'min': 0, 'max': 21 },
-        'crop': {    'color': Colors.yellow, 'min': 0, 'max': 21 },
-      },
       'hillshade': {
         'include': false,
         'default': { 'color': Colors.grey, 'min': 0, 'max': 21 },
@@ -232,18 +227,18 @@ class Styles {
       },
       'landuse_areas' : {
         'include': false,
-        'default': { 'color': Colors.brown, 'min': 0, 'max': 21},
+        'default': { 'color': Colors.green.shade400, 'min': 0, 'max': 21},
         'leisure': { 'color': Colors.green , 'min': 0, 'max': 21},
       },
       'landcover': {
         'include': false,
-        'default': { 'color': Colors.grey, 'min': 0, 'max': 21},
+        'default': { 'color': Colors.green.shade50, 'min': 0, 'max': 21},
         'grass': { 'color': Colors.green, 'min': 0, 'max': 21},
-        'crop': { 'color': Colors.yellow, 'min': 0, 'max': 21},
+        'crop': { 'color': Colors.green.shade700, 'min': 0, 'max': 21},
       },
       'hillshade': {
         'include': false,
-        'default': { 'color': Colors.grey, 'min': 0, 'max': 21},
+        'default': { 'color': Colors.green.shade100, 'min': 0, 'max': 21},
         'shadow': { 'color': Colors.grey, 'min': 0, 'max': 21},
       },
       'transport_lines': {
@@ -309,8 +304,15 @@ class Styles {
     if(type == 'LINESTRING' || type == 'line') paint.style = PaintingStyle.stroke; // are roads filled ?
     if(type == 'POLYGON'    || type == 'fill') paint.style = PaintingStyle.fill;
 
+    var useHairline = false;
+
     if(styleInfo.containsKey(layerString)) {
       if(styleInfo[layerString].containsKey(className)) {
+        if(styleInfo[layerString][className].containsKey('hairline')) { // tidy a bit
+          if( tileZoom < styleInfo[layerString][className]['hairline']['<']) {
+            useHairline = true;
+          }
+        }
         paint.color = styleInfo[layerString][className]['color'];
       } else {
         paint.color = styleInfo[layerString]['default']['color'];
@@ -324,6 +326,8 @@ class Styles {
     }
 
     paint.strokeWidth =  (paint.strokeWidth / scale); ///.ceilToDouble();
+
+    if( useHairline ) paint.strokeWidth = 0.0;
 
     return paint;
   }
