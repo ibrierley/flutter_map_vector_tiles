@@ -11,8 +11,8 @@ class Styles {
   static Map<String, int> defaultLayerOrder() {
     return {
       'water' : 15,
-      'waterway' : 2,
-      'landuse': 3,
+      'waterway' : 3,
+      'landuse': 2,
       'road': 6,
       'structure': 4,
       'building' : 5,
@@ -27,33 +27,33 @@ class Styles {
 
     "default": {
       'include': true,
-      'default': { 'color': Colors.grey, 'min': 0, 'max': 21},
+      'default': { 'color': Colors.yellow, 'min': 0, 'max': 21},
     },
 
     ///mapbox streets
     ///hairline = switch to a hairline width of 0 for optimisation at low zoom levels where we dont care
     "road": {
       'include': true,
-      'default':      { 'color': Colors.grey,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
-      'service':      { 'color':  Colors.grey, 'min': 14, 'max' : 21, 'hairline': { "<" : 14 } },
-      'street':       { 'color': Colors.grey,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
-      'pedestrian':   { 'color': Colors.grey,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
-      'street_limited': { 'color': Colors.grey, 'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
+      'default':      { 'color': Colors.blueGrey,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
+      'service':      { 'color': Colors.blueGrey.shade600, 'min': 14, 'max' : 21, 'hairline': { "<" : 14 } },
+      'street':       { 'color': Colors.blueGrey.shade600,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
+      'pedestrian':   { 'color': Colors.blueGrey.shade600,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
+      'street_limited': { 'color': Colors.blueGrey.shade600, 'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
       'motorway' :    { 'color': Colors.blueGrey.shade800,   'min': 5, 'max' : 21, 'hairline': { "<" : 0 } },
       'trunk':        { 'color': Colors.blueGrey.shade700,   'min': 5, 'max' : 21, 'hairline':  { "<" : 0 } },
       'trunk_link':   { 'color': Colors.blueGrey.shade700,   'min': 5, 'max' : 21, 'hairline':  { "<" : 0 } },
-      'primary' :     { 'color': Colors.blueGrey.shade600,   'min': 9, 'max' : 21, 'hairline': { "<" : 13 } },
+      'primary' :     { 'color': Colors.blueGrey.shade600,   'min': 9, 'max' : 21, 'hairline': { "<" : 13 } }, // A roads
       'primary_link': { 'color': Colors.blueGrey.shade600,   'min': 9, 'max' : 21, 'hairline': { "<" : 13 } },
       'secondary':    { 'color': Colors.blueGrey.shade500,    'min': 12, 'max' : 21, 'hairline': { "<" : 14 } },
       'secondary_link': { 'color': Colors.blueGrey.shade500,  'min': 12, 'max' : 21, 'hairline': { "<" : 14 } },
-      'tertiary':     { 'color': Colors.blueGrey.shade400,    'min': 13, 'max' : 21, 'hairline': { "<" : 14 } },
+      'tertiary':     { 'color': Colors.blueGrey.shade500,    'min': 13, 'max' : 21, 'hairline': { "<" : 14 } },
       'tertiary_link': { 'color': Colors.blueGrey.shade400,   'min': 13, 'max' : 21, 'hairline': { "<" : 14 } },
-      "path":         { 'color': Colors.grey,    'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
-      'track':        { 'color': Colors.grey,    'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
-      'residential':  { 'color': Colors.grey,    'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
+      "path":         { 'color': Colors.brown.shade800,    'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
+      'track':        { 'color': Colors.brown.shade800,    'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
+      'residential':  { 'color': Colors.blue,    'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
       'major_rail':   { 'color': Colors.blueGrey.shade900,    'min': 13, 'max' : 21, 'hairline': { "<" : 12 } }, // make prob darker than roads...
       'minor_rail':   { 'color': Colors.blueGrey.shade600,    'min': 14, 'max' : 21, 'hairline': { "<" : 13 } },
-      'service_rail': { 'color': Colors.grey,    'min': 13, 'max' : 21, 'hairline': { "<" : 13 } },
+      'service_rail': { 'color': Colors.blueGrey.shade500,    'min': 13, 'max' : 21, 'hairline': { "<" : 13 } },
       'construction': { 'color': Colors.brown,    'min': 14, 'max' : 21, 'hairline': { "<" : 13 } },
       'ferry':        { 'color': Colors.brown,    'min': 13, 'max' : 21, 'hairline': { "<" : 13 } },
     },
@@ -78,7 +78,7 @@ class Styles {
         'agriculture': { 'color': Colors.green.shade700,   'min': 5, 'max': 21},
         'school':   { 'color': Colors.grey,       'min': 13, 'max': 21},
         'scrub' :   { 'color': Colors.grey,       'min': 5, 'max': 21},
-        'cemetery': { 'color': Colors.grey,       'min': 14, 'max': 21},
+        'cemetery': { 'color': Colors.green.shade600,       'min': 14, 'max': 21},
         'rock' :    { 'color': Colors.grey,       'min': 5, 'max': 21},
         'glacier' : { 'color': Colors.grey,       'min': 5, 'max': 21},
       },
@@ -99,6 +99,7 @@ class Styles {
         'default': { 'color': Colors.blue.shade700, 'min': 13, 'max': 21},
         'river':   { 'color': Colors.blue.shade600, 'min': 12, 'max': 21},
         'canal': { 'color': Colors.blue.shade600, 'min': 9, 'max': 21},
+        'stream': { 'color': Colors.blue.shade900, 'min': 14, 'max': 21},
       },
       "transit_stop": {
           'include': true,
@@ -107,12 +108,12 @@ class Styles {
 
       "building": {
         'include': true,
-        "default": { 'color': Colors.blueGrey, 'min': 16, 'max': 21 },
+        "default": { 'color': Colors.blueGrey, 'min': 15, 'max': 21 },
       },
       "structure": {
         'include': true,
         "default": { 'color': Colors.blueGrey, 'min': 15, 'max': 21 },
-        'fence': { 'color': Colors.brown, 'min': 15, 'max': 21 },
+        'fence': { 'color': Colors.brown.shade300, 'min': 15, 'max': 21 },
       },
       "barrierline": {
         'include': true,
@@ -150,50 +151,51 @@ class Styles {
         'include': true,
         'default': { 'color': Colors.brown, 'min': 14, 'max': 21},
         'landform': { 'color': Colors.brown, 'min': 7, 'max': 21},
-        'sea': { 'color': Colors.lightBlueAccent, 'min': 0, 'max': 21},
+        'sea': { 'color': Colors.black, 'min': 0, 'max': 21},
+        'stream': { 'color': Colors.black, 'min': 14, 'max': 21},
       },
 
 
       'place_label': {
         'include': true,
-        'default':    { 'color': Colors.grey, 'min': 0, 'max': 21},
-        'settlement': { 'color': Colors.grey, 'min': 9, 'max': 21},
+        'default':    { 'color': Colors.black, 'min': 0, 'max': 21},
+        'settlement': { 'color': Colors.black, 'min': 9, 'max': 21},
         'settlement_subdivision': { 'color': Colors.grey, 'min': 14, 'max': 21},
-        'park_like':  { 'color': Colors.grey, 'min': 14, 'max': 21},
+        'park_like':  { 'color': Colors.black, 'min': 14, 'max': 21},
         // types, refine by class doesn't reduce labels enough, but types is useful here..
         'types' : {
-          'village':  { 'color': Colors.grey, 'min': 15, 'max': 21},
-          'suburb':   { 'color': Colors.grey, 'min': 15, 'max': 21},
-          'hamlet':   { 'color': Colors.grey, 'min': 15, 'max': 21},
-          'city':     { 'color': Colors.grey, 'min': 11, 'max': 21},
-          'town':     { 'color': Colors.grey, 'min': 12, 'max': 21},
+          'village':  { 'color': Colors.black, 'min': 15, 'max': 21},
+          'suburb':   { 'color': Colors.black, 'min': 15, 'max': 21},
+          'hamlet':   { 'color': Colors.black, 'min': 15, 'max': 21},
+          'city':     { 'color': Colors.black, 'min': 11, 'max': 21},
+          'town':     { 'color': Colors.black, 'min': 12, 'max': 21},
         }
 
       },
 
       "airport_label": {
         'include': true,
-        'default': { 'color': Colors.grey, 'min': 0, 'max': 21},
+        'default': { 'color': Colors.black, 'min': 0, 'max': 21},
       },
       "housenum_label": {
-        'include': false,
-        'default': { 'color': Colors.grey, 'min': 17, 'max': 21},
+        'include': true,
+        'default': { 'color': Colors.black, 'min': 17, 'max': 21},
       },
       "mountain_peak_label": {
-        'include': false,
-        'default': { 'color': Colors.brown, 'min': 16, 'max': 21},
+        'include': true,
+        'default': { 'color': Colors.black, 'min': 16, 'max': 21},
       },
       "state_label": {
         'include': true,
-        'default': { 'color': Colors.grey, 'min': 13, 'max': 21},
+        'default': { 'color': Colors.black, 'min': 13, 'max': 21},
       },
       "marine_label": {
         'include': true,
-        'default': { 'color': Colors.blueGrey, 'min': 0, 'max': 21},
+        'default': { 'color': Colors.black, 'min': 0, 'max': 21},
       },
       "country_label": {
         'include': true,
-        'default': { 'color': Colors.blueGrey, 'min': 0, 'max': 21},
+        'default': { 'color': Colors.black, 'min': 0, 'max': 21},
       },
 
       ///traffic mapbox
@@ -254,7 +256,7 @@ class Styles {
 
   static Map<String, Map<String, double>> classStrokeWidthClasses = { /// maybe move this into colorstyles above and rename
     "default": { "default": 2 },
-    "road": { "default": 2, "street_limited": 2, "pedestrian" : 1, "path" : 3, "service" : 1, 'motorway': 4,'street': 2, "primary" : 3, "secondary": 3, "tertiary": 2, "trunk": 3, "trunk_link": 3, "major_rail": 2, "minor_rail": 1, "service_rail" : 1, },
+    "road": { "default": 2, "street_limited": 2, "pedestrian" : 1, "path" : 3, "service" : 4, 'motorway': 5,'street': 2, "primary" : 3, "secondary": 3, "tertiary": 3, "trunk": 4, "trunk_link": 4, "major_rail": 2, "minor_rail": 1, "service_rail" : 1, },
   };
 
   static bool includeFeature(layerString, type, thisClass, zoom) { //reduce code...
