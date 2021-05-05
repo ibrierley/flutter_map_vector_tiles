@@ -8,8 +8,8 @@ import 'filters.dart';
 import 'styles.dart';
 import 'package:flutter_map_vector_tile/VectorTileWidget.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:vector_math/vector_math_64.dart' hide Colors;
-
+import 'package:vector_math/vector_math_64.dart' as VectorMath hide Colors;
+//import 'package:vector_math/vector_math.dart' as Test hide Colors;
 
 int decodeZigZag( int byte ) { /// decodes from mapbox small int style
   return ((byte >> 1) ^ -(byte & 1)).toInt();
@@ -276,6 +276,7 @@ class VectorPainter extends CustomPainter {
   final tileZoom;
   final cachedVectorDataMap;
   final levelUpDiff;
+  final usePerspective;
 
   TextPainter cachedTextPainter = TextPainter(
       textDirection: TextDirection.ltr,
@@ -283,20 +284,41 @@ class VectorPainter extends CustomPainter {
 
   List<Map<String, bool>> layerDisplaySegments = Filters.layerDisplaySegments();
 
-  VectorPainter(List<VTile> this.tilesToRender, this.tileZoom, this.cachedVectorDataMap, this.levelUpDiff);
+  VectorPainter(List<VTile> this.tilesToRender, this.tileZoom, this.cachedVectorDataMap, this.levelUpDiff, this.usePerspective);
 
   @override
   void paint(Canvas canvas, Size size) {
 
     var strokeScale = 1.0;
     var seenLabel = {};
+    var rotatePerspective = -1.4; // only used if we're using perspective enabled
+
+    var pointPaint = Paint()
+      ..color = Colors.grey
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round;
 
     for (var tile in tilesToRender) {
       var pos = cachedVectorDataMap[tileCoordsToKey(tile.coords)]['positionInfo'];
 
-      var matrix = Matrix4.identity()
-        ..translate(  pos['pos'].x,  pos['pos'].y )
-        ..scale( pos['scale']  );
+      var matrix;
+      if( !usePerspective ) {
+        matrix = Matrix4.identity()
+          ..translate(  pos['pos'].x,  pos['pos'].y )
+          ..scale( pos['scale'] );
+      } else  {
+        // https://github.com/google/vector_math.dart/blob/527da5771eb7f1bd61b9e5fdb884891d46c3235d/lib/src/vector_math_64/opengl.dart
+        //matrix = VectorMath.makePerspectiveMatrix(math.pi / 2, 2.0, -100000.0, 100000.0)
+        matrix = Matrix4.identity()
+          ..setEntry(3, 2, 0.002) // perspective
+          ..translate(0.0, 0.0, 0.0)
+          ..rotateX(rotatePerspective)
+          ..translate(pos['pos'].x, pos['pos'].y)
+          ..scale(pos['scale'], pos['scale'])
+
+
+          ;
+      }
 
       for (var layer in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['paths']) {
         for (var layerKey in layer['pathMap'].keys) { /// we have a map for each layer, paths should be combined to same style/type
@@ -318,28 +340,54 @@ class VectorPainter extends CustomPainter {
       var pos = cachedVectorDataMap[tileCoordsToKey(
           tile.coords)]['positionInfo'];
 
-      var matrix = Matrix4.identity()
-        ..translate(pos['pos'].x, pos['pos'].y)
-        ..scale(pos['scale']);
+      var matrix;
+      if( !usePerspective) {
+        matrix = Matrix4.identity()
+          ..translate(pos['pos'].x, pos['pos'].y)
+          ..scale(pos['scale'])
+        ;
+
+      } else {
+        matrix = Matrix4.identity()
+          ..setEntry(3, 2, 0.002) // perspective
+          ..translate(0.0, 0.0, 0.0)
+          ..rotateX(rotatePerspective)
+          ..translate(pos['pos'].x, pos['pos'].y)
+          ..scale(pos['scale'], pos['scale'])
+
+        ;
+      }
+
 
       for (var text in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['text']) {
         /// prevent dupe labels from different tiles
         if(!seenLabel.containsKey(text['text'])) {
 
-          var translatedPos = text['pointInfo']
-              .scale(pos['scale'], pos['scale'])
-              .translate(pos['pos'].x, pos['pos'].y);
+          ///var centerPoint = Offset(text['pointInfo'].dx - text['textPainter'].width / 2,
+          ///    text['pointInfo'].dy + (text['textPainter'].height/2));
+          ///
+          var transformedPoint = MatrixUtils.transformPoint(matrix, text['pointInfo']);
+          //var transformedCenterPoint = Offset(transformedPoint.dx - text['textPainter'].width / 2 / pos['scale'],
+           //   (transformedPoint.dy + (text['textPainter'].height / 2 / pos['scale']) ) );
 
-          _drawTextAt(text['text'], translatedPos, canvas, pos['scale'],
-              matrix, text['textPainter']); // we don't want to scale text
+
+          // https://github.com/flutter/flutter/blob/master/packages/flutter/lib/src/painting/matrix_utils.dart
+          ///var transformedCenterPoint = MatrixUtils.transformPoint(matrix, centerPoint);
+
+          canvas.drawPoints( PointMode.points, [ transformedPoint ], pointPaint );
+
+          _drawTextAt(text['text'], transformedPoint, canvas, pos['scale'],
+              text['textPainter']); // we don't want to scale text
           seenLabel[text['text']] = true;
         }
       }
+
+
     }
   }
 
 
-  void _drawTextAt(String text, Offset position, Canvas canvas, scale, matrix, textPainter) {
+  void _drawTextAt(String text, Offset position, Canvas canvas, scale, textPainter) {
 
     Offset drawPosition =
       Offset(position.dx - textPainter.width / 2, position.dy + (textPainter.height/2));

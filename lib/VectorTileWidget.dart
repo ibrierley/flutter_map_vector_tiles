@@ -8,17 +8,13 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map/src/core/bounds.dart';
 import 'package:flutter_map/src/core/point.dart';
-import 'package:flutter_map/src/core/util.dart' as util;
 import 'package:flutter_map/src/map/map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:tuple/tuple.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:http/retry.dart' as retry;
 import 'vector_tile.pb.dart' as vector_tile;
-import 'filters.dart';
-import 'styles.dart';
 import 'vector_tile_plugin.dart';
 import 'package:transparent_image/transparent_image.dart';
 
@@ -27,12 +23,14 @@ class VectorWidget extends StatefulWidget {
   final List<VTile> tilesToRender;
   final tileZoom;
   final levelUpDiff;
+  final usePerspective;
 
   VectorWidget(
       this.cachedVectorDataMap,
       this.tilesToRender,
       this.tileZoom,
       this.levelUpDiff,
+      this.usePerspective,
       );
 
   @override
@@ -52,7 +50,7 @@ class _VectorWidgetState extends State<VectorWidget> {
         child: RepaintBoundary (
           child: CustomPaint(
             isComplex: true, //Tells flutter to cache the painter.
-            painter: VectorPainter( widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap, widget.levelUpDiff ) )
+            painter: VectorPainter( widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap, widget.levelUpDiff, widget.usePerspective ) )
         )
     );
 
@@ -117,17 +115,12 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   Map<String, Map<String, dynamic>>_cachedVectorData = {};
   Timer _housekeepingTimer;
 
-  ///Map currentTileCoordsToRenderMap = {};
-
   Map<String, DateTime> _outstandingTileLoads = {};
   Map<String, DateTime> _recentTilesCompleted = {};
-  Map<String, VTile> _lastBuildTiles = {};
   Map vectorStyle;
 
   int _secondsBetweenListCleanups = 20;
   DateTime _lastTileListCleanupTime = DateTime.now();
-
-  final _cachedTransparentImage = Image.memory(kTransparentImage, gaplessPlayback: true);
 
   LatLng _prevCenter;
   int levelUpDiff;
@@ -181,8 +174,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   @override
   Widget build(BuildContext context) {
 
-    var start = DateTime.now();
-
     var pixelBounds = _getTiledPixelBounds(map.center);
     var tileRange = _pxBoundsToTileRange(pixelBounds);
     var tileCenter = tileRange.getCenter();
@@ -190,7 +181,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     var _backupTiles = {};
     var _tiles = {};
     var _haveBackupTileMap = {};
-    var _transitionTiles = {};
     Map levelupCoordsMap = {};
 
     /// Just a little bit of housekeeping we don't need to run too much
@@ -213,8 +203,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
 
     _prevCenter ??= map.center;
-
-    var adjustedZoom = _tileZoom - levelUpDiff;
 
     for (var j = miny; j <= maxy; j++) {
       for (var i = minx; i <= maxx; i++) {
@@ -357,18 +345,16 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       _cachedVectorData[_tileCoordsToKey(tile.coords)]['positionInfo'] = _createTilePositionInfo(tile); /// need to recreate backup tile info on diff zoom...
     }
 
-    _lastBuildTiles = {};
-
     return Container(
            color: Colors.blueGrey,
-         child: VectorWidget(_cachedVectorData, allTilesToRender, _tileZoom, levelUpDiff  )
+         child: VectorWidget(_cachedVectorData, allTilesToRender, _tileZoom, levelUpDiff, vectorOptions.usePerspective  )
      );
   }
 
   Map<String, dynamic> _createTilePositionInfo( tile ) {
     var coords = tile.coords;
     var tilePos = _getTilePos(coords);
-    var level = _levels[coords.z]; ///
+    var level = _levels[coords.z];
     var tileSize = getTileSize();
     var pos = (tilePos).multiplyBy(level.scale) + level.translatePoint;
     var width = tileSize.x * level.scale;
@@ -387,8 +373,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     var coordsKey = _tileCoordsToKey(coords);
 
-    print("FETCHING DATA for $coordsKey!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-
     if (!_recentTilesCompleted.containsKey(coordsKey))
       _outstandingTileLoads[coordsKey] = DateTime.now();
 
@@ -400,7 +384,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     } else {
       if(!_cachedVectorData.containsKey(coordsKey)) {
-        print("initializing data for $coordsKey");
         _cachedVectorData[coordsKey] = {
           'units': null,
           'imageMemory': null,
@@ -423,7 +406,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
       if (_cachedVectorData[coordsKey]['state'] == 'gettingHttp') {
 
-        
         var response = await retry.RetryClient(http.Client()).get(Uri.parse(url));
 
         try {
@@ -449,7 +431,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
   }
 
-  /// ////////////// END MAIN NEW VECTOR CODE ////////////////////////////////////////////////////////////////
+  /// ////////////// END MAIN NEW VECTOR CODE ///////////////////////////////////
 
   CustomPoint getTileSize() {
     return _tileSize;
@@ -525,7 +507,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
 
     // wrapping
-    try { _wrapX = crs.wrapLng; } catch (e) { print("BLEH $e");} /// ////////////////////////////////////////
+    try { _wrapX = crs.wrapLng; } catch (e) { print( "$e"); }
 
     _wrapX = crs.wrapLng;
 
@@ -763,7 +745,6 @@ class VectorTileLayerPluginOptions extends TileLayerOptions {
   Map vectorStyle;
   int levelUpDiff;
 
-
   VectorTileLayerPluginOptions({
     this.urlTemplate,
     this.tileSize = 256.0,
@@ -772,7 +753,6 @@ class VectorTileLayerPluginOptions extends TileLayerOptions {
     this.zoomOffset = 0.0,
     this.additionalOptions = const <String, String>{},
     this.subdomains = const <String>[],
-    ///this.keepBuffer = 2, /// deprecated, see above
     this.backgroundColor = const Color(0xFFE0E0E0),
     this.placeholderImage,
     this.tileProvider = const NonCachingNetworkTileProvider(),
