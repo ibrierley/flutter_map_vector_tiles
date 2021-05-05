@@ -8,12 +8,12 @@ import 'styles.dart';
 
 
 void main() {
-  //debugPaintSizeEnabled = true;
-  //debugPaintBaselinesEnabled = false;
-  //debugPaintLayerBordersEnabled = true;
-  //debugPaintPointersEnabled = false;
-  //debugRepaintRainbowEnabled = false;
-  //debugRepaintTextRainbowEnabled = false;
+  debugPaintSizeEnabled = true;
+  debugPaintBaselinesEnabled = true;
+  debugPaintLayerBordersEnabled = true;
+  debugPaintPointersEnabled = false;
+  debugRepaintRainbowEnabled = false;
+  debugRepaintTextRainbowEnabled = false;
   //debugCheckElevationsEnabled = false;
   //debugDisableClipLayers = false;
   //debugDisablePhysicalShapeLayers = false;

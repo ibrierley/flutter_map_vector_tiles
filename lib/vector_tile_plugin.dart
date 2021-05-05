@@ -139,8 +139,8 @@ class MapboxTile {
 
             var ncx, ncy;
             if (command == 'M' || (command == 'L')) {
-              ncx = (cx.toDouble() / 16).floorToDouble(); // Change /16 to a tileRatio passed in..
-              ncy = (cy.toDouble() / 16).floorToDouble();
+              ncx = (cx.toDouble() / 16); ///.floorToDouble(); // Change /16 to a tileRatio passed in..
+              ncy = (cy.toDouble() / 16); ///.floorToDouble();
             }
 
             var type = feature.type.toString();
@@ -308,31 +308,38 @@ class VectorPainter extends CustomPainter {
           ..scale( pos['scale'] );
       } else  {
         // https://github.com/google/vector_math.dart/blob/527da5771eb7f1bd61b9e5fdb884891d46c3235d/lib/src/vector_math_64/opengl.dart
-        //matrix = VectorMath.makePerspectiveMatrix(math.pi / 2, 2.0, -100000.0, 100000.0)
+
         matrix = Matrix4.identity()
           ..setEntry(3, 2, 0.002) // perspective
           ..translate(0.0, 0.0, 0.0)
           ..rotateX(rotatePerspective)
           ..translate(pos['pos'].x, pos['pos'].y)
-          ..scale(pos['scale'], pos['scale'])
-
-
-          ;
+          ..scale(pos['scale'], pos['scale']);
       }
+      // May need to clip off the tile if there are overlapping problems with joining
+      // paths. This may help, but it makes any perspective clipping difficult as its not a rect
+      // unless we clip/draw on a transformed canvas or something fiddly
+      // leaving this code here, just to think about, it doesn't really work
+      // canvas.save();
+
+      // var clipOffset = Offset(pos['pos'].x, pos['pos'].y);
+      // var adjustedSize = Offset(256.0, 256.0).scale(pos['scale'], pos['scale']);
+
+      // Rect myRect = Offset(pos['pos'].x, pos['pos'].y) & Size(adjustedSize.dx, adjustedSize.dy);
+      // canvas.clipRect(myRect);
 
       for (var layer in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['paths']) {
-        for (var layerKey in layer['pathMap'].keys) { /// we have a map for each layer, paths should be combined to same style/type
-
+        for (var layerKey in layer['pathMap'].keys) { /// we have a map for each layer, paths should be combined to same syle/type
           var pathMap = layer['pathMap'][layerKey];
 
           if( pathMap.containsKey('path') ) {
             var style = Styles.getStyle2( pathMap['layerString'], pathMap['type'], pathMap['class'], tileZoom, strokeScale, 2 );
-            canvas.drawPath(
-                pathMap['path'].transform(matrix.storage), style);
-          } else {
+            canvas.drawPath( pathMap['path'].transform(matrix.storage), style );
+
           }
         }
       }
+      // canvas.restore();
     }
 
     /// All labels should come on top of paths etc, so moved loop out here
@@ -363,16 +370,8 @@ class VectorPainter extends CustomPainter {
         /// prevent dupe labels from different tiles
         if(!seenLabel.containsKey(text['text'])) {
 
-          ///var centerPoint = Offset(text['pointInfo'].dx - text['textPainter'].width / 2,
-          ///    text['pointInfo'].dy + (text['textPainter'].height/2));
-          ///
           var transformedPoint = MatrixUtils.transformPoint(matrix, text['pointInfo']);
-          //var transformedCenterPoint = Offset(transformedPoint.dx - text['textPainter'].width / 2 / pos['scale'],
-           //   (transformedPoint.dy + (text['textPainter'].height / 2 / pos['scale']) ) );
-
-
           // https://github.com/flutter/flutter/blob/master/packages/flutter/lib/src/painting/matrix_utils.dart
-          ///var transformedCenterPoint = MatrixUtils.transformPoint(matrix, centerPoint);
 
           canvas.drawPoints( PointMode.points, [ transformedPoint ], pointPaint );
 
