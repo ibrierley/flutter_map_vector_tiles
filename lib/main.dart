@@ -77,9 +77,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 useCanvas: true,
                 useImages: false, //disabled, code currently removed,
                 useBackupTiles: true, //use a previously loaded tile if current one not available yet
-                usePerspective: false,
+                usePerspective: false, // experimental, bug with some lines appearing...none closed paths or something weird ?
                 levelUpDiff: 0, // needs renaming, how many zoom levels above current one to use instead
-                //vectorStyle: vectorStyle,
               ),
             ],
           );

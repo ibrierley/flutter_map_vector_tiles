@@ -34,7 +34,7 @@ class Styles {
     ///hairline = switch to a hairline width of 0 for optimisation at low zoom levels where we dont care
     "road": {
       'include': true,
-      'default':      { 'color': Colors.blueGrey,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
+      'default':      { 'color': Colors.blueGrey.shade900,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
       'service':      { 'color': Colors.blueGrey.shade600, 'min': 14, 'max' : 21, 'hairline': { "<" : 14 } },
       'street':       { 'color': Colors.blueGrey.shade600,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
       'pedestrian':   { 'color': Colors.blueGrey.shade600,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
@@ -86,8 +86,8 @@ class Styles {
         'include': true,
         'default': { 'color': Colors.green, 'min': 0, 'max': 21},
         "national_park": { 'color': Colors.green, 'min': 0, 'max': 21},
-        "wetland_noveg" : { 'color': Colors.blueGrey, 'min': 0, 'max': 21},
-        "wetland" : { 'color': Colors.blueGrey, 'min': 0, 'max': 21},
+        "wetland_noveg" : { 'color': Colors.grey.shade900, 'min': 0, 'max': 21},
+        "wetland" : { 'color': Colors.grey.shade900, 'min': 0, 'max': 21},
       },
 
       "water": {
@@ -108,11 +108,11 @@ class Styles {
 
       "building": {
         'include': true,
-        "default": { 'color': Colors.blueGrey, 'min': 15, 'max': 21 },
+        "default": { 'color': Colors.grey.shade600, 'min': 15, 'max': 21 },
       },
       "structure": {
         'include': true,
-        "default": { 'color': Colors.blueGrey, 'min': 15, 'max': 21 },
+        "default": { 'color': Colors.grey.shade600, 'min': 15, 'max': 21 },
         'fence': { 'color': Colors.brown.shade300, 'min': 15, 'max': 21 },
       },
       "barrierline": {
