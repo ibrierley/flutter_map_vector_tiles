@@ -19,15 +19,23 @@ String tileCoordsToKey(Coords coords) {
   return '${coords.x}:${coords.y}:${coords.z}';
 }
 
+class TileStats {
+  int labels = 0, paths = 0, polys = 0, points = 0, labelPoints = 0, polyPoints = 0, linePoints = 0;
+  TileStats();
+  void dump() { print("labels: ${this.labels}, paths: ${this.paths}, polys: ${this.polys}, labelPoints: ${this.labelPoints}, polyPoints ${this.polyPoints}, linePoints: ${this.linePoints}"); }
+}
+
 class MapboxTile {
+
+  static void summaryAdd( key, map ) {
+    map[ key ] = map.containsKey(key) ? map[ key ]++ : 1;
+  }
 
   static void decode( coordsKey, cachedInfo, options, vectorStyles, tileZoom ) {
 
-    var includeSummary = {};
-    var excludeSummary = {};
-    var objectStats = { 'labels': 0, 'paths': 0, 'polys' : 0, 'points': 0, 'labelPoints': 0, 'polyPoints': 0, 'linePoints': 0 } ;
-
-    var strokeScale = 2.0; /// remove the need for this hardcoded here
+    Map<String, int> includeSummary = {};
+    Map<String, int> excludeSummary = {};
+    TileStats tileStats = new TileStats();
 
     vector_tile.Tile vt;
 
@@ -117,12 +125,12 @@ class MapboxTile {
               command = 'L';
             } else if (checkCom == 7) {
               command = 'C';
-              reps =0;
+              reps = 0;
 
               if (feature.type.toString() == 'POLYGON') {
                 if (path == null) path = dartui.Path();
                 path.addPolygon(polyPoints, true);
-                objectStats['polys']++;
+                tileStats.polys++;
                 polyPoints = [];
               } else {
                 path.close();
@@ -139,8 +147,8 @@ class MapboxTile {
 
             var ncx, ncy;
             if (command == 'M' || (command == 'L')) {
-              ncx = (cx.toDouble() / 16); ///.floorToDouble(); // Change /16 to a tileRatio passed in..
-              ncy = (cy.toDouble() / 16); ///.floorToDouble();
+              ncx = (cx.toDouble() / 16); // Change /16 to a tileRatio passed in..
+              ncy = (cy.toDouble() / 16);
             }
 
             var type = feature.type.toString();
@@ -150,7 +158,7 @@ class MapboxTile {
               if (type == 'POLYGON') {
                 polyPoints = [];
                 polyPoints.add(Offset(ncx, ncy));
-                objectStats['polyPoints']++;
+                tileStats.polyPoints++;
               } else if (type == 'LINESTRING') {
                 if (path == null) path = dartui.Path();
                 path.moveTo(ncx, ncy);
@@ -158,18 +166,18 @@ class MapboxTile {
               } else if (type == 'POINT') {
                 pointList.add(Offset(ncx, ncy));
                 labelPointlist.add([Offset(ncx, ncy),layer.name, featureInfo  ]);  /// May want to add a style here, to draw last thing...
-                objectStats['points']++;
-                objectStats['labelPoints']++;
+                tileStats.points++;
+                tileStats.labelPoints++;
               }
 
             } else if (command == 'L') { // LINETO
 
               if (type == 'POLYGON') {
                 polyPoints.add(Offset(ncx, ncy));
-                objectStats['polyPoints']++;
+                tileStats.polyPoints++;
               } else if (type == 'LINESTRING') {
                 path.lineTo(ncx, ncy);
-                objectStats['linePoints']++;
+                tileStats.linePoints++;
               }
             } else {
               print("Incorrect command string");
@@ -185,9 +193,9 @@ class MapboxTile {
 
         var includeFeature = Styles.includeFeature(layerString, type, featureInfo['class'], tileZoom);
         var thisClass = featureInfo['class'] ?? 'default';
-        var detailType = featureInfo['type'] ?? 'default'; // this may be a track (which is listed as a road and has a type of track)
 
         var key = "$layerString|$type|$thisClass";
+        var summaryKey = key + "|" + tileZoom.toString();
 
         if (!options.containsKey('labelsOnly') && path != null) {
           if(includeFeature) {
@@ -201,10 +209,10 @@ class MapboxTile {
 
             pathMap[key]['path'].addPath(path, Offset(0, 0));
             pathMap[key]['count']++;
-            objectStats['paths']++;
-            includeSummary[ key + "|" + tileZoom.toString() ] = true;
+            tileStats.paths++;
+            summaryAdd(summaryKey, includeSummary);
           } else {
-            excludeSummary[ key + "|" + tileZoom.toString() ] = true;
+            summaryAdd(summaryKey, excludeSummary);
           }
           path = null;
         }
@@ -221,15 +229,18 @@ class MapboxTile {
 
         var thisClass = pointInfo[2]['class'] ?? 'default';
         var includeFeature = Styles.includeFeature(layerString, pointInfo[2]['type'], thisClass, tileZoom);
+        var summaryKey = layerString + "_" + thisClass +"_" + tileZoom.toString();
 
         if( includeFeature ) {
           var info = pointInfo[2]['name'];
 
           if (info != null) {
 
+            /// feel like this shouldn't be here, but is an optimisation.
+            /// Cache it in the Vector Painter ?
             TextStyle textStyle = TextStyle(
                 color: Colors.black,
-                fontSize: 14 //scale == 1 ? scale : 16 / scale, // diffratio, wondering if this may give an none fraction optimisations..
+                fontSize: 14 //scale == 1 ? scale : 16 / scale, // diffratio, ?
             );
             TextSpan textSpan = TextSpan(
               text: info.toString(),
@@ -250,18 +261,18 @@ class MapboxTile {
                   'textPainter': textPainter
                 });
           }
-          objectStats['labels']++;
+          tileStats.labels++;
 
-          includeSummary[ layerString + "_" + thisClass +"_" + tileZoom.toString() ] = true;
+          summaryAdd(summaryKey, includeSummary);
         } else {
-          excludeSummary[ layerString + "_" + thisClass + "_" + tileZoom.toString() ] = true;
+          summaryAdd(summaryKey, excludeSummary);
         }
       }
     }
 
     cachedInfo['paintedLayerSegments']++;
 
-    print("ObjectStats is $objectStats");
+    tileStats.dump();
     print("INCLUDES: $includeSummary");
     print("EXCLUDES $excludeSummary");
   }
@@ -277,6 +288,7 @@ class VectorPainter extends CustomPainter {
   final cachedVectorDataMap;
   final levelUpDiff;
   final usePerspective;
+  final debugTiles;
 
   TextPainter cachedTextPainter = TextPainter(
       textDirection: TextDirection.ltr,
@@ -284,14 +296,13 @@ class VectorPainter extends CustomPainter {
 
   List<Map<String, bool>> layerDisplaySegments = Filters.layerDisplaySegments();
 
-  VectorPainter(List<VTile> this.tilesToRender, this.tileZoom, this.cachedVectorDataMap, this.levelUpDiff, this.usePerspective);
+  VectorPainter(List<VTile> this.tilesToRender, this.tileZoom, this.cachedVectorDataMap, this.levelUpDiff, this.usePerspective, this.debugTiles);
 
   @override
   void paint(Canvas canvas, Size size) {
 
-    var strokeScale = 1.0;
     var seenLabel = {};
-    var rotatePerspective = -1.4; // only used if we're using perspective enabled
+    var rotatePerspective = -1.25; //-1.25; // only used if we're using perspective enabled
 
     var pointPaint = Paint()
       ..color = Colors.grey
@@ -310,8 +321,8 @@ class VectorPainter extends CustomPainter {
         // https://github.com/google/vector_math.dart/blob/527da5771eb7f1bd61b9e5fdb884891d46c3235d/lib/src/vector_math_64/opengl.dart
 
         matrix = Matrix4.identity()
-          ..setEntry(3, 2, 0.002) // perspective
-          ..translate(0.0, 0.0, 0.0)
+          ..setEntry(3, 2, 0.0015) // perspective
+          ..translate(0.0,0.0,0.0)
           ..rotateX(rotatePerspective)
           ..translate(pos['pos'].x, pos['pos'].y)
           ..scale(pos['scale'], pos['scale']);
@@ -320,7 +331,9 @@ class VectorPainter extends CustomPainter {
       // paths. This may help, but it makes any perspective clipping difficult as its not a rect
       // unless we clip/draw on a transformed canvas or something fiddly
       // leaving this code here, just to think about, it doesn't really work
-      // canvas.save();
+
+        canvas.save();
+        canvas.transform(matrix.storage);
 
       // var clipOffset = Offset(pos['pos'].x, pos['pos'].y);
       // var adjustedSize = Offset(256.0, 256.0).scale(pos['scale'], pos['scale']);
@@ -333,13 +346,17 @@ class VectorPainter extends CustomPainter {
           var pathMap = layer['pathMap'][layerKey];
 
           if( pathMap.containsKey('path') ) {
-            var style = Styles.getStyle2( pathMap['layerString'], pathMap['type'], pathMap['class'], tileZoom, strokeScale, 2 );
-            canvas.drawPath( pathMap['path'].transform(matrix.storage), style );
+            var style = Styles.getStyle2( pathMap['layerString'], pathMap['type'], pathMap['class'], tileZoom, pos['scale'], 2 );
+            ///canvas.drawPath( pathMap['path'].transform(matrix.storage), style );
+            canvas.drawPath( pathMap['path'], style );
 
           }
         }
       }
-      // canvas.restore();
+      if( debugTiles ) { /// display tile square and coords
+        _debugTiles(canvas, tile);
+      }
+       canvas.restore();
     }
 
     /// All labels should come on top of paths etc, so moved loop out here
@@ -356,7 +373,7 @@ class VectorPainter extends CustomPainter {
 
       } else {
         matrix = Matrix4.identity()
-          ..setEntry(3, 2, 0.002) // perspective
+          ..setEntry(3, 2, 0.0015) // perspective
           ..translate(0.0, 0.0, 0.0)
           ..rotateX(rotatePerspective)
           ..translate(pos['pos'].x, pos['pos'].y)
@@ -385,12 +402,50 @@ class VectorPainter extends CustomPainter {
     }
   }
 
-
   void _drawTextAt(String text, Offset position, Canvas canvas, scale, textPainter) {
 
     Offset drawPosition =
       Offset(position.dx - textPainter.width / 2, position.dy + (textPainter.height/2));
     textPainter.paint(canvas, drawPosition);
+  }
+
+  void _debugTiles(Canvas canvas, VTile tile) {
+
+    var pointPaint = Paint()
+      ..color = Colors.grey
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round;
+
+    Path path = Path();
+    path.moveTo(0, 0);
+    path.lineTo(256.0, 0);
+    path.lineTo(256.0, 256.0);
+    path.lineTo(0, 256.0);
+    path.close();
+
+    var paint = pointPaint;
+    paint.color = Colors.yellow;
+    paint.style = PaintingStyle.stroke;
+    paint.strokeWidth = 1.0;
+    canvas.drawPath(path, paint);
+
+    TextStyle textStyle = TextStyle(
+        color: Colors.yellow,
+        fontSize: 14 //scale == 1 ? scale : 16 / scale, // diffratio, ?
+    );
+    TextSpan textSpan = TextSpan(
+      text: tile.coords.toString(),
+      style: textStyle,
+    );
+
+    var textPainter = TextPainter(
+        text: textSpan,
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center)
+      ..layout(minWidth: 0, maxWidth: double.infinity)
+      ..text = textSpan;
+
+    textPainter.paint(canvas, Offset(0.0,0.0));
   }
 
   @override

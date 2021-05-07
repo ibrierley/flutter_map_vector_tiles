@@ -24,6 +24,7 @@ class VectorWidget extends StatefulWidget {
   final tileZoom;
   final levelUpDiff;
   final usePerspective;
+  final debugTiles;
 
   VectorWidget(
       this.cachedVectorDataMap,
@@ -31,6 +32,7 @@ class VectorWidget extends StatefulWidget {
       this.tileZoom,
       this.levelUpDiff,
       this.usePerspective,
+      this.debugTiles,
       );
 
   @override
@@ -50,7 +52,7 @@ class _VectorWidgetState extends State<VectorWidget> {
         child: RepaintBoundary (
           child: CustomPaint(
             isComplex: true, //Tells flutter to cache the painter.
-            painter: VectorPainter( widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap, widget.levelUpDiff, widget.usePerspective ) )
+            painter: VectorPainter( widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap, widget.levelUpDiff, widget.usePerspective, widget.debugTiles ) )
         )
     );
 
@@ -317,7 +319,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     for (var tile in _tiles.values) {
       if ((_level != null) && (tile.coords.z - _level.zoom).abs() <= 1 + math.pow(2, levelUpDiff)) {
         if (!_cachedVectorData.containsKey(_tileCoordsToKey(tile.coords))) {
-          print("Fetching data fir ${tile.coords}");
+          print("Fetching data for ${tile.coords} (not the final http call)");
           fetchData(tile.coords, 1);
         } else {
           tilesToRender.add(tile);
@@ -347,7 +349,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     return Container(
            color: Colors.blueGrey,
-         child: VectorWidget(_cachedVectorData, allTilesToRender, _tileZoom, levelUpDiff, vectorOptions.usePerspective  )
+         child: VectorWidget(_cachedVectorData, allTilesToRender, _tileZoom, levelUpDiff, vectorOptions.usePerspective, vectorOptions.debugTiles  )
      );
   }
 
@@ -368,6 +370,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
 
   void fetchData(coords, method) async {
+    print("HTTP Making a call to grab $coords");
     var url = vectorOptions.tileProvider.getTileUrl(
         coords, vectorOptions);
 
@@ -742,6 +745,7 @@ class VectorTileLayerPluginOptions extends TileLayerOptions {
   bool useCanvas;
   bool useBackupTiles;
   bool usePerspective;
+  bool debugTiles;
   Map vectorStyle;
   int levelUpDiff;
 
@@ -764,6 +768,7 @@ class VectorTileLayerPluginOptions extends TileLayerOptions {
     this.useCanvas = true,
     this.useBackupTiles = true,
     this.usePerspective = false,
+    this.debugTiles = false,
     this.vectorStyle,
     this.levelUpDiff,
     rebuild,
