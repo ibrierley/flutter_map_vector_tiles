@@ -17,6 +17,7 @@ import 'package:http/retry.dart' as retry;
 import 'vector_tile.pb.dart' as vector_tile;
 import 'vector_tile_plugin.dart';
 import 'package:transparent_image/transparent_image.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 class VectorWidget extends StatefulWidget {
   final cachedVectorDataMap;
@@ -319,7 +320,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     for (var tile in _tiles.values) {
       if ((_level != null) && (tile.coords.z - _level.zoom).abs() <= 1 + math.pow(2, levelUpDiff)) {
         if (!_cachedVectorData.containsKey(_tileCoordsToKey(tile.coords))) {
-          print("Fetching data for ${tile.coords} (not the final http call)");
+          print("Calling fechData for ${tile.coords} ");
           fetchData(tile.coords, 1);
         } else {
           tilesToRender.add(tile);
@@ -370,7 +371,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
 
   void fetchData(coords, method) async {
-    print("HTTP Making a call to grab $coords");
+
     var url = vectorOptions.tileProvider.getTileUrl(
         coords, vectorOptions);
 
@@ -409,26 +410,38 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
       if (_cachedVectorData[coordsKey]['state'] == 'gettingHttp') {
 
-        var response = await retry.RetryClient(http.Client()).get(Uri.parse(url));
+        DefaultCacheManager().getSingleFile(url).then( ( value ) async {
 
-        try {
-          _cachedVectorData[coordsKey]['units'] = response.body.codeUnits;
-          _cachedVectorData[coordsKey]['state'] = 'got';
+            _cachedVectorData[coordsKey]['units'] = value.readAsBytesSync();
+            /// move this to a catchError maybe, not sure it will do anything here now ?
+            /// does it just fail or return null...
+            if( _cachedVectorData[coordsKey]['units'] == null ) {
+              print("Not in cache so doing an http retry");
+              var response = await retry.RetryClient(http.Client()).get(Uri.parse(url));
+              _cachedVectorData[coordsKey]['units'] = response.body.codeUnits;
+            } else {
+              print("Got $coordsKey via DefaultCacheManager");
+            }
 
-          MapboxTile.decode(coordsKey, _cachedVectorData[coordsKey], {}, {}, _tileZoom);
+            try {
+            _cachedVectorData[coordsKey]['state'] = 'got';
 
-          _recentTilesCompleted[coordsKey] = DateTime.now(); ///backup tiles uses these to know which it can use as a backup
-          _outstandingTileLoads.remove(coordsKey);
+            MapboxTile.decode(coordsKey, _cachedVectorData[coordsKey], {}, {}, _tileZoom);
 
-          print("decoded $coordsKey}");
+            _recentTilesCompleted[coordsKey] = DateTime.now(); ///backup tiles uses these to know which it can use as a backup
+            _outstandingTileLoads.remove(coordsKey);
 
-          setState(() {
-            
-          });
+            print("decoded $coordsKey}");
 
-        } catch (e) {
-          print("$e");
-        }
+            setState(() {
+
+            });
+
+            } catch (e) {
+              print("$e");
+            }
+
+        } );
       }
     }
 
