@@ -3,17 +3,15 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'vector_tile_plugin.dart';
 import 'package:flutter_map_vector_tile/VectorTileWidget.dart';
-import 'package:flutter/rendering.dart';
-import 'styles.dart';
 
 
 void main() {
-  debugPaintSizeEnabled = true;
-  debugPaintBaselinesEnabled = true;
-  debugPaintLayerBordersEnabled = true;
-  debugPaintPointersEnabled = false;
-  debugRepaintRainbowEnabled = false;
-  debugRepaintTextRainbowEnabled = false;
+  //debugPaintSizeEnabled = true;
+  //debugPaintBaselinesEnabled = true;
+  //debugPaintLayerBordersEnabled = true;
+  //debugPaintPointersEnabled = false;
+  //debugRepaintRainbowEnabled = false;
+  //debugRepaintTextRainbowEnabled = false;
   //debugCheckElevationsEnabled = false;
   //debugDisableClipLayers = false;
   //debugDisablePhysicalShapeLayers = false;
