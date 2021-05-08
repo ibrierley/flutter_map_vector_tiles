@@ -295,6 +295,7 @@ class MapboxTile {
 
 class VectorPainter extends CustomPainter {
 
+  final dimensions;
   final tilesToRender;
   final tileZoom;
   final cachedVectorDataMap;
@@ -302,6 +303,7 @@ class VectorPainter extends CustomPainter {
   final usePerspective;
   final debugTiles;
   final debugLabels;
+  final rotation;
 
   static final Map<String, dynamic> labelsOnDisplay = {};
 
@@ -311,13 +313,17 @@ class VectorPainter extends CustomPainter {
 
   List<Map<String, bool>> layerDisplaySegments = Filters.layerDisplaySegments();
 
-  VectorPainter(List<VTile> this.tilesToRender, this.tileZoom, this.cachedVectorDataMap, this.underZoom, this.usePerspective, this.debugTiles, this.debugLabels);
+  VectorPainter(Offset this.dimensions, double this.rotation,  List<VTile> this.tilesToRender, this.tileZoom, this.cachedVectorDataMap, this.underZoom, this.usePerspective, this.debugTiles, this.debugLabels);
 
   @override
   void paint(Canvas canvas, Size size) {
 
     var seenLabel = {};
     var rotatePerspective = -1.25; //-1.25; // only used if we're using perspective enabled
+    var rotate = 0.0;
+    var widgetRotation = this.rotation;
+    var isRotated = false;
+    if(widgetRotation != 0.0 ) isRotated = true;
 
     var pointPaint = Paint()
       ..color = Colors.grey
@@ -333,19 +339,22 @@ class VectorPainter extends CustomPainter {
       tileCoordsDisplayed[tileCoordsKey] = true;
 
       var matrix;
-      if( !usePerspective ) {
+      if( !usePerspective ) { /// normal
+        print("Dimensions are $dimensions");
         matrix = Matrix4.identity()
-          ..translate(  pos['pos'].x,  pos['pos'].y )
+          ..translate( pos['pos'].x,  pos['pos'].y )
           ..scale( pos['scale'] );
-      } else  {
-        // https://github.com/google/vector_math.dart/blob/527da5771eb7f1bd61b9e5fdb884891d46c3235d/lib/src/vector_math_64/opengl.dart
 
+      } else  { /// perspective mode
         matrix = Matrix4.identity()
           ..setEntry(3, 2, 0.0015) // perspective
-          ..translate(0.0,0.0,0.0)
-          ..rotateX(rotatePerspective)
-          ..translate(pos['pos'].x, pos['pos'].y)
-          ..scale(pos['scale'], pos['scale']);
+        ..translate(0.0,0.0,0.0);
+        matrix..rotateX(rotatePerspective)
+        ;
+
+        matrix..translate(pos['pos'].x, pos['pos'].y)
+          ..scale(pos['scale'], pos['scale'])
+        ;
       }
       // May need to clip off the tile if there are overlapping problems with joining
       // paths. This may help, but it makes any perspective clipping difficult as its not a rect
@@ -391,15 +400,23 @@ class VectorPainter extends CustomPainter {
 
       var matrix;
       if( !usePerspective) {
-        matrix = Matrix4.identity()
-          ..translate(pos['pos'].x, pos['pos'].y)
-          ..scale(pos['scale']);
+        matrix = Matrix4.identity();
+        matrix..translate(pos['pos'].x, pos['pos'].y)
+          ..scale(pos['scale'])
+        ;
+
       } else {
         matrix = Matrix4.identity()
           ..setEntry(3, 2, 0.0015) // perspective
           ..translate(0.0, 0.0, 0.0)
           ..rotateX(rotatePerspective)
-          ..translate(pos['pos'].x, pos['pos'].y)
+          ;
+        if( true ) {
+          matrix..translate((dimensions.dx/2.0), (dimensions.dy/2.0))
+            ..rotateZ( rotate )
+            ..translate(-dimensions.dx/2.0, -dimensions.dy/2.0);
+        }
+         matrix..translate(pos['pos'].x, pos['pos'].y)
           ..scale(pos['scale'], pos['scale']);
       }
 
@@ -413,8 +430,6 @@ class VectorPainter extends CustomPainter {
         /// prevent dupe labels from different tiles
         if(!seenLabel.containsKey(label.text)) {  ///careful this may not match up with our ondisplay list ?
 
-          // https://github.com/flutter/flutter/blob/master/packages/flutter/lib/src/painting/matrix_utils.dart
-
           if( checkLabelOverlaps( tileCoordsKey, label, canvas, debugLabels  ) ) {
             labelsOnDisplay.remove(label.text);
             continue;
@@ -422,8 +437,20 @@ class VectorPainter extends CustomPainter {
 
           canvas.drawPoints( PointMode.points, [ label.transformedPoint ], pointPaint );
 
-          _drawTextAt(label.text, label.transformedPoint, canvas, pos['scale'],
+          var drawPoint = label.transformedPoint;
+          if( isRotated) {
+            drawPoint = Offset(0.0, 0.0);
+            canvas.save(); // can we transform all first, as save is quite expensive...
+            canvas.translate(label.transformedPoint.dx, label.transformedPoint.dy);
+            canvas.rotate(-widgetRotation * 0.0174533);
+          }
+          _drawTextAt(label.text, drawPoint, canvas, pos['scale'],
               label.textPainter); // we don't want to scale text
+
+          if( isRotated ) {
+            canvas.restore();
+          }
+
           seenLabel[label.text] = true;
 
           labelsOnDisplay[label.text] = [tileCoordsKey, label];

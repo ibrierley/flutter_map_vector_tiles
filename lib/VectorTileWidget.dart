@@ -20,6 +20,7 @@ import 'package:transparent_image/transparent_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 class VectorWidget extends StatefulWidget {
+  final rotation;
   final cachedVectorDataMap;
   final List<VTile> tilesToRender;
   final tileZoom;
@@ -29,6 +30,7 @@ class VectorWidget extends StatefulWidget {
   final debugLabels;
 
   VectorWidget(
+      this.rotation,
       this.cachedVectorDataMap,
       this.tilesToRender,
       this.tileZoom,
@@ -49,13 +51,17 @@ class _VectorWidgetState extends State<VectorWidget> {
   @override
   Widget build(BuildContext context) {
 
+    var width = MediaQuery.of(context).size.width * 2.0;
+    var height = MediaQuery.of(context).size.height;
+    var dimensions = Offset(width,height);
+
     var box = SizedBox(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height,
+        width: width,
+        height: height,
         child: RepaintBoundary (
           child: CustomPaint(
             isComplex: true, //Tells flutter to cache the painter.
-            painter: VectorPainter( widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap, widget.underZoom, widget.usePerspective, widget.debugTiles, widget.debugLabels ) )
+            painter: VectorPainter( dimensions, widget.rotation, widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap, widget.underZoom, widget.usePerspective, widget.debugTiles, widget.debugLabels ) )
         )
     );
 
@@ -350,9 +356,10 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       _cachedVectorData[_tileCoordsToKey(tile.coords)]['positionInfo'] = _createTilePositionInfo(tile); /// need to recreate backup tile info on diff zoom...
     }
 
+
     return Container(
            color: Colors.blueGrey,
-         child: VectorWidget(_cachedVectorData, allTilesToRender, _tileZoom, underZoom, vectorOptions.usePerspective, vectorOptions.debugTiles, vectorOptions.debugLabels  )
+         child: VectorWidget(widget.mapState.rotation, _cachedVectorData, allTilesToRender, _tileZoom, underZoom, vectorOptions.usePerspective, vectorOptions.debugTiles, vectorOptions.debugLabels  )
      );
   }
 
