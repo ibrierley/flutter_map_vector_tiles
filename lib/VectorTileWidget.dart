@@ -23,17 +23,19 @@ class VectorWidget extends StatefulWidget {
   final cachedVectorDataMap;
   final List<VTile> tilesToRender;
   final tileZoom;
-  final levelUpDiff;
+  final underZoom;
   final usePerspective;
   final debugTiles;
+  final debugLabels;
 
   VectorWidget(
       this.cachedVectorDataMap,
       this.tilesToRender,
       this.tileZoom,
-      this.levelUpDiff,
+      this.underZoom,
       this.usePerspective,
       this.debugTiles,
+      this.debugLabels,
       );
 
   @override
@@ -53,7 +55,7 @@ class _VectorWidgetState extends State<VectorWidget> {
         child: RepaintBoundary (
           child: CustomPaint(
             isComplex: true, //Tells flutter to cache the painter.
-            painter: VectorPainter( widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap, widget.levelUpDiff, widget.usePerspective, widget.debugTiles ) )
+            painter: VectorPainter( widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap, widget.underZoom, widget.usePerspective, widget.debugTiles, widget.debugLabels ) )
         )
     );
 
@@ -126,12 +128,12 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   DateTime _lastTileListCleanupTime = DateTime.now();
 
   LatLng _prevCenter;
-  int levelUpDiff;
+  int underZoom;
 
   @override
   void initState() {
     vectorOptions = widget.vectorTileLayerOptions;
-    levelUpDiff = vectorOptions.levelUpDiff;
+    underZoom = vectorOptions.underZoom;
     vectorStyle = vectorOptions.vectorStyle;
 
     super.initState();
@@ -218,13 +220,13 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
         }
 
         var coordsKey = _tileCoordsToKey(coords);
-        var levelUpDiffRatio = math.pow(2, levelUpDiff);
+        var underZoomRatio = math.pow(2, underZoom);
 
-        if (levelUpDiff > 0) {
+        if (underZoom > 0) {
           var upCoord = Coords(
-              (i / levelUpDiffRatio).floorToDouble(),
-              (j / levelUpDiffRatio).floorToDouble());
-          upCoord.z = _tileZoom - levelUpDiff;
+              (i / underZoomRatio).floorToDouble(),
+              (j / underZoomRatio).floorToDouble());
+          upCoord.z = _tileZoom - underZoom;
 
           coords = upCoord;
           coordsKey = _tileCoordsToKey(coords);
@@ -273,8 +275,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
                   }
 
                   backupCoords = Coords(
-                      (i ~/ (ratio * levelUpDiffRatio) + a).toDouble(),
-                      (j ~/ (ratio * levelUpDiffRatio) + b).toDouble());
+                      (i ~/ (ratio * underZoomRatio) + a).toDouble(),
+                      (j ~/ (ratio * underZoomRatio) + b).toDouble());
                   backupCoords.z = backupZoom;
 
                   /// set backup zoom level to check what was in old completed map
@@ -318,7 +320,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     var tilesToRender = <VTile>[];
     for (var tile in _tiles.values) {
-      if ((_level != null) && (tile.coords.z - _level.zoom).abs() <= 1 + math.pow(2, levelUpDiff)) {
+      if ((_level != null) && (tile.coords.z - _level.zoom).abs() <= 1 + math.pow(2, underZoom)) {
         if (!_cachedVectorData.containsKey(_tileCoordsToKey(tile.coords))) {
           print("Calling fechData for ${tile.coords} ");
           fetchData(tile.coords, 1);
@@ -350,7 +352,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     return Container(
            color: Colors.blueGrey,
-         child: VectorWidget(_cachedVectorData, allTilesToRender, _tileZoom, levelUpDiff, vectorOptions.usePerspective, vectorOptions.debugTiles  )
+         child: VectorWidget(_cachedVectorData, allTilesToRender, _tileZoom, underZoom, vectorOptions.usePerspective, vectorOptions.debugTiles, vectorOptions.debugLabels  )
      );
   }
 
@@ -387,6 +389,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       }
 
     } else {
+      List<Label> labelList = [];
       if(!_cachedVectorData.containsKey(coordsKey)) {
         _cachedVectorData[coordsKey] = {
           'units': null,
@@ -396,7 +399,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           'paintedLayerSegments': -1,
           'coordsKey': coordsKey,
           'transitioning' : 0,
-          'levelUpDiffFactor' : math.pow(2,levelUpDiff).toInt(),
+          'underZoomFactor' : math.pow(2,underZoom).toInt(),
           'useCanvas' : vectorOptions.useCanvas,
           'useImages' : vectorOptions.useImages,
           'useBackupTiles' : vectorOptions.useBackupTiles,
@@ -404,7 +407,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           'completeWidget' : null,
           'backupCompleteWidget' : null,
           'buildMap': {},
-          'geomInfo' : { 'paths': [], 'text': [], 'points': [] },
+          'geomInfo' : { 'paths': [], 'labels': labelList, 'points': [] },
         };
       }
 
@@ -465,7 +468,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       }
     }
 
-    var max = vectorOptions.maxZoom + levelUpDiff;
+    var max = vectorOptions.maxZoom + underZoom;
 
     for(var tempZoom in [for(var i=1.0; i<max; i+=1.0) i]) {
 
@@ -759,8 +762,9 @@ class VectorTileLayerPluginOptions extends TileLayerOptions {
   bool useBackupTiles;
   bool usePerspective;
   bool debugTiles;
+  bool debugLabels;
   Map vectorStyle;
-  int levelUpDiff;
+  int underZoom;
 
   VectorTileLayerPluginOptions({
     this.urlTemplate,
@@ -782,8 +786,9 @@ class VectorTileLayerPluginOptions extends TileLayerOptions {
     this.useBackupTiles = true,
     this.usePerspective = false,
     this.debugTiles = false,
+    this.debugLabels = false,
     this.vectorStyle,
-    this.levelUpDiff,
+    this.underZoom,
     rebuild,
   })  :
         super(rebuild: rebuild);
