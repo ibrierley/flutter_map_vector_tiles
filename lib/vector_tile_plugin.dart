@@ -1,6 +1,7 @@
 import 'dart:ui' as dartui;
 import 'dart:ui';
 import 'dart:math' as math;
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'vector_tile.pb.dart' as vector_tile;
@@ -17,6 +18,16 @@ int decodeZigZag( int byte ) { /// decodes from mapbox small int style
 
 String tileCoordsToKey(Coords coords) {
   return '${coords.x}:${coords.y}:${coords.z}';
+}
+
+class Label {
+  String text;
+  Offset point;
+  Offset transformedPoint;
+  Offset boundNW;
+  Offset boundSE;
+  TextPainter textPainter;
+  Label( this.text, this.point, this.textPainter);
 }
 
 class TileStats {
@@ -254,12 +265,13 @@ class MapboxTile {
               ..layout(minWidth: 0, maxWidth: double.infinity)
               ..text = textSpan;
 
-            cachedInfo['geomInfo']['text'].add(
-                {
-                  'text': info.toString(),
-                  'pointInfo': pointInfo[0],
-                  'textPainter': textPainter
-                });
+            cachedInfo['geomInfo']['labels'].add(
+              Label( info.toString(), pointInfo[0], textPainter ) );
+              //  {
+              //    'text': info.toString(),
+              //    'pointInfo': pointInfo[0],
+              //    'textPainter': textPainter
+              //  });
           }
           tileStats.labels++;
 
@@ -286,9 +298,12 @@ class VectorPainter extends CustomPainter {
   final tilesToRender;
   final tileZoom;
   final cachedVectorDataMap;
-  final levelUpDiff;
+  final underZoom;
   final usePerspective;
   final debugTiles;
+  final debugLabels;
+
+  static final Map<String, dynamic> labelsOnDisplay = {};
 
   TextPainter cachedTextPainter = TextPainter(
       textDirection: TextDirection.ltr,
@@ -296,7 +311,7 @@ class VectorPainter extends CustomPainter {
 
   List<Map<String, bool>> layerDisplaySegments = Filters.layerDisplaySegments();
 
-  VectorPainter(List<VTile> this.tilesToRender, this.tileZoom, this.cachedVectorDataMap, this.levelUpDiff, this.usePerspective, this.debugTiles);
+  VectorPainter(List<VTile> this.tilesToRender, this.tileZoom, this.cachedVectorDataMap, this.underZoom, this.usePerspective, this.debugTiles, this.debugLabels);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -308,9 +323,14 @@ class VectorPainter extends CustomPainter {
       ..color = Colors.grey
       ..strokeWidth = 5
       ..strokeCap = StrokeCap.round;
+    
+    Map<String, bool> tileCoordsDisplayed = {};
 
     for (var tile in tilesToRender) {
-      var pos = cachedVectorDataMap[tileCoordsToKey(tile.coords)]['positionInfo'];
+      var tileCoordsKey = tileCoordsToKey(tile.coords);
+      var pos = cachedVectorDataMap[tileCoordsKey]['positionInfo'];
+      
+      tileCoordsDisplayed[tileCoordsKey] = true;
 
       var matrix;
       if( !usePerspective ) {
@@ -359,46 +379,58 @@ class VectorPainter extends CustomPainter {
        canvas.restore();
     }
 
+    /// we want to keep previous labels displayed to show first if tiles /// ////////////////////////////////////////
+    /// haven't gone out of view
+
+    labelsOnDisplay.removeWhere((key, keyLabel) => !tileCoordsDisplayed.containsKey(keyLabel[0]));
+
     /// All labels should come on top of paths etc, so moved loop out here
     for (var tile in tilesToRender) {
-      var pos = cachedVectorDataMap[tileCoordsToKey(
-          tile.coords)]['positionInfo'];
+      var tileCoordsKey = tileCoordsToKey(tile.coords);
+      var pos = cachedVectorDataMap[tileCoordsKey]['positionInfo'];
 
       var matrix;
       if( !usePerspective) {
         matrix = Matrix4.identity()
           ..translate(pos['pos'].x, pos['pos'].y)
-          ..scale(pos['scale'])
-        ;
-
+          ..scale(pos['scale']);
       } else {
         matrix = Matrix4.identity()
           ..setEntry(3, 2, 0.0015) // perspective
           ..translate(0.0, 0.0, 0.0)
           ..rotateX(rotatePerspective)
           ..translate(pos['pos'].x, pos['pos'].y)
-          ..scale(pos['scale'], pos['scale'])
-
-        ;
+          ..scale(pos['scale'], pos['scale']);
       }
 
+      /// need to transform points for comparison of labels...
+      for (Label label in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['labels']) {
+        label.transformedPoint = MatrixUtils.transformPoint(matrix, label.point);
+        _updateLabelBounding( label );
+      }
 
-      for (var text in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['text']) {
+      for (Label label in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['labels']) {
         /// prevent dupe labels from different tiles
-        if(!seenLabel.containsKey(text['text'])) {
+        if(!seenLabel.containsKey(label.text)) {  ///careful this may not match up with our ondisplay list ?
 
-          var transformedPoint = MatrixUtils.transformPoint(matrix, text['pointInfo']);
           // https://github.com/flutter/flutter/blob/master/packages/flutter/lib/src/painting/matrix_utils.dart
 
-          canvas.drawPoints( PointMode.points, [ transformedPoint ], pointPaint );
+          if( checkLabelOverlaps( tileCoordsKey, label, canvas, debugLabels  ) ) {
+            labelsOnDisplay.remove(label.text);
+            continue;
+          }
 
-          _drawTextAt(text['text'], transformedPoint, canvas, pos['scale'],
-              text['textPainter']); // we don't want to scale text
-          seenLabel[text['text']] = true;
+          canvas.drawPoints( PointMode.points, [ label.transformedPoint ], pointPaint );
+
+          _drawTextAt(label.text, label.transformedPoint, canvas, pos['scale'],
+              label.textPainter); // we don't want to scale text
+          seenLabel[label.text] = true;
+
+          labelsOnDisplay[label.text] = [tileCoordsKey, label];
+        } else {
+           ///
         }
       }
-
-
     }
   }
 
@@ -409,11 +441,48 @@ class VectorPainter extends CustomPainter {
     textPainter.paint(canvas, drawPosition);
   }
 
+
+
+  bool checkLabelOverlaps( String coordsKey, Label label, Canvas canvas, debugLabels  ) { // add fontsize (14) to the check...
+
+    if( debugLabels ) debugRect(canvas, label);
+    bool collides = false;
+
+    labelsOnDisplay.keys.forEach((key) {
+
+      Label compareLabel = labelsOnDisplay[key][1];  // [coord, label]
+
+      if( compareLabel != label) {
+
+        if ((label.boundNW.dx < compareLabel.boundSE.dx) &&
+            (label.boundSE.dx > compareLabel.boundNW.dx) &&
+            (label.boundNW.dy < compareLabel.boundSE.dy) &&
+            (label.boundSE.dy > compareLabel.boundNW.dy)) {
+
+          collides = true;
+        }
+      }
+    });
+
+    return collides;
+  }
+
+  void _updateLabelBounding(Label label) {
+    var widthFactor = 10.0;
+    var heightFactor = 40.0;
+    var labelLength = label.text.length;
+
+    label.boundNW  = Offset( label.transformedPoint.dx - (labelLength * widthFactor / 2) , label.transformedPoint.dy - 4);
+    label.boundSE = Offset(label.boundNW.dx + (labelLength * widthFactor ), label.boundNW.dy + heightFactor );
+
+  }
+
   void _debugTiles(Canvas canvas, VTile tile) {
 
-    var pointPaint = Paint()
-      ..color = Colors.grey
-      ..strokeWidth = 5
+    var paint = Paint()
+      ..color = Colors.yellowAccent
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     Path path = Path();
@@ -423,10 +492,6 @@ class VectorPainter extends CustomPainter {
     path.lineTo(0, 256.0);
     path.close();
 
-    var paint = pointPaint;
-    paint.color = Colors.yellow;
-    paint.style = PaintingStyle.stroke;
-    paint.strokeWidth = 1.0;
     canvas.drawPath(path, paint);
 
     TextStyle textStyle = TextStyle(
@@ -448,12 +513,27 @@ class VectorPainter extends CustomPainter {
     textPainter.paint(canvas, Offset(0.0,0.0));
   }
 
+  void debugRect(canvas, Label label) {
+    Path path = Path();
+    path.moveTo(label.boundNW.dx, label.boundNW.dy);
+    path.lineTo(label.boundSE.dx, label.boundNW.dy);
+    path.lineTo(label.boundSE.dx, label.boundSE.dy);
+    path.lineTo(label.boundNW.dx, label.boundSE.dy);
+    path.close();
+
+    var paint = Paint();
+    paint.color = Colors.green;
+    paint.style = PaintingStyle.stroke;
+    paint.strokeWidth = 3.0;
+
+    canvas.drawPath( path, paint);
+
+  }
+
   @override
   bool shouldRepaint(VectorPainter oldDelegate) =>
       tilesToRender != oldDelegate.tilesToRender ||
           tileZoom != oldDelegate.tileZoom ||
           cachedVectorDataMap != oldDelegate.cachedVectorDataMap;
-
-
 }
 
