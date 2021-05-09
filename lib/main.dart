@@ -63,7 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
               plugins: [
                 VectorTilePlugin(),
               ],
-              interactiveFlags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+              interactiveFlags: InteractiveFlag.all, // & ~InteractiveFlag.rotate,
               center: LatLng(50.8323646,-0.1871463),
               zoom: 12.3,
               //rotation: 45,
@@ -75,7 +75,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 useCanvas: true,
                 useImages: false, //disabled, code currently removed, but could be added, not sure I currently see the benefit
                 useBackupTiles: true, //use a previously loaded tile if current one not available yet
-                usePerspective: false, // experimental, bug with some lines appearing...none closed paths or something weird ?
+                usePerspective: false, // experimental, probably won't be working, but leaving in code to play with
                 underZoom: 0, // how many zoom levels above current one to use instead, try 1 or 2 for example
                 debugTiles: false, // will display a border around the tile for debugging
                 debugLabels: false, // will display a boundary around a label used for collision detection
