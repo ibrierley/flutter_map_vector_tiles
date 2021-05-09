@@ -342,6 +342,7 @@ class VectorPainter extends CustomPainter {
       if( !usePerspective ) { /// normal
         print("Dimensions are $dimensions");
         matrix = Matrix4.identity()
+
           ..translate( pos['pos'].x,  pos['pos'].y )
           ..scale( pos['scale'] );
 
@@ -349,12 +350,10 @@ class VectorPainter extends CustomPainter {
         matrix = Matrix4.identity()
           ..setEntry(3, 2, 0.0015) // perspective
         ..translate(0.0,0.0,0.0);
-        matrix..rotateX(rotatePerspective)
-        ;
+        matrix..rotateX(rotatePerspective);
 
         matrix..translate(pos['pos'].x, pos['pos'].y)
-          ..scale(pos['scale'], pos['scale'])
-        ;
+          ..scale(pos['scale'], pos['scale']);
       }
       // May need to clip off the tile if there are overlapping problems with joining
       // paths. This may help, but it makes any perspective clipping difficult as its not a rect

@@ -56,13 +56,13 @@ class _VectorWidgetState extends State<VectorWidget> {
     var dimensions = Offset(width,height);
 
     var box = SizedBox(
-        width: width,
-        height: height,
+        width: width*1.25,
+        height: height*1.25,
         child: RepaintBoundary (
           child: CustomPaint(
             isComplex: true, //Tells flutter to cache the painter.
             painter: VectorPainter( dimensions, widget.rotation, widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap, widget.underZoom, widget.usePerspective, widget.debugTiles, widget.debugLabels ) )
-        )
+       )
     );
 
     return box;
