@@ -30,6 +30,11 @@ class Styles {
       'default': { 'color': Colors.yellow, 'min': 10, 'max': 21},
     },
 
+    "admin": {
+      'include': true,
+      'default': { 'color': Colors.lightGreen, 'min': 8, 'max': 21, 'hairline': { "<" : 12 } },
+    },
+
     ///mapbox streets
     ///hairline = switch to a hairline width of 0 for optimisation at low zoom levels where we dont care
     "road": {
