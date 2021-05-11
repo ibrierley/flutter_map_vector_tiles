@@ -285,8 +285,8 @@ class MapboxTile {
     cachedInfo['paintedLayerSegments']++;
 
     tileStats.dump();
-    print("INCLUDES: $includeSummary");
-    print("EXCLUDES $excludeSummary");
+    //print("INCLUDES: $includeSummary");
+    //print("EXCLUDES $excludeSummary");
   }
 }
 
@@ -340,7 +340,6 @@ class VectorPainter extends CustomPainter {
 
       var matrix;
       if( !usePerspective ) { /// normal
-        print("Dimensions are $dimensions");
         matrix = Matrix4.identity()
 
           ..translate( pos['pos'].x,  pos['pos'].y )
