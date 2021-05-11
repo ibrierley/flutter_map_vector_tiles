@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'dart:ui' as dartui;
 import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map_vector_tile/custom_path.dart';
 import 'vector_tile.pb.dart' as vector_tile;
 import 'filters.dart';
 import 'styles.dart';
@@ -85,6 +87,7 @@ class MapboxTile {
 
       var command = '';
 
+      SuperPath superPath;
       dartui.Path path;
       List<Offset> pointList = [];
 
@@ -171,8 +174,12 @@ class MapboxTile {
                 polyPoints.add(Offset(ncx, ncy));
                 tileStats.polyPoints++;
               } else if (type == 'LINESTRING') {
-                if (path == null) path = dartui.Path();
-                path.moveTo(ncx, ncy);
+                if (path == null) {
+                   superPath = SuperPath();
+                   path = dartui.Path();
+                }
+                //path.moveTo(ncx, ncy);
+                superPath.moveTo(ncx, ncy);
 
               } else if (type == 'POINT') {
                 pointList.add(Offset(ncx, ncy));
@@ -187,7 +194,8 @@ class MapboxTile {
                 polyPoints.add(Offset(ncx, ncy));
                 tileStats.polyPoints++;
               } else if (type == 'LINESTRING') {
-                path.lineTo(ncx, ncy);
+                //path.lineTo(ncx, ncy); //THIS ADDS POINTS
+                superPath.lineTo(ncx, ncy);
                 tileStats.linePoints++;
               }
             } else {
@@ -218,6 +226,10 @@ class MapboxTile {
                 'count' : 1,  }; // init
             }
 
+            if(superPath != null) {
+              pathMap[key]['path'].addPath(superPath.getPath(tolerance: 5), Offset(0, 0));
+            }
+
             pathMap[key]['path'].addPath(path, Offset(0, 0));
             pathMap[key]['count']++;
             tileStats.paths++;
@@ -226,6 +238,7 @@ class MapboxTile {
             summaryAdd(summaryKey, excludeSummary);
           }
           path = null;
+          superPath = null;
         }
       }
 
@@ -375,6 +388,7 @@ class VectorPainter extends CustomPainter {
           if( pathMap.containsKey('path') ) {
             var style = Styles.getStyle2( pathMap['layerString'], pathMap['type'], pathMap['class'], tileZoom, pos['scale'], 2 );
             ///canvas.drawPath( pathMap['path'].transform(matrix.storage), style );
+
             canvas.drawPath( pathMap['path'], style );
 
           }

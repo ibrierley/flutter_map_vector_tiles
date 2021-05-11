@@ -31,6 +31,7 @@ dependencies:
 
   fixnum: any
   protobuf: any
+  simplify_dart: any
   #latlong2: any
   http: ^0.13.2
   flutter_cache_manager: any

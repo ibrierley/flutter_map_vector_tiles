@@ -441,7 +441,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
             _recentTilesCompleted[coordsKey] = DateTime.now(); ///backup tiles uses these to know which it can use as a backup
             _outstandingTileLoads.remove(coordsKey);
 
-            print("decoded $coordsKey}");
+            //print("decoded $coordsKey}");
 
             setState(() {
 
