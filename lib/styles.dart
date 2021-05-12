@@ -26,13 +26,13 @@ class Styles {
   static Map<String, Map<String, dynamic>> classColorStyles = {
 
     "default": {
-      'include': true,
+      'include': false,
       'default': { 'color': Colors.yellow, 'min': 10, 'max': 21},
     },
 
     "admin": {
       'include': true,
-      'default': { 'color': Colors.lightGreen, 'min': 8, 'max': 21, 'hairline': { "<" : 12 } },
+      'default': { 'color': Colors.green.shade900, 'min': 0, 'max': 21, 'hairline': { "<" : 12 } },
     },
 
     ///mapbox streets
@@ -44,16 +44,16 @@ class Styles {
       'street':       { 'color': Colors.blueGrey.shade600,    'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
       'pedestrian':   { 'color': Colors.blueGrey.shade600,    'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
       'street_limited': { 'color': Colors.blueGrey.shade600,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
-      'motorway' :    { 'color': Colors.blueGrey.shade800,    'min': 6, 'max' : 21, 'hairline': { "<" : 0 } },
-      'trunk':        { 'color': Colors.blueGrey.shade700,    'min': 9, 'max' : 21, 'hairline':  { "<" : 0 } },
-      'trunk_link':   { 'color': Colors.blueGrey.shade700,    'min': 9, 'max' : 21, 'hairline':  { "<" : 0 } },
-      'primary' :     { 'color': Colors.blueGrey.shade600,    'min': 9, 'max' : 21, 'hairline': { "<" : 13 } }, // A roads
-      'primary_link': { 'color': Colors.blueGrey.shade600,    'min': 10, 'max' : 21, 'hairline': { "<" : 13 } },
+      'motorway' :    { 'color': Colors.blueGrey.shade800,    'min': 5,  'max' : 21, 'hairline': { "<" : 9 } }, ///
+      'trunk':        { 'color': Colors.blueGrey.shade700,    'min': 5,  'max' : 21, 'hairline': { "<" : 9 } }, ///
+      'trunk_link':   { 'color': Colors.blueGrey.shade700,    'min': 7,  'max' : 21, 'hairline': { "<" : 9 } }, ///
+      'primary' :     { 'color': Colors.blueGrey.shade600,    'min': 17, 'max' : 21, 'hairline': { "<" : 13 } }, // A roads
+      'primary_link': { 'color': Colors.blueGrey.shade600,    'min': 17, 'max' : 21, 'hairline': { "<" : 13 } },
       'secondary':    { 'color': Colors.blueGrey.shade500,    'min': 12, 'max' : 21, 'hairline': { "<" : 14 } },
       'secondary_link': { 'color': Colors.blueGrey.shade500,  'min': 12, 'max' : 21, 'hairline': { "<" : 14 } },
       'tertiary':     { 'color': Colors.blueGrey.shade500,    'min': 13, 'max' : 21, 'hairline': { "<" : 14 } },
       'tertiary_link': { 'color': Colors.blueGrey.shade400,   'min': 13, 'max' : 21, 'hairline': { "<" : 14 } },
-      "path":         { 'color': Colors.brown.shade800,       'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
+      'path':         { 'color': Colors.brown.shade800,       'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
       'track':        { 'color': Colors.brown.shade800,       'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
       'residential':  { 'color': Colors.blue,                 'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
       'major_rail':   { 'color': Colors.blueGrey.shade900,    'min': 13, 'max' : 21, 'hairline': { "<" : 12 } }, // make prob darker than roads...
@@ -164,7 +164,7 @@ class Styles {
       'place_label': {
         'include': true,
         'default':    { 'color': Colors.black, 'min': 0, 'max': 21},
-        'settlement': { 'color': Colors.black, 'min': 12, 'max': 21},
+        'settlement': { 'color': Colors.black, 'min': 0, 'max': 21},
         'settlement_subdivision': { 'color': Colors.grey, 'min': 14, 'max': 21},
         'park_like':  { 'color': Colors.black, 'min': 14, 'max': 21},
         // types, refine by class doesn't reduce labels enough, but types is useful here..
@@ -261,7 +261,7 @@ class Styles {
 
   static Map<String, Map<String, double>> classStrokeWidthClasses = { /// maybe move this into colorstyles above and rename
     "default": { "default": 2 },
-    "road": { "default": 2, "street_limited": 2, "pedestrian" : 1, "path" : 3, "service" : 4, 'motorway': 5,'street': 2, "primary" : 3, "secondary": 3, "tertiary": 3, "trunk": 4, "trunk_link": 4, "major_rail": 2, "minor_rail": 1, "service_rail" : 1, },
+    "road": { "default": 2, "street_limited": 2, "pedestrian" : 1, "path" : 2, "service" : 2, 'motorway': 2,'street': 2, "primary" : 2, "secondary": 2, "tertiary": 2, "trunk": 2, "trunk_link": 2, "major_rail": 2, "minor_rail": 1, "service_rail" : 1, },
   };
 
   static bool includeFeature(layerString, type, thisClass, zoom) { //reduce code...

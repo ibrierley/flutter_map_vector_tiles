@@ -285,8 +285,8 @@ class MapboxTile {
     cachedInfo['paintedLayerSegments']++;
 
     tileStats.dump();
-    //print("INCLUDES: $includeSummary");
-    //print("EXCLUDES $excludeSummary");
+    print("INCLUDES: $includeSummary");
+    print("EXCLUDES $excludeSummary");
   }
 }
 

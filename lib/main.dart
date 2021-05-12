@@ -63,9 +63,9 @@ class _MyHomePageState extends State<MyHomePage> {
               plugins: [
                 VectorTilePlugin(),
               ],
-              interactiveFlags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+              interactiveFlags: InteractiveFlag.all, // & ~InteractiveFlag.rotate,
               center: LatLng(50.8323646,-0.1871463),
-              zoom: 6.3,
+              zoom: 4.3,
               //rotation: 45,
             ),
             layers: [
