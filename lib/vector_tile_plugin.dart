@@ -205,7 +205,7 @@ class MapboxTile {
         var includeFeature = Styles.includeFeature(layerString, type, featureInfo['class'], tileZoom);
         var thisClass = featureInfo['class'] ?? 'default';
 
-        var key = "$layerString|$type|$thisClass";
+        var key = "L:$layerString>T:$type>C:$thisClass";
         var summaryKey = key + "|" + tileZoom.toString();
 
         if (!options.containsKey('labelsOnly') && path != null) {
@@ -240,7 +240,7 @@ class MapboxTile {
 
         var thisClass = pointInfo[2]['class'] ?? 'default';
         var includeFeature = Styles.includeFeature(layerString, pointInfo[2]['type'], thisClass, tileZoom);
-        var summaryKey = layerString + "_" + thisClass +"_" + tileZoom.toString();
+        var summaryKey = "L:" + layerString + "_C:" + thisClass +"_Z:" + tileZoom.toString();
 
         if( includeFeature ) {
           var info = pointInfo[2]['name'];
@@ -267,11 +267,7 @@ class MapboxTile {
 
             cachedInfo['geomInfo']['labels'].add(
               Label( info.toString(), pointInfo[0], textPainter ) );
-              //  {
-              //    'text': info.toString(),
-              //    'pointInfo': pointInfo[0],
-              //    'textPainter': textPainter
-              //  });
+
           }
           tileStats.labels++;
 
@@ -339,6 +335,7 @@ class VectorPainter extends CustomPainter {
       tileCoordsDisplayed[tileCoordsKey] = true;
 
       var matrix;
+
       if( !usePerspective ) { /// normal
         matrix = Matrix4.identity()
 
@@ -386,7 +383,7 @@ class VectorPainter extends CustomPainter {
        canvas.restore();
     }
 
-    /// we want to keep previous labels displayed to show first if tiles /// ////////////////////////////////////////
+    /// we want to keep previous labels displayed to show first if tiles ///
     /// haven't gone out of view
 
     labelsOnDisplay.removeWhere((key, keyLabel) => !tileCoordsDisplayed.containsKey(keyLabel[0]));
@@ -400,15 +397,13 @@ class VectorPainter extends CustomPainter {
       if( !usePerspective) {
         matrix = Matrix4.identity();
         matrix..translate(pos['pos'].x, pos['pos'].y)
-          ..scale(pos['scale'])
-        ;
+          ..scale(pos['scale']);
 
       } else {
         matrix = Matrix4.identity()
           ..setEntry(3, 2, 0.0015) // perspective
           ..translate(0.0, 0.0, 0.0)
-          ..rotateX(rotatePerspective)
-          ;
+          ..rotateX(rotatePerspective);
         if( true ) {
           matrix..translate((dimensions.dx/2.0), (dimensions.dy/2.0))
             ..rotateZ( rotate )
@@ -418,7 +413,8 @@ class VectorPainter extends CustomPainter {
           ..scale(pos['scale'], pos['scale']);
       }
 
-      /// need to transform points for comparison of labels...
+      /// There's a slight issue as labels aren't reverse transformed to account for
+      /// widget rotations. Gets fiddly, but we could probably sort if we care enough
       for (Label label in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['labels']) {
         label.transformedPoint = MatrixUtils.transformPoint(matrix, label.point);
         _updateLabelBounding( label );
@@ -442,6 +438,7 @@ class VectorPainter extends CustomPainter {
             canvas.translate(label.transformedPoint.dx, label.transformedPoint.dy);
             canvas.rotate(-widgetRotation * 0.0174533);
           }
+
           _drawTextAt(label.text, drawPoint, canvas, pos['scale'],
               label.textPainter); // we don't want to scale text
 
@@ -453,7 +450,6 @@ class VectorPainter extends CustomPainter {
 
           labelsOnDisplay[label.text] = [tileCoordsKey, label];
         } else {
-           ///
         }
       }
     }
@@ -497,10 +493,10 @@ class VectorPainter extends CustomPainter {
     var heightFactor = 40.0;
     var labelLength = label.text.length;
 
-    label.boundNW  = Offset( label.transformedPoint.dx - (labelLength * widthFactor / 2) , label.transformedPoint.dy - 4);
+    label.boundNW = Offset( label.transformedPoint.dx - (labelLength * widthFactor / 2) , label.transformedPoint.dy - 4);
     label.boundSE = Offset(label.boundNW.dx + (labelLength * widthFactor ), label.boundNW.dy + heightFactor );
 
-  }
+    }
 
   void _debugTiles(Canvas canvas, VTile tile) {
 

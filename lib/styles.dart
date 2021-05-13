@@ -26,13 +26,13 @@ class Styles {
   static Map<String, Map<String, dynamic>> classColorStyles = {
 
     "default": {
-      'include': false,
+      'include': true,
       'default': { 'color': Colors.yellow, 'min': 10, 'max': 21},
     },
 
     "admin": {
       'include': true,
-      'default': { 'color': Colors.green.shade900, 'min': 0, 'max': 21, 'hairline': { "<" : 12 } },
+      'default': { 'color': Colors.deepPurple, 'min': 0, 'max': 21, 'hairline': { "<" : 0 } },
     },
 
     ///mapbox streets
@@ -44,9 +44,9 @@ class Styles {
       'street':       { 'color': Colors.blueGrey.shade600,    'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
       'pedestrian':   { 'color': Colors.blueGrey.shade600,    'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
       'street_limited': { 'color': Colors.blueGrey.shade600,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
-      'motorway' :    { 'color': Colors.blueGrey.shade800,    'min': 5,  'max' : 21, 'hairline': { "<" : 9 } }, ///
-      'trunk':        { 'color': Colors.blueGrey.shade700,    'min': 5,  'max' : 21, 'hairline': { "<" : 9 } }, ///
-      'trunk_link':   { 'color': Colors.blueGrey.shade700,    'min': 7,  'max' : 21, 'hairline': { "<" : 9 } }, ///
+      'motorway' :    { 'color': Colors.blueGrey.shade800,    'min': 5,  'max' : 21, 'hairline': { "<" : 10 } }, ///
+      'trunk':        { 'color': Colors.blueGrey.shade700,    'min': 5,  'max' : 21, 'hairline': { "<" : 10 } }, ///
+      'trunk_link':   { 'color': Colors.blueGrey.shade700,    'min': 7,  'max' : 21, 'hairline': { "<" : 10 } }, ///
       'primary' :     { 'color': Colors.blueGrey.shade600,    'min': 17, 'max' : 21, 'hairline': { "<" : 13 } }, // A roads
       'primary_link': { 'color': Colors.blueGrey.shade600,    'min': 17, 'max' : 21, 'hairline': { "<" : 13 } },
       'secondary':    { 'color': Colors.blueGrey.shade500,    'min': 12, 'max' : 21, 'hairline': { "<" : 14 } },
@@ -79,12 +79,12 @@ class Styles {
         'park':     { 'color': Colors.lightGreen,           'min': 12, 'max': 21},
         'pitch':    { 'color': Colors.green,                'min': 12, 'max': 21},
         'parking':  { 'color': Colors.green.shade100,       'min': 14, 'max': 21},
-        'wood':     { 'color': Colors.green,                'min': 11, 'max': 21},
+        'wood':     { 'color': Colors.green,                'min': 0, 'max': 21},
         'agriculture': { 'color': Colors.green.shade700,    'min': 12, 'max': 21},
         'school':   { 'color': Colors.grey,                 'min': 13, 'max': 21},
-        'scrub' :   { 'color': Colors.grey,                 'min': 12, 'max': 21},
+        'scrub' :   { 'color': Colors.grey,                 'min': 0, 'max': 21},
         'cemetery': { 'color': Colors.green.shade600,       'min': 14, 'max': 21},
-        'rock' :    { 'color': Colors.grey,                 'min': 12, 'max': 21},
+        'rock' :    { 'color': Colors.grey,                 'min': 0, 'max': 21},
         'glacier' : { 'color': Colors.grey,                 'min': 12, 'max': 21},
       },
       "landuse_overlay": {
@@ -175,7 +175,6 @@ class Styles {
           'city':     { 'color': Colors.black, 'min': 11, 'max': 21},
           'town':     { 'color': Colors.black, 'min': 12, 'max': 21},
         }
-
       },
 
       "airport_label": {
@@ -261,6 +260,7 @@ class Styles {
 
   static Map<String, Map<String, double>> classStrokeWidthClasses = { /// maybe move this into colorstyles above and rename
     "default": { "default": 2 },
+    "admin" : { "default" : 0.8 },
     "road": { "default": 2, "street_limited": 2, "pedestrian" : 1, "path" : 2, "service" : 2, 'motorway': 2,'street': 2, "primary" : 2, "secondary": 2, "tertiary": 2, "trunk": 2, "trunk_link": 2, "major_rail": 2, "minor_rail": 1, "service_rail" : 1, },
   };
 
