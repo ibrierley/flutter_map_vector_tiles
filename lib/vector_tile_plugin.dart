@@ -338,17 +338,15 @@ class VectorPainter extends CustomPainter {
 
       if( !usePerspective ) { /// normal
         matrix = Matrix4.identity()
-
           ..translate( pos['pos'].x,  pos['pos'].y )
           ..scale( pos['scale'] );
 
       } else  { /// perspective mode
         matrix = Matrix4.identity()
           ..setEntry(3, 2, 0.0015) // perspective
-        ..translate(0.0,0.0,0.0);
-        matrix..rotateX(rotatePerspective);
-
-        matrix..translate(pos['pos'].x, pos['pos'].y)
+          ..translate(0.0,0.0,0.0)
+          ..rotateX(rotatePerspective)
+          ..translate(pos['pos'].x, pos['pos'].y)
           ..scale(pos['scale'], pos['scale']);
       }
       // May need to clip off the tile if there are overlapping problems with joining
@@ -424,7 +422,7 @@ class VectorPainter extends CustomPainter {
         /// prevent dupe labels from different tiles
         if(!seenLabel.containsKey(label.text)) {  ///careful this may not match up with our ondisplay list ?
 
-          if( checkLabelOverlaps( tileCoordsKey, label, canvas, debugLabels  ) ) {
+          if( checkLabelOverlaps( tileCoordsKey, label, canvas, debugLabels ) ) {
             labelsOnDisplay.remove(label.text);
             continue;
           }

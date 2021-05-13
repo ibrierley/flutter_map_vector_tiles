@@ -160,7 +160,6 @@ class Styles {
         'stream': { 'color': Colors.black, 'min': 14, 'max': 21},
       },
 
-
       'place_label': {
         'include': true,
         'default':    { 'color': Colors.black, 'min': 0, 'max': 21},
@@ -169,11 +168,11 @@ class Styles {
         'park_like':  { 'color': Colors.black, 'min': 14, 'max': 21},
         // types, refine by class doesn't reduce labels enough, but types is useful here..
         'types' : {
-          'village':  { 'color': Colors.black, 'min': 15, 'max': 21},
-          'suburb':   { 'color': Colors.black, 'min': 15, 'max': 21},
-          'hamlet':   { 'color': Colors.black, 'min': 15, 'max': 21},
-          'city':     { 'color': Colors.black, 'min': 11, 'max': 21},
-          'town':     { 'color': Colors.black, 'min': 12, 'max': 21},
+          'village':  { 'color': Colors.black, 'min': 14, 'max': 21}, //15
+          'suburb':   { 'color': Colors.black, 'min': 14, 'max': 21}, //15
+          'hamlet':   { 'color': Colors.black, 'min': 14, 'max': 21}, //15
+          'city':     { 'color': Colors.black, 'min': 6,  'max': 21}, //6
+          'town':     { 'color': Colors.black, 'min': 10, 'max': 21}, //12
         }
       },
 
@@ -306,7 +305,6 @@ class Styles {
     ///..strokeCap = StrokeCap.round
       ..isAntiAlias = false;
     var styleInfo = classColorStyles;
-
 
     if(type == 'LINESTRING' || type == 'line') paint.style = PaintingStyle.stroke; // are roads filled ?
     if(type == 'POLYGON'    || type == 'fill') paint.style = PaintingStyle.fill;
