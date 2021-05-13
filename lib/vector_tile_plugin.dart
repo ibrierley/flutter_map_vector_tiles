@@ -280,9 +280,9 @@ class MapboxTile {
 
     cachedInfo['paintedLayerSegments']++;
 
-    tileStats.dump();
-    print("INCLUDES: $includeSummary");
-    print("EXCLUDES $excludeSummary");
+    ///tileStats.dump();
+    ///print("INCLUDES: $includeSummary");
+    ///print("EXCLUDES $excludeSummary");
   }
 }
 
@@ -301,7 +301,7 @@ class VectorPainter extends CustomPainter {
   final debugLabels;
   final rotation;
 
-  static final Map<String, dynamic> labelsOnDisplay = {};
+  static final Map<String, Label> labelsOnDisplay = {};
 
   TextPainter cachedTextPainter = TextPainter(
       textDirection: TextDirection.ltr,
@@ -327,6 +327,7 @@ class VectorPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
     
     Map<String, bool> tileCoordsDisplayed = {};
+    List<Label> renderLabels = [];
 
     for (var tile in tilesToRender) {
       var tileCoordsKey = tileCoordsToKey(tile.coords);
@@ -384,7 +385,7 @@ class VectorPainter extends CustomPainter {
     /// we want to keep previous labels displayed to show first if tiles ///
     /// haven't gone out of view
 
-    labelsOnDisplay.removeWhere((key, keyLabel) => !tileCoordsDisplayed.containsKey(keyLabel[0]));
+    labelsOnDisplay.removeWhere((key, keyLabel) => !tileCoordsDisplayed.containsKey(keyLabel));
 
     /// All labels should come on top of paths etc, so moved loop out here
     for (var tile in tilesToRender) {
@@ -416,39 +417,51 @@ class VectorPainter extends CustomPainter {
       for (Label label in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['labels']) {
         label.transformedPoint = MatrixUtils.transformPoint(matrix, label.point);
         _updateLabelBounding( label );
+        renderLabels.add(label);
       }
+    }
 
-      for (Label label in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['labels']) {
-        /// prevent dupe labels from different tiles
-        if(!seenLabel.containsKey(label.text)) {  ///careful this may not match up with our ondisplay list ?
+    /// Not sure this sort makes any diff. The general idea was that labels seem
+    /// to glitch in which is displayed, as a lot is happening and there is no
+    /// order as the tiles come in and out, so I was trying to at least make sure
+    /// a random ordering doesn't mean one label gets past collision detection one
+    /// frame when it didn't before. We also need to be careful to remember the
+    /// labels must be consistent accross tiles and tile changes
 
-          if( checkLabelOverlaps( tileCoordsKey, label, canvas, debugLabels ) ) {
-            labelsOnDisplay.remove(label.text);
-            continue;
-          }
+    renderLabels.sort((a, b) => a.text.compareTo(b.text));
 
-          canvas.drawPoints( PointMode.points, [ label.transformedPoint ], pointPaint );
+    for (Label label in renderLabels ) {
+      /// prevent dupe labels from different tiles
+      if(!seenLabel.containsKey(label.text)) {  ///careful this may not match up with our ondisplay list ?
 
-          var drawPoint = label.transformedPoint;
-          if( isRotated) {
-            drawPoint = Offset(0.0, 0.0);
-            canvas.save(); // can we transform all first, as save is quite expensive...
-            canvas.translate(label.transformedPoint.dx, label.transformedPoint.dy);
-            canvas.rotate(-widgetRotation * 0.0174533);
-          }
-
-          _drawTextAt(label.text, drawPoint, canvas, pos['scale'],
-              label.textPainter); // we don't want to scale text
-
-          if( isRotated ) {
-            canvas.restore();
-          }
-
-          seenLabel[label.text] = true;
-
-          labelsOnDisplay[label.text] = [tileCoordsKey, label];
-        } else {
+        /// boundary box check (slight bug that it rotates unlike text)
+        
+        if( checkLabelOverlaps( label, canvas, debugLabels ) ) {
+          labelsOnDisplay.remove(label.text);
+          continue;
         }
+
+        canvas.drawPoints( PointMode.points, [ label.transformedPoint ], pointPaint );
+
+        var drawPoint = label.transformedPoint;
+        if( isRotated) {
+          drawPoint = Offset(0.0, 0.0);
+          canvas.save(); // can we transform all first, as save is quite expensive...
+          canvas.translate(label.transformedPoint.dx, label.transformedPoint.dy);
+          canvas.rotate(-widgetRotation * 0.0174533);
+        }
+
+        _drawTextAt(label.text, drawPoint, canvas, 1,
+            label.textPainter); // we don't want to scale text
+
+        if( isRotated ) {
+          canvas.restore();
+        }
+
+        seenLabel[label.text] = true;
+        labelsOnDisplay[label.text] = label;
+
+      } else {
       }
     }
   }
@@ -462,14 +475,14 @@ class VectorPainter extends CustomPainter {
 
 
 
-  bool checkLabelOverlaps( String coordsKey, Label label, Canvas canvas, debugLabels  ) { // add fontsize (14) to the check...
+  bool checkLabelOverlaps( Label label, Canvas canvas, debugLabels  ) { // add fontsize (14) to the check...
 
     if( debugLabels ) debugRect(canvas, label);
     bool collides = false;
 
     labelsOnDisplay.keys.forEach((key) {
 
-      Label compareLabel = labelsOnDisplay[key][1];  // [coord, label]
+      Label compareLabel = labelsOnDisplay[key];  // [coord, label]
 
       if( compareLabel != label) {
 
