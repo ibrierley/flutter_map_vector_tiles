@@ -123,7 +123,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
   final Map<double, VectorLevel> _levels = {};
 
-  Map<String, Map<String, dynamic>>_cachedVectorData = {};
+  Map<String, VTCache>_cachedVectorData = {};
   Timer _housekeepingTimer;
 
   Map<String, DateTime> _outstandingTileLoads = {};
@@ -353,7 +353,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     var allTilesToRender = backupTilesToRender + tilesToRender;
 
     for (var tile in allTilesToRender) {
-      _cachedVectorData[_tileCoordsToKey(tile.coords)]['positionInfo'] = _createTilePositionInfo(tile); /// need to recreate backup tile info on diff zoom...
+      _cachedVectorData[_tileCoordsToKey(tile.coords)].positionInfo = _createTilePositionInfo(tile); /// need to recreate backup tile info on diff zoom...
     }
 
 
@@ -395,7 +395,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       _outstandingTileLoads[coordsKey] = DateTime.now();
 
     if(_cachedVectorData.containsKey(coordsKey)) {
-      if(_cachedVectorData[coordsKey]['state'] == 'trying') { /// Not convinced state does anything really...
+      if(_cachedVectorData[coordsKey].state == 'trying') { /// Not convinced state does anything really...
         print("Still trying...returning");
         return null;
       }
@@ -403,43 +403,38 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     } else {
       List<Label> labelList = [];
       if(!_cachedVectorData.containsKey(coordsKey)) {
-        _cachedVectorData[coordsKey] = {
+       /* _cachedVectorData[coordsKey] = {
           'units': null,
-          'imageMemory': null,
-          'customPaintWidget' : null,
           'state': 'gettingHttp',
-          'paintedLayerSegments': -1,
           'coordsKey': coordsKey,
-          'transitioning' : 0,
-          'underZoomFactor' : math.pow(2,underZoom).toInt(),
-          'useCanvas' : vectorOptions.useCanvas,
-          'useImages' : vectorOptions.useImages,
-          'useBackupTiles' : vectorOptions.useBackupTiles,
           'tileZoom' : _tileZoom,
-          'completeWidget' : null,
-          'backupCompleteWidget' : null,
-          'buildMap': {},
-          'geomInfo' : { 'paths': [], 'labels': labelList, 'points': [] },
-        };
+          'positionInfo' : {},
+          'geomInfo' : GeomStore([], labelList, []),
+        };*/
+
+        _cachedVectorData[coordsKey] = VTCache(
+          null, 'gettingHttp', coordsKey, _tileZoom, {},  GeomStore([], labelList, [])
+        );
+
       }
 
-      if (_cachedVectorData[coordsKey]['state'] == 'gettingHttp') {
+      if (_cachedVectorData[coordsKey].state == 'gettingHttp') {
 
         DefaultCacheManager().getSingleFile(url).then( ( value ) async {
 
-            _cachedVectorData[coordsKey]['units'] = value.readAsBytesSync();
+            _cachedVectorData[coordsKey].units = value.readAsBytesSync();
             /// move this to a catchError maybe, not sure it will do anything here now ?
             /// does it just fail or return null...
-            if( _cachedVectorData[coordsKey]['units'] == null ) {
+            if( _cachedVectorData[coordsKey].units == null ) {
               print("Not in cache so doing an http retry");
               var response = await retry.RetryClient(http.Client()).get(Uri.parse(url));
-              _cachedVectorData[coordsKey]['units'] = response.body.codeUnits;
+              _cachedVectorData[coordsKey].units = response.body.codeUnits;
             } else {
               print("Got $coordsKey via DefaultCacheManager");
             }
 
             try {
-            _cachedVectorData[coordsKey]['state'] = 'got';
+            _cachedVectorData[coordsKey].state = 'got';
 
             MapboxTile.decode(coordsKey, _cachedVectorData[coordsKey], {}, {}, _tileZoom);
 

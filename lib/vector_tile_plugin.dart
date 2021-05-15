@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'dart:ui' as dartui;
 import 'dart:ui';
 import 'dart:math' as math;
@@ -18,6 +19,24 @@ int decodeZigZag( int byte ) { /// decodes from mapbox small int style
 
 String tileCoordsToKey(Coords coords) {
   return '${coords.x}:${coords.y}:${coords.z}';
+}
+
+class GeomStore {
+  List<Map<String,dynamic>> pathStore; /// rename/rejig as not really paths as such...
+  List<Label> labels;
+  List<Offset> points;
+  GeomStore( this.pathStore, this.labels, this.points );
+}
+
+class VTCache {
+  Uint8List units;
+  String state;
+  String coordsKey;
+  double tileZoom;
+  Map<String, dynamic> positionInfo;
+  GeomStore geomInfo;
+
+  VTCache( this.units, this.state, this.coordsKey, this.tileZoom, this.positionInfo, this.geomInfo);
 }
 
 class Label {
@@ -51,7 +70,7 @@ class MapboxTile {
     vector_tile.Tile vt;
 
     try {
-      vt = vector_tile.Tile.fromBuffer(cachedInfo['units']);
+      vt = vector_tile.Tile.fromBuffer(cachedInfo.units);
     } catch (e) {
       print("Problem getting from buffer $e");
     }
@@ -229,7 +248,9 @@ class MapboxTile {
         }
       }
 
-      cachedInfo['geomInfo']['paths'].add({'layerString': layerString, 'pathMap': pathMap });
+      ///cachedInfo['geomInfo']['paths'].add({'layerString': layerString, 'pathMap': pathMap });
+      cachedInfo.geomInfo.pathStore.add({'layerString': layerString, 'pathMap': pathMap });
+
     } // layer
 
 
@@ -265,7 +286,7 @@ class MapboxTile {
               ..layout(minWidth: 0, maxWidth: double.infinity)
               ..text = textSpan;
 
-            cachedInfo['geomInfo']['labels'].add(
+            cachedInfo.geomInfo.labels.add(
               Label( info.toString(), pointInfo[0], textPainter ) );
 
           }
@@ -278,7 +299,7 @@ class MapboxTile {
       }
     }
 
-    cachedInfo['paintedLayerSegments']++;
+    ///cachedInfo['paintedLayerSegments']++;
 
     ///tileStats.dump();
     ///print("INCLUDES: $includeSummary");
@@ -331,7 +352,7 @@ class VectorPainter extends CustomPainter {
 
     for (var tile in tilesToRender) {
       var tileCoordsKey = tileCoordsToKey(tile.coords);
-      var pos = cachedVectorDataMap[tileCoordsKey]['positionInfo'];
+      var pos = cachedVectorDataMap[tileCoordsKey].positionInfo;
       
       tileCoordsDisplayed[tileCoordsKey] = true;
 
@@ -364,7 +385,7 @@ class VectorPainter extends CustomPainter {
       // Rect myRect = Offset(pos['pos'].x, pos['pos'].y) & Size(adjustedSize.dx, adjustedSize.dy);
       // canvas.clipRect(myRect);
 
-      for (var layer in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['paths']) {
+      for (var layer in cachedVectorDataMap[tileCoordsToKey(tile.coords)].geomInfo.pathStore) {
         for (var layerKey in layer['pathMap'].keys) { /// we have a map for each layer, paths should be combined to same syle/type
           var pathMap = layer['pathMap'][layerKey];
 
@@ -390,7 +411,7 @@ class VectorPainter extends CustomPainter {
     /// All labels should come on top of paths etc, so moved loop out here
     for (var tile in tilesToRender) {
       var tileCoordsKey = tileCoordsToKey(tile.coords);
-      var pos = cachedVectorDataMap[tileCoordsKey]['positionInfo'];
+      var pos = cachedVectorDataMap[tileCoordsKey].positionInfo;
 
       var matrix;
       if( !usePerspective) {
@@ -414,7 +435,7 @@ class VectorPainter extends CustomPainter {
 
       /// There's a slight issue as labels aren't reverse transformed to account for
       /// widget rotations. Gets fiddly, but we could probably sort if we care enough
-      for (Label label in cachedVectorDataMap[tileCoordsToKey(tile.coords)]['geomInfo']['labels']) {
+      for (Label label in cachedVectorDataMap[tileCoordsToKey(tile.coords)].geomInfo.labels) {
         label.transformedPoint = MatrixUtils.transformPoint(matrix, label.point);
         _updateLabelBounding( label );
         renderLabels.add(label);

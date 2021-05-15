@@ -52,6 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     mapController = MapController();
+
   }
 
   Widget build(BuildContext context) {
@@ -65,7 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ],
               interactiveFlags: InteractiveFlag.all, // & ~InteractiveFlag.rotate,
               center: LatLng(50.8323646,-0.1871463),
-              zoom: 6.3,
+              zoom: 15.3,
               //rotation: 45,
             ),
             layers: [
@@ -82,6 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ],
           );
+
 
         var end = DateTime.now().difference(start).inMicroseconds;
         print ("TIMING! Flutter_map main end time took $end");
