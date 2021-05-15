@@ -363,7 +363,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
      );
   }
 
-  Map<String, dynamic> _createTilePositionInfo( tile ) {
+  PositionInfo _createTilePositionInfo( tile ) {
     var coords = tile.coords;
     var tilePos = _getTilePos(coords);
     var level = _levels[coords.z];
@@ -372,7 +372,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     var width = tileSize.x * level.scale;
     var height = tileSize.y * level.scale;
     var coordsKey = _tileCoordsToKey(coords);
-    var tilePositionInfo = { 'pos' : pos, 'width' : width, 'height': height, 'coordsKey' : coordsKey, 'scale' : width / tileSize.x };
+    ///var tilePositionInfo = { 'pos' : pos, 'width' : width, 'height': height, 'coordsKey' : coordsKey, 'scale' : width / tileSize.x };
+    PositionInfo tilePositionInfo = PositionInfo(point: pos, width: width, height: height, coordsKey: coordsKey, scale: width / tileSize.x );
 
     return tilePositionInfo;
 
@@ -413,7 +414,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
         };*/
 
         _cachedVectorData[coordsKey] = VTCache(
-          null, 'gettingHttp', coordsKey, _tileZoom, {},  GeomStore([], labelList, [])
+          null, 'gettingHttp', coordsKey, _tileZoom, PositionInfo(),  GeomStore([], labelList, [])
         );
 
       }

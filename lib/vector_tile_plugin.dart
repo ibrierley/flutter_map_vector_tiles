@@ -1,8 +1,6 @@
 import 'dart:typed_data';
 import 'dart:ui' as dartui;
 import 'dart:ui';
-import 'dart:math' as math;
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'vector_tile.pb.dart' as vector_tile;
@@ -10,8 +8,6 @@ import 'filters.dart';
 import 'styles.dart';
 import 'package:flutter_map_vector_tile/VectorTileWidget.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:vector_math/vector_math_64.dart' as VectorMath hide Colors;
-//import 'package:vector_math/vector_math.dart' as Test hide Colors;
 
 int decodeZigZag( int byte ) { /// decodes from mapbox small int style
   return ((byte >> 1) ^ -(byte & 1)).toInt();
@@ -36,6 +32,15 @@ class PathInfo {
   int count;
 
   PathInfo(this.path, this.pclass, this.type, this.layerString, this.count);
+}
+
+class PositionInfo {
+  CustomPoint point;
+  double width;
+  double height;
+  String coordsKey;
+  double scale;
+  PositionInfo({this.point, this.width, this.height, this.coordsKey, this.scale});
 
 }
 
@@ -44,7 +49,7 @@ class VTCache {
   String state;
   String coordsKey;
   double tileZoom;
-  Map<String, dynamic> positionInfo;
+  PositionInfo positionInfo;
   GeomStore geomInfo;
 
   VTCache( this.units, this.state, this.coordsKey, this.tileZoom, this.positionInfo, this.geomInfo);
@@ -308,7 +313,7 @@ class MapboxTile {
         }
       }
     }
-    
+
     ///tileStats.dump();
     ///print("INCLUDES: $includeSummary");
     ///print("EXCLUDES $excludeSummary");
@@ -359,25 +364,25 @@ class VectorPainter extends CustomPainter {
     List<Label> renderLabels = [];
 
     for (var tile in tilesToRender) {
-      var tileCoordsKey = tileCoordsToKey(tile.coords);
-      var pos = cachedVectorDataMap[tileCoordsKey].positionInfo;
+      String tileCoordsKey = tileCoordsToKey(tile.coords);
+      PositionInfo pos = cachedVectorDataMap[tileCoordsKey].positionInfo;
       
       tileCoordsDisplayed[tileCoordsKey] = true;
 
-      var matrix;
+      Matrix4 matrix;
 
       if( !usePerspective ) { /// normal
         matrix = Matrix4.identity()
-          ..translate( pos['pos'].x,  pos['pos'].y )
-          ..scale( pos['scale'] );
+          ..translate( pos.point.x,  pos.point.y )
+          ..scale( pos.scale );
 
       } else  { /// perspective mode
         matrix = Matrix4.identity()
           ..setEntry(3, 2, 0.0015) // perspective
           ..translate(0.0,0.0,0.0)
           ..rotateX(rotatePerspective)
-          ..translate(pos['pos'].x, pos['pos'].y)
-          ..scale(pos['scale'], pos['scale']);
+          ..translate(pos.point.x, pos.point.y)
+          ..scale(pos.scale, pos.scale);
       }
       // May need to clip off the tile if there are overlapping problems with joining
       // paths. This may help, but it makes any perspective clipping difficult as its not a rect
@@ -398,7 +403,7 @@ class VectorPainter extends CustomPainter {
           var pathMap = layer['pathMap'][layerKey];
 
           if( pathMap.path != null ) {
-            var style = Styles.getStyle2( pathMap.layerString, pathMap.type, pathMap.pclass, tileZoom, pos['scale'], 2 );
+            var style = Styles.getStyle2( pathMap.layerString, pathMap.type, pathMap.pclass, tileZoom, pos.scale, 2 );
             ///canvas.drawPath( pathMap['path'].transform(matrix.storage), style );
             canvas.drawPath( pathMap.path, style );
 
@@ -418,14 +423,14 @@ class VectorPainter extends CustomPainter {
 
     /// All labels should come on top of paths etc, so moved loop out here
     for (var tile in tilesToRender) {
-      var tileCoordsKey = tileCoordsToKey(tile.coords);
-      var pos = cachedVectorDataMap[tileCoordsKey].positionInfo;
+      String tileCoordsKey = tileCoordsToKey(tile.coords);
+      PositionInfo pos = cachedVectorDataMap[tileCoordsKey].positionInfo;
 
-      var matrix;
+      Matrix4 matrix;
       if( !usePerspective) {
         matrix = Matrix4.identity();
-        matrix..translate(pos['pos'].x, pos['pos'].y)
-          ..scale(pos['scale']);
+        matrix..translate(pos.point.x, pos.point.y)
+          ..scale(pos.scale);
 
       } else {
         matrix = Matrix4.identity()
@@ -437,8 +442,8 @@ class VectorPainter extends CustomPainter {
             ..rotateZ( rotate )
             ..translate(-dimensions.dx/2.0, -dimensions.dy/2.0);
         }
-         matrix..translate(pos['pos'].x, pos['pos'].y)
-          ..scale(pos['scale'], pos['scale']);
+         matrix..translate(pos.point.x, pos.point.y)
+          ..scale(pos.scale, pos.scale);
       }
 
       /// There's a slight issue as labels aren't reverse transformed to account for
