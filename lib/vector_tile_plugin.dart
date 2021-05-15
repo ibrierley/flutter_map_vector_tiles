@@ -28,6 +28,17 @@ class GeomStore {
   GeomStore( this.pathStore, this.labels, this.points );
 }
 
+class PathInfo {
+  dartui.Path path;
+  String pclass;
+  String type;
+  String layerString;
+  int count;
+
+  PathInfo(this.path, this.pclass, this.type, this.layerString, this.count);
+
+}
+
 class VTCache {
   Uint8List units;
   String state;
@@ -92,7 +103,7 @@ class MapboxTile {
 
     for( var layer in vt.layers) {
 
-      Map<String, dynamic> pathMap = { };  //path => path, class => class, type => type, layer => layer
+      Map<String, PathInfo> pathMap = {};  //path => path, class => class, type => type, layer => layer
 
       var layerString = layer.name.toString();
 
@@ -233,12 +244,11 @@ class MapboxTile {
             /// otherwise water can end up on top of a road for example
 
             if(!pathMap.containsKey(key)) {
-              pathMap[key] = { 'path': dartui.Path(), 'class' : thisClass, 'type' : type, 'layerString' : layerString,
-                'count' : 1,  }; // init
+              pathMap[key] = PathInfo(dartui.Path(), thisClass, type, layerString, 1 );
             }
 
-            pathMap[key]['path'].addPath(path, Offset(0, 0));
-            pathMap[key]['count']++;
+            pathMap[key].path.addPath(path, Offset(0, 0));
+            pathMap[key].count++;
             tileStats.paths++;
             summaryAdd(summaryKey, includeSummary);
           } else {
@@ -298,9 +308,7 @@ class MapboxTile {
         }
       }
     }
-
-    ///cachedInfo['paintedLayerSegments']++;
-
+    
     ///tileStats.dump();
     ///print("INCLUDES: $includeSummary");
     ///print("EXCLUDES $excludeSummary");
@@ -389,10 +397,10 @@ class VectorPainter extends CustomPainter {
         for (var layerKey in layer['pathMap'].keys) { /// we have a map for each layer, paths should be combined to same syle/type
           var pathMap = layer['pathMap'][layerKey];
 
-          if( pathMap.containsKey('path') ) {
-            var style = Styles.getStyle2( pathMap['layerString'], pathMap['type'], pathMap['class'], tileZoom, pos['scale'], 2 );
+          if( pathMap.path != null ) {
+            var style = Styles.getStyle2( pathMap.layerString, pathMap.type, pathMap.pclass, tileZoom, pos['scale'], 2 );
             ///canvas.drawPath( pathMap['path'].transform(matrix.storage), style );
-            canvas.drawPath( pathMap['path'], style );
+            canvas.drawPath( pathMap.path, style );
 
           }
         }
