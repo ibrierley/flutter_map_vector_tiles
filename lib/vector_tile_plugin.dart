@@ -8,6 +8,8 @@ import 'filters.dart';
 import 'styles.dart';
 import 'package:flutter_map_vector_tile/VectorTileWidget.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:vector_math/vector_math_64.dart' as VectorMath hide Colors;
+import 'dart:math' as DartMath;
 
 int decodeZigZag( int byte ) { /// decodes from mapbox small int style
   return ((byte >> 1) ^ -(byte & 1)).toInt();
@@ -350,10 +352,10 @@ class VectorPainter extends CustomPainter {
 
     var seenLabel = {};
     var rotatePerspective = -1.25; //-1.25; // only used if we're using perspective enabled
-    var rotate = 0.0;
     var widgetRotation = this.rotation;
     var isRotated = false;
     if(widgetRotation != 0.0 ) isRotated = true;
+    var devicePerspectiveAngle =  DartMath.atan2( size.width/2 , size.height) * 57.2958;
 
     var pointPaint = Paint()
       ..color = Colors.grey
@@ -363,6 +365,7 @@ class VectorPainter extends CustomPainter {
     Map<String, bool> tileCoordsDisplayed = {};
     List<Label> renderLabels = [];
 
+    /// Drawing normal paths
     for (var tile in tilesToRender) {
       String tileCoordsKey = tileCoordsToKey(tile.coords);
       PositionInfo pos = cachedVectorDataMap[tileCoordsKey].positionInfo;
@@ -370,6 +373,7 @@ class VectorPainter extends CustomPainter {
       tileCoordsDisplayed[tileCoordsKey] = true;
 
       Matrix4 matrix;
+      VectorMath.Matrix4 matrix4;
 
       if( !usePerspective ) { /// normal
         matrix = Matrix4.identity()
@@ -377,20 +381,27 @@ class VectorPainter extends CustomPainter {
           ..scale( pos.scale );
 
       } else  { /// perspective mode
+
+        // If using perspective, the vanshing point is aligned to 0,0 top left of
+        // device, so need to rotate to center align devicePerspectiveAngle;
+        // rotatePerspective is the near/far rotation
+
         matrix = Matrix4.identity()
+          ..rotateY(devicePerspectiveAngle * 0.0174)
           ..setEntry(3, 2, 0.0015) // perspective
-          ..translate(0.0,0.0,0.0)
           ..rotateX(rotatePerspective)
+
           ..translate(pos.point.x, pos.point.y)
           ..scale(pos.scale, pos.scale);
       }
+
+        canvas.save();
+        canvas.transform(matrix.storage);
+
       // May need to clip off the tile if there are overlapping problems with joining
       // paths. This may help, but it makes any perspective clipping difficult as its not a rect
       // unless we clip/draw on a transformed canvas or something fiddly
       // leaving this code here, just to think about, it doesn't really work
-
-        canvas.save();
-        canvas.transform(matrix.storage);
 
       // var clipOffset = Offset(pos['pos'].x, pos['pos'].y);
       // var adjustedSize = Offset(256.0, 256.0).scale(pos['scale'], pos['scale']);
@@ -416,11 +427,13 @@ class VectorPainter extends CustomPainter {
        canvas.restore();
     }
 
-    /// we want to keep previous labels displayed to show first if tiles ///
+    /// we want to keep previous labels displayed to show first if tiles
     /// haven't gone out of view
 
     labelsOnDisplay.removeWhere((key, keyLabel) => !tileCoordsDisplayed.containsKey(keyLabel));
 
+    /// Calculated transformed Label position and do collision detection
+    /// to decide which to cull.
     /// All labels should come on top of paths etc, so moved loop out here
     for (var tile in tilesToRender) {
       String tileCoordsKey = tileCoordsToKey(tile.coords);
@@ -434,15 +447,12 @@ class VectorPainter extends CustomPainter {
 
       } else {
         matrix = Matrix4.identity()
+          ..rotateY(devicePerspectiveAngle * 0.0174)
           ..setEntry(3, 2, 0.0015) // perspective
-          ..translate(0.0, 0.0, 0.0)
-          ..rotateX(rotatePerspective);
-        if( true ) {
-          matrix..translate((dimensions.dx/2.0), (dimensions.dy/2.0))
-            ..rotateZ( rotate )
-            ..translate(-dimensions.dx/2.0, -dimensions.dy/2.0);
-        }
-         matrix..translate(pos.point.x, pos.point.y)
+          ..rotateX(rotatePerspective)
+
+          // normal position
+          ..translate(pos.point.x, pos.point.y)
           ..scale(pos.scale, pos.scale);
       }
 
@@ -477,6 +487,7 @@ class VectorPainter extends CustomPainter {
 
         canvas.drawPoints( PointMode.points, [ label.transformedPoint ], pointPaint );
 
+        /// if its rotated, we want to keep the text unrotated
         var drawPoint = label.transformedPoint;
         if( isRotated) {
           drawPoint = Offset(0.0, 0.0);

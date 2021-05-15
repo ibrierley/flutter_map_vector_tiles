@@ -86,7 +86,6 @@ class VectorTilePlugin implements MapPlugin {
   bool supportsLayer(LayerOptions options) {
     return options is VectorTileLayerPluginOptions;
   }
-
 }
 
 class VectorTilePluginLayer extends StatefulWidget {
@@ -116,7 +115,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   double _tileZoom;
   VectorLevel _level;
   StreamSubscription _moveSub;
-  StreamController<LatLng> _throttleUpdate;
   CustomPoint _tileSize;
 
   ValueNotifier<int> paintNotifier;
@@ -147,6 +145,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     _resetView();
     _moveSub = widget.stream.listen((_) => _handleMove());
     _housekeepingTimer = Timer.periodic(Duration(hours: 24), (Timer t) => _tidyOldTileListEntries());
+
   }
 
   @override
@@ -159,10 +158,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
   void _handleMove() {
     setState(() {
-      /// Not needed now, as we don't leave tiles hanging about, we just
-      /// try and do the right thing and display, with a strategy to try
-      /// recently loaded tiles if a current tile is outstanding.
-      /// _pruneTiles();
       _resetView();
     });
   }
@@ -372,7 +367,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     var width = tileSize.x * level.scale;
     var height = tileSize.y * level.scale;
     var coordsKey = _tileCoordsToKey(coords);
-    ///var tilePositionInfo = { 'pos' : pos, 'width' : width, 'height': height, 'coordsKey' : coordsKey, 'scale' : width / tileSize.x };
+
     PositionInfo tilePositionInfo = PositionInfo(point: pos, width: width, height: height, coordsKey: coordsKey, scale: width / tileSize.x );
 
     return tilePositionInfo;
@@ -404,15 +399,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     } else {
       List<Label> labelList = [];
       if(!_cachedVectorData.containsKey(coordsKey)) {
-       /* _cachedVectorData[coordsKey] = {
-          'units': null,
-          'state': 'gettingHttp',
-          'coordsKey': coordsKey,
-          'tileZoom' : _tileZoom,
-          'positionInfo' : {},
-          'geomInfo' : GeomStore([], labelList, []),
-        };*/
-
         _cachedVectorData[coordsKey] = VTCache(
           null, 'gettingHttp', coordsKey, _tileZoom, PositionInfo(),  GeomStore([], labelList, [])
         );

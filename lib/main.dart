@@ -52,7 +52,6 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     mapController = MapController();
-
   }
 
   Widget build(BuildContext context) {
@@ -76,7 +75,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 useCanvas: true,
                 useImages: false, //disabled, code currently removed, but could be added, not sure I currently see the benefit
                 useBackupTiles: true, //use a previously loaded tile if current one not available yet
-                usePerspective: false, // experimental, probably won't be working, but leaving in code to play with
+                usePerspective: false, // experimental, doesn't work with rotate on
                 underZoom: 0, // how many zoom levels above current one to use instead, try 1 or 2 for example
                 debugTiles: false, // will display a border around the tile for debugging
                 debugLabels: false, // will display a boundary around a label used for collision detection
