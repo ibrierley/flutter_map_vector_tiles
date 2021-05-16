@@ -44,9 +44,9 @@ class Styles {
       'street':       { 'color': Colors.blueGrey.shade600,    'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
       'pedestrian':   { 'color': Colors.blueGrey.shade600,    'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
       'street_limited': { 'color': Colors.blueGrey.shade600,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
-      'motorway' :    { 'color': Colors.blueGrey.shade800,    'min': 5,  'max' : 21, 'hairline': { "<" : 10 } }, ///
-      'trunk':        { 'color': Colors.blueGrey.shade700,    'min': 5,  'max' : 21, 'hairline': { "<" : 10 } }, ///
-      'trunk_link':   { 'color': Colors.blueGrey.shade700,    'min': 7,  'max' : 21, 'hairline': { "<" : 10 } }, ///
+      'motorway' :    { 'color': Colors.blueGrey.shade800,    'min': 5,  'max' : 21, 'hairline': { "<" : 0 } }, /// 5,21,10
+      'trunk':        { 'color': Colors.blueGrey.shade700,    'min': 8,  'max' : 21, 'hairline': { "<" : 0 } }, /// 5,21,10
+      'trunk_link':   { 'color': Colors.blueGrey.shade700,    'min': 10,  'max' : 21, 'hairline': { "<" : 0 } }, /// 7,21,10
       'primary' :     { 'color': Colors.blueGrey.shade600,    'min': 17, 'max' : 21, 'hairline': { "<" : 13 } }, // A roads
       'primary_link': { 'color': Colors.blueGrey.shade600,    'min': 17, 'max' : 21, 'hairline': { "<" : 13 } },
       'secondary':    { 'color': Colors.blueGrey.shade500,    'min': 12, 'max' : 21, 'hairline': { "<" : 14 } },

@@ -26,8 +26,8 @@ class VectorWidget extends StatefulWidget {
   final tileZoom;
   final underZoom;
   final usePerspective;
-  final debugTiles;
-  final debugLabels;
+  final debugOptions;
+  final optimisations;
 
   VectorWidget(
       this.rotation,
@@ -36,8 +36,8 @@ class VectorWidget extends StatefulWidget {
       this.tileZoom,
       this.underZoom,
       this.usePerspective,
-      this.debugTiles,
-      this.debugLabels,
+      this.debugOptions,
+      this.optimisations,
       );
 
   @override
@@ -61,7 +61,9 @@ class _VectorWidgetState extends State<VectorWidget> {
         child: RepaintBoundary (
           child: CustomPaint(
             isComplex: true, //Tells flutter to cache the painter.
-            painter: VectorPainter( dimensions, widget.rotation, widget.tilesToRender, widget.tileZoom, widget.cachedVectorDataMap, widget.underZoom, widget.usePerspective, widget.debugTiles, widget.debugLabels ) )
+            painter: VectorPainter( dimensions, widget.rotation, widget.tilesToRender, widget.tileZoom,
+                widget.cachedVectorDataMap, widget.underZoom, widget.usePerspective,
+                widget.debugOptions, widget.optimisations ) )
        )
     );
 
@@ -133,12 +135,36 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
   LatLng _prevCenter;
   int underZoom;
+  Optimisations optimisations;
+  DebugOptions debugOptions;
 
   @override
   void initState() {
     vectorOptions = widget.vectorTileLayerOptions;
+    optimisations = vectorOptions.optimisations;
+    debugOptions = vectorOptions.debugOptions;
     underZoom = vectorOptions.underZoom;
     vectorStyle = vectorOptions.vectorStyle;
+
+    if( vectorOptions.mapController != null ) {
+      ///print("have a map controller");
+      vectorOptions.mapController.mapEventStream.listen((event) {
+        ///print("Map event $event ${ event.zoom } ${event.source } ");
+
+        /// hack to see if we can speed up pinchzooms...
+        /// use hairline if middle of pinchzoom
+        if( optimisations.pinchZoomOption) {
+          if (event.source == MapEventSource.onMultiFinger &&
+              (event is MapEventMoveStart)) {
+            optimisations.pinchZoom = true;
+          }
+          if (event.source == MapEventSource.multiFingerEnd ||
+              event.source == MapEventSource.dragEnd) {
+            optimisations.pinchZoom = false;
+          }
+        }
+      });
+    }
 
     super.initState();
     _tileSize = CustomPoint(vectorOptions.tileSize, vectorOptions.tileSize);
@@ -323,7 +349,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     for (var tile in _tiles.values) {
       if ((_level != null) && (tile.coords.z - _level.zoom).abs() <= 1 + math.pow(2, underZoom)) {
         if (!_cachedVectorData.containsKey(_tileCoordsToKey(tile.coords))) {
-          print("Calling fechData for ${tile.coords} ");
+          if ( debugOptions.decoding) print("Calling fechData for ${tile.coords} ");
           fetchData(tile.coords, 1);
         } else {
           tilesToRender.add(tile);
@@ -354,7 +380,9 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     return Container(
            color: Colors.blueGrey,
-         child: VectorWidget(widget.mapState.rotation, _cachedVectorData, allTilesToRender, _tileZoom, underZoom, vectorOptions.usePerspective, vectorOptions.debugTiles, vectorOptions.debugLabels  )
+         child: VectorWidget(widget.mapState.rotation, _cachedVectorData, allTilesToRender, _tileZoom, underZoom,
+             vectorOptions.usePerspective, vectorOptions.debugOptions,
+             optimisations  )
      );
   }
 
@@ -417,7 +445,9 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
               var response = await retry.RetryClient(http.Client()).get(Uri.parse(url));
               _cachedVectorData[coordsKey].units = response.body.codeUnits;
             } else {
-              print("Got $coordsKey via DefaultCacheManager");
+              if( debugOptions.decoding) {
+                print("Got $coordsKey via DefaultCacheManager");
+              }
             }
 
             try {
@@ -428,7 +458,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
             _recentTilesCompleted[coordsKey] = DateTime.now(); ///backup tiles uses these to know which it can use as a backup
             _outstandingTileLoads.remove(coordsKey);
 
-            print("decoded $coordsKey}");
+            if( debugOptions.decoding ) print("decoded $coordsKey}");
 
             setState(() {
 
@@ -755,10 +785,11 @@ class VectorTileLayerPluginOptions extends TileLayerOptions {
   bool useCanvas;
   bool useBackupTiles;
   bool usePerspective;
-  bool debugTiles;
-  bool debugLabels;
+  DebugOptions debugOptions;
   Map vectorStyle;
   int underZoom;
+  MapController mapController;
+  Optimisations optimisations;
 
   VectorTileLayerPluginOptions({
     this.urlTemplate,
@@ -779,10 +810,11 @@ class VectorTileLayerPluginOptions extends TileLayerOptions {
     this.useCanvas = true,
     this.useBackupTiles = true,
     this.usePerspective = false,
-    this.debugTiles = false,
-    this.debugLabels = false,
+    this.debugOptions,
     this.vectorStyle,
     this.underZoom,
+    this.mapController,
+    this.optimisations,
     rebuild,
   })  :
         super(rebuild: rebuild);
@@ -805,6 +837,23 @@ class VTile {
 
   VTile(this.coords, this.displayedZ, this.current, this.backupCoords);
 }
+
+class Optimisations {
+  bool pinchZoom;
+  bool pinchZoomOption;
+  bool hairline;
+  bool hairlineOption;
+  Optimisations( { this.pinchZoom = false, this.pinchZoomOption = false, this.hairline = false, this.hairlineOption = false });
+}
+
+class DebugOptions {
+  bool tiles;
+  bool labels;
+  bool decoding;
+
+  DebugOptions({ this.tiles = false, this.labels = false, this.decoding = false });
+}
+
 
 
 

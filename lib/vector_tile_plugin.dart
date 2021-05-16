@@ -333,9 +333,9 @@ class VectorPainter extends CustomPainter {
   final cachedVectorDataMap;
   final underZoom;
   final usePerspective;
-  final debugTiles;
-  final debugLabels;
+  final debugOptions;
   final rotation;
+  final Optimisations optimisations;
 
   static final Map<String, Label> labelsOnDisplay = {};
 
@@ -345,7 +345,9 @@ class VectorPainter extends CustomPainter {
 
   List<Map<String, bool>> layerDisplaySegments = Filters.layerDisplaySegments();
 
-  VectorPainter(Offset this.dimensions, double this.rotation,  List<VTile> this.tilesToRender, this.tileZoom, this.cachedVectorDataMap, this.underZoom, this.usePerspective, this.debugTiles, this.debugLabels);
+  VectorPainter(Offset this.dimensions, double this.rotation,  List<VTile> this.tilesToRender, this.tileZoom,
+      this.cachedVectorDataMap, this.underZoom, this.usePerspective,
+      this.debugOptions, this.optimisations);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -387,12 +389,12 @@ class VectorPainter extends CustomPainter {
         // rotatePerspective is the near/far rotation
 
         matrix = Matrix4.identity()
-          ..rotateY(devicePerspectiveAngle * 0.0174)
-          ..setEntry(3, 2, 0.0015) // perspective
-          ..rotateX(rotatePerspective)
+          ..rotateY(devicePerspectiveAngle * 0.0174) // device vanishing point offset
+          ..setEntry(3, 2, 0.0015) // general distance perspective
+          ..rotateX(rotatePerspective) // horizontal level angle change
 
-          ..translate(pos.point.x, pos.point.y)
-          ..scale(pos.scale, pos.scale);
+          ..translate(pos.point.x, pos.point.y) // general tile position change
+          ..scale(pos.scale, pos.scale); // our zoom level change
       }
 
         canvas.save();
@@ -416,14 +418,20 @@ class VectorPainter extends CustomPainter {
           if( pathMap.path != null ) {
             var style = Styles.getStyle2( pathMap.layerString, pathMap.type, pathMap.pclass, tileZoom, pos.scale, 2 );
             ///canvas.drawPath( pathMap['path'].transform(matrix.storage), style );
+
+            /// if we've pinchzooming, use thin lines for speed
+            if( optimisations.pinchZoom ) style.strokeWidth = 0.0;
+            if( optimisations.hairlineOption && tileZoom < 11) style.strokeWidth = 0.0;
+
             canvas.drawPath( pathMap.path, style );
 
           }
         }
       }
-      if( debugTiles ) { /// display tile square and coords
+      if( debugOptions.tiles ) { /// display tile square and coords
         _debugTiles(canvas, tile);
       }
+
        canvas.restore();
     }
 
@@ -480,7 +488,7 @@ class VectorPainter extends CustomPainter {
 
         /// boundary box check (slight bug that it rotates unlike text)
         
-        if( checkLabelOverlaps( label, canvas, debugLabels ) ) {
+        if( checkLabelOverlaps( label, canvas, debugOptions.labels ) ) {
           labelsOnDisplay.remove(label.text);
           continue;
         }
