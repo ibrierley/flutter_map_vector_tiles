@@ -39,7 +39,7 @@ class Styles {
     ///hairline = switch to a hairline width of 0 for optimisation at low zoom levels where we dont care
     "road": {
       'include': true,
-      'default':      { 'color': Colors.blueGrey.shade900,    'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
+      'default':      { 'color': Colors.yellow,    'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
       'service':      { 'color': Colors.blueGrey.shade600,    'min': 14, 'max' : 21, 'hairline': { "<" : 14 } },
       'street':       { 'color': Colors.blueGrey.shade600,    'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
       'pedestrian':   { 'color': Colors.blueGrey.shade600,    'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
@@ -87,12 +87,13 @@ class Styles {
         'rock' :    { 'color': Colors.grey,                 'min': 0, 'max': 21},
         'glacier' : { 'color': Colors.grey,                 'min': 12, 'max': 21},
       },
+
       "landuse_overlay": {
         'include': true,
         'default': { 'color': Colors.green, 'min': 12, 'max': 21},
         "national_park": { 'color': Colors.green, 'min': 12, 'max': 21},
-        "wetland_noveg" : { 'color': Colors.grey.shade900, 'min': 11, 'max': 21},
-        "wetland" : { 'color': Colors.grey.shade900, 'min': 12, 'max': 21},
+        "wetland_noveg" : { 'color': Colors.blueGrey, 'min': 11, 'max': 21},
+        "wetland" : { 'color': Colors.blue.shade700, 'min': 12, 'max': 21},
       },
 
       "water": {
@@ -105,6 +106,7 @@ class Styles {
         'river':   { 'color': Colors.blue.shade600, 'min': 12, 'max': 21},
         'canal': { 'color': Colors.blue.shade600, 'min': 12, 'max': 21},
         'stream': { 'color': Colors.blue.shade900, 'min': 14, 'max': 21},
+        'ditch' : { 'color': Colors.blue.shade600, 'min': 12, 'max': 21},
       },
       "transit_stop": {
           'include': true,
@@ -157,7 +159,7 @@ class Styles {
         'default': { 'color': Colors.brown, 'min': 14, 'max': 21},
         'landform': { 'color': Colors.brown, 'min': 12, 'max': 21},
         'sea': { 'color': Colors.black, 'min': 0, 'max': 21},
-        'stream': { 'color': Colors.black, 'min': 14, 'max': 21},
+        'stream': { 'color': Colors.blue.shade800, 'min': 14, 'max': 21},
       },
 
       'place_label': {

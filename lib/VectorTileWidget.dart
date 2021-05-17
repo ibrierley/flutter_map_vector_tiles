@@ -453,7 +453,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
             try {
             _cachedVectorData[coordsKey].state = 'got';
 
-            MapboxTile.decode(coordsKey, _cachedVectorData[coordsKey], {}, {}, _tileZoom);
+            MapboxTile.decode(coordsKey, _cachedVectorData[coordsKey], {}, {}, _tileZoom, debugOptions);
 
             _recentTilesCompleted[coordsKey] = DateTime.now(); ///backup tiles uses these to know which it can use as a backup
             _outstandingTileLoads.remove(coordsKey);
@@ -850,8 +850,9 @@ class DebugOptions {
   bool tiles;
   bool labels;
   bool decoding;
+  bool featureSummary;
 
-  DebugOptions({ this.tiles = false, this.labels = false, this.decoding = false });
+  DebugOptions({ this.tiles = false, this.labels = false, this.decoding = false, this.featureSummary = false });
 }
 
 

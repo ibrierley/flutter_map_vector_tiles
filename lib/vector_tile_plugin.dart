@@ -79,7 +79,7 @@ class MapboxTile {
     map[ key ] = map.containsKey(key) ? map[ key ]++ : 1;
   }
 
-  static void decode( coordsKey, cachedInfo, options, vectorStyles, tileZoom ) {
+  static void decode( coordsKey, cachedInfo, options, vectorStyles, tileZoom, DebugOptions debugOptions ) {
 
     Map<String, int> includeSummary = {};
     Map<String, int> excludeSummary = {};
@@ -317,8 +317,10 @@ class MapboxTile {
     }
 
     ///tileStats.dump();
-    ///print("INCLUDES: $includeSummary");
-    ///print("EXCLUDES $excludeSummary");
+    if( debugOptions.featureSummary ) {
+      print("INCLUDES: $includeSummary");
+      print("EXCLUDES $excludeSummary");
+    }
   }
 }
 

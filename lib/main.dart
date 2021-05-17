@@ -55,7 +55,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget build(BuildContext context) {
-    var start = DateTime.now();
 
     Optimisations optimisations = Optimisations(
         pinchZoomOption: true, // use hairlines for speed when zooming
@@ -64,7 +63,8 @@ class _MyHomePageState extends State<MyHomePage> {
     DebugOptions debugOptions = DebugOptions(
         tiles: false, // show a tile border
         labels: false, // show a label border thats used for label collision checks
-        decoding: false // show http gets and when decoding is done
+        decoding: false, // show http gets and when decoding is done
+        featureSummary: false
     );
 
     var fmap =  FlutterMap(
