@@ -369,6 +369,16 @@ class VectorPainter extends CustomPainter {
     Map<String, bool> tileCoordsDisplayed = {};
     List<Label> renderLabels = [];
 
+    if( usePerspective ) {
+      var m = Matrix4.identity()
+        ..rotateY(
+            devicePerspectiveAngle * 0.0174) // device vanishing point offset
+        ..setEntry(3, 2, 0.0015) // general distance perspective
+        ..rotateX(rotatePerspective); // horizontal level angle change
+      canvas.save();
+      canvas.transform( m.storage );
+    }
+
     /// Drawing normal paths
     for (var tile in tilesToRender) {
       String tileCoordsKey = tileCoordsToKey(tile.coords);
@@ -376,28 +386,9 @@ class VectorPainter extends CustomPainter {
       
       tileCoordsDisplayed[tileCoordsKey] = true;
 
-      Matrix4 matrix;
-      VectorMath.Matrix4 matrix4;
-
-      if( !usePerspective ) { /// normal
-        matrix = Matrix4.identity()
+      Matrix4 matrix = Matrix4.identity()
           ..translate( pos.point.x,  pos.point.y )
           ..scale( pos.scale );
-
-      } else  { /// perspective mode
-
-        // If using perspective, the vanshing point is aligned to 0,0 top left of
-        // device, so need to rotate to center align devicePerspectiveAngle;
-        // rotatePerspective is the near/far rotation
-
-        matrix = Matrix4.identity()
-          ..rotateY(devicePerspectiveAngle * 0.0174) // device vanishing point offset
-          ..setEntry(3, 2, 0.0015) // general distance perspective
-          ..rotateX(rotatePerspective) // horizontal level angle change
-
-          ..translate(pos.point.x, pos.point.y) // general tile position change
-          ..scale(pos.scale, pos.scale); // our zoom level change
-      }
 
         canvas.save();
         canvas.transform(matrix.storage);
@@ -436,6 +427,8 @@ class VectorPainter extends CustomPainter {
 
        canvas.restore();
     }
+
+    if( usePerspective ) canvas.restore();
 
     /// we want to keep previous labels displayed to show first if tiles
     /// haven't gone out of view
