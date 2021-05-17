@@ -20,7 +20,7 @@ String tileCoordsToKey(Coords coords) {
 }
 
 class GeomStore {
-  List<Map<String,dynamic>> pathStore; /// rename/rejig as not really paths as such...
+  List<Map<String, PathInfo>> pathStore; /// rename/rejig as not really paths as such...
   List<Label> labels;
   List<Offset> points;
   GeomStore( this.pathStore, this.labels, this.points );
@@ -213,7 +213,7 @@ class MapboxTile {
 
               } else if (type == 'POINT') {
                 pointList.add(Offset(ncx, ncy));
-                labelPointlist.add([Offset(ncx, ncy),layer.name, featureInfo  ]);  /// May want to add a style here, to draw last thing...
+                labelPointlist.add([ Offset(ncx, ncy), layer.name, featureInfo ]);  /// May want to add a style here, to draw last thing...
                 tileStats.points++;
                 tileStats.labelPoints++;
               }
@@ -265,8 +265,7 @@ class MapboxTile {
         }
       }
 
-      ///cachedInfo['geomInfo']['paths'].add({'layerString': layerString, 'pathMap': pathMap });
-      cachedInfo.geomInfo.pathStore.add({'layerString': layerString, 'pathMap': pathMap });
+      cachedInfo.geomInfo.pathStore.add(pathMap);
 
     } // layer
 
@@ -375,6 +374,7 @@ class VectorPainter extends CustomPainter {
             devicePerspectiveAngle * 0.0174) // device vanishing point offset
         ..setEntry(3, 2, 0.0015) // general distance perspective
         ..rotateX(rotatePerspective); // horizontal level angle change
+
       canvas.save();
       canvas.transform( m.storage );
     }
@@ -405,12 +405,12 @@ class VectorPainter extends CustomPainter {
       // canvas.clipRect(myRect);
 
       for (var layer in cachedVectorDataMap[tileCoordsToKey(tile.coords)].geomInfo.pathStore) {
-        for (var layerKey in layer['pathMap'].keys) { /// we have a map for each layer, paths should be combined to same syle/type
-          var pathMap = layer['pathMap'][layerKey];
+        for (var layerKey in layer.keys) { /// we have a map for each layer, paths should be combined to same syle/type
+          var pathMap = layer[layerKey];
 
           if( pathMap.path != null ) {
             var style = Styles.getStyle2( pathMap.layerString, pathMap.type, pathMap.pclass, tileZoom, pos.scale, 2 );
-            ///canvas.drawPath( pathMap['path'].transform(matrix.storage), style );
+            ///canvas.drawPath( pathMap.path.transform(matrix.storage), style );
 
             /// if we've pinchzooming, use thin lines for speed
             if( optimisations.pinchZoom ) style.strokeWidth = 0.0;
