@@ -49,16 +49,16 @@ class Styles {
       'trunk_link':   { 'color': Colors.blueGrey.shade700,    'min': 10,  'max' : 21, 'hairline': { "<" : 0 } }, /// 7,21,10
       'primary' :     { 'color': Colors.blueGrey.shade600,    'min': 17, 'max' : 21, 'hairline': { "<" : 13 } }, // A roads
       'primary_link': { 'color': Colors.blueGrey.shade600,    'min': 17, 'max' : 21, 'hairline': { "<" : 13 } },
-      'secondary':    { 'color': Colors.blueGrey.shade500,    'min': 12, 'max' : 21, 'hairline': { "<" : 14 } },
-      'secondary_link': { 'color': Colors.blueGrey.shade500,  'min': 12, 'max' : 21, 'hairline': { "<" : 14 } },
-      'tertiary':     { 'color': Colors.blueGrey.shade500,    'min': 13, 'max' : 21, 'hairline': { "<" : 14 } },
-      'tertiary_link': { 'color': Colors.blueGrey.shade400,   'min': 13, 'max' : 21, 'hairline': { "<" : 14 } },
+      'secondary':    { 'color': Colors.blueGrey.shade600,    'min': 12, 'max' : 21, 'hairline': { "<" : 14 } },
+      'secondary_link': { 'color': Colors.blueGrey.shade600,  'min': 12, 'max' : 21, 'hairline': { "<" : 14 } },
+      'tertiary':     { 'color': Colors.blueGrey.shade600,    'min': 13, 'max' : 21, 'hairline': { "<" : 14 } },
+      'tertiary_link': { 'color': Colors.blueGrey.shade600,   'min': 13, 'max' : 21, 'hairline': { "<" : 14 } },
       'path':         { 'color': Colors.brown.shade800,       'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
       'track':        { 'color': Colors.brown.shade800,       'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
       'residential':  { 'color': Colors.blue,                 'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
       'major_rail':   { 'color': Colors.blueGrey.shade900,    'min': 13, 'max' : 21, 'hairline': { "<" : 12 } }, // make prob darker than roads...
-      'minor_rail':   { 'color': Colors.blueGrey.shade600,    'min': 14, 'max' : 21, 'hairline': { "<" : 13 } },
-      'service_rail': { 'color': Colors.blueGrey.shade500,    'min': 13, 'max' : 21, 'hairline': { "<" : 13 } },
+      'minor_rail':   { 'color': Colors.blueGrey.shade900,    'min': 14, 'max' : 21, 'hairline': { "<" : 13 } },
+      'service_rail': { 'color': Colors.blueGrey.shade900,    'min': 13, 'max' : 21, 'hairline': { "<" : 13 } },
       'construction': { 'color': Colors.brown,                'min': 14, 'max' : 21, 'hairline': { "<" : 13 } },
       'ferry':        { 'color': Colors.brown,                'min': 13, 'max' : 21, 'hairline': { "<" : 13 } },
     },
@@ -184,7 +184,7 @@ class Styles {
       },
       "housenum_label": {
         'include': true,
-        'default': { 'color': Colors.black, 'min': 17, 'max': 21},
+        'default': { 'color': Colors.black, 'min': 21, 'max': 21},
       },
       "mountain_peak_label": {
         'include': true,

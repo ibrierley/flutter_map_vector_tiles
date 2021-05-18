@@ -75,7 +75,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ],
               interactiveFlags: InteractiveFlag.all, // MapEventMoveStart& ~InteractiveFlag.rotate,
               center: LatLng(50.8323646,-0.1871463),
-              zoom: 15.3,
+              zoom: 17.3,
               //rotation: 45,
             ),
             layers: [

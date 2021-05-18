@@ -19,6 +19,12 @@ String tileCoordsToKey(Coords coords) {
   return '${coords.x}:${coords.y}:${coords.z}';
 }
 
+enum GeomType {
+  polygon,
+  linestring,
+  point
+}
+
 class GeomStore {
   List<Map<String, PathInfo>> pathStore; /// rename/rejig as not really paths as such...
   List<Label> labels;
@@ -59,12 +65,14 @@ class VTCache {
 
 class Label {
   String text;
+  String dedupeKey;
   Offset point;
   Offset transformedPoint;
   Offset boundNW;
   Offset boundSE;
+  int priority = 3;
   TextPainter textPainter;
-  Label( this.text, this.point, this.textPainter);
+  Label( this.text, this.point, this.textPainter, this.dedupeKey, this.priority );
 }
 
 class TileStats {
@@ -81,6 +89,7 @@ class MapboxTile {
 
   static void decode( coordsKey, cachedInfo, options, vectorStyles, tileZoom, DebugOptions debugOptions ) {
 
+    Map<GeomType,List> fullGeomMap = { GeomType.linestring: [], GeomType.polygon: [], GeomType.point:  []}; /// I don't know if we will want this..may be better to separate into roads, labels, paths etc...?
     Map<String, int> includeSummary = {};
     Map<String, int> excludeSummary = {};
     TileStats tileStats = new TileStats();
@@ -107,6 +116,7 @@ class MapboxTile {
     Map layerSummary = {};
 
     List labelPointlist = [];
+    List roadList = [];
 
     for( var layer in vt.layers) {
 
@@ -128,6 +138,8 @@ class MapboxTile {
       for (var feature in layer.features) {
 
         var featureInfo = {};
+        var item; // path or point
+        var point;
 
         for (var tagIndex = 0; tagIndex < feature.tags.length; tagIndex += 2) {
           var valIndex = feature.tags[tagIndex + 1];
@@ -145,9 +157,11 @@ class MapboxTile {
           featureInfo[layer.keys[feature.tags[tagIndex]]] = val;
         }
 
+
         List<Offset> polyPoints = [];
 
         var type = feature.type.toString();
+        GeomType geomType;
 
         if(layerSummary.containsKey(type)) {
           layerSummary[type]++;
@@ -180,6 +194,7 @@ class MapboxTile {
                 path.addPolygon(polyPoints, true);
                 tileStats.polys++;
                 polyPoints = [];
+                geomType = GeomType.polygon;
               } else {
                 path.close();
               }
@@ -207,15 +222,34 @@ class MapboxTile {
                 polyPoints = [];
                 polyPoints.add(Offset(ncx, ncy));
                 tileStats.polyPoints++;
+                geomType = GeomType.polygon;
+
               } else if (type == 'LINESTRING') {
                 if (path == null) path = dartui.Path();
                 path.moveTo(ncx, ncy);
+                geomType = GeomType.linestring;
 
               } else if (type == 'POINT') {
-                pointList.add(Offset(ncx, ncy));
-                labelPointlist.add([ Offset(ncx, ncy), layer.name, featureInfo ]);  /// May want to add a style here, to draw last thing...
+
+                point = Offset(ncx, ncy);
+                pointList.add(point);
+
+                var dedupeKey = featureInfo['name'];
+                var priority = 1; // 1 is best priority
+
+                /// We want a poi or a shop label to appear rather than a housenum if poss
+                if(layer.name == "housenum_label") {
+                  featureInfo['name'] = featureInfo['house_num'];
+                  dedupeKey = "${featureInfo['name']}|$point";
+                  priority = 9;
+                }
+
+                labelPointlist.add([ point, layer.name, featureInfo, dedupeKey, priority ]);  /// May want to add a style here, to draw last thing..., move into a class
+
                 tileStats.points++;
                 tileStats.labelPoints++;
+                geomType = GeomType.point;
+
               }
 
             } else if (command == 'L') { // LINETO
@@ -223,9 +257,12 @@ class MapboxTile {
               if (type == 'POLYGON') {
                 polyPoints.add(Offset(ncx, ncy));
                 tileStats.polyPoints++;
+                geomType = GeomType.polygon;
               } else if (type == 'LINESTRING') {
+
                 path.lineTo(ncx, ncy);
                 tileStats.linePoints++;
+                geomType = GeomType.linestring;
               }
             } else {
               print("Incorrect command string");
@@ -244,6 +281,15 @@ class MapboxTile {
 
         var key = "L:$layerString>T:$type>C:$thisClass";
         var summaryKey = key + "|" + tileZoom.toString();
+
+        if(includeFeature && geomType != null) {
+          if(geomType == GeomType.point) item = point;
+          if(geomType == GeomType.linestring || geomType == GeomType.polygon) item = path;
+
+          print("$geomType ${layer.name} ${featureInfo} ${item}");
+
+          fullGeomMap[geomType].add([type, layer.name, featureInfo, item]); /// not sure if we need this fully yet....
+        }
 
         if (!options.containsKey('labelsOnly') && path != null) {
           if(includeFeature) {
@@ -303,7 +349,7 @@ class MapboxTile {
               ..text = textSpan;
 
             cachedInfo.geomInfo.labels.add(
-              Label( info.toString(), pointInfo[0], textPainter ) );
+              Label( info.toString(), pointInfo[0], textPainter, pointInfo[3], pointInfo[4] ) ); /// use named params ?
 
           }
           tileStats.labels++;
@@ -320,6 +366,8 @@ class MapboxTile {
       print("INCLUDES: $includeSummary");
       print("EXCLUDES $excludeSummary");
     }
+
+    ///print("$fullGeomMap");
   }
 }
 
@@ -367,6 +415,7 @@ class VectorPainter extends CustomPainter {
     
     Map<String, bool> tileCoordsDisplayed = {};
     List<Label> renderLabels = [];
+    List<Label> lowPriRenderLabels = [];
 
     if( usePerspective ) {
       var m = Matrix4.identity()
@@ -390,8 +439,8 @@ class VectorPainter extends CustomPainter {
           ..translate( pos.point.x,  pos.point.y )
           ..scale( pos.scale );
 
-        canvas.save();
-        canvas.transform(matrix.storage);
+      canvas.save();
+      canvas.transform(matrix.storage);
 
       // May need to clip off the tile if there are overlapping problems with joining
       // paths. This may help, but it makes any perspective clipping difficult as its not a rect
@@ -461,7 +510,7 @@ class VectorPainter extends CustomPainter {
 
       /// There's a slight issue as labels aren't reverse transformed to account for
       /// widget rotations. Gets fiddly, but we could probably sort if we care enough
-      for (Label label in cachedVectorDataMap[tileCoordsToKey(tile.coords)].geomInfo.labels) {
+      for (Label label in cachedVectorDataMap[tileCoordsKey].geomInfo.labels) {
         label.transformedPoint = MatrixUtils.transformPoint(matrix, label.point);
         _updateLabelBounding( label );
         renderLabels.add(label);
@@ -475,16 +524,29 @@ class VectorPainter extends CustomPainter {
     /// frame when it didn't before. We also need to be careful to remember the
     /// labels must be consistent accross tiles and tile changes
 
-    renderLabels.sort((a, b) => a.text.compareTo(b.text));
+    ///renderLabels.sort((a, b) => a.text.compareTo(b.text));
+
+    /// housenum_labels last
+    renderLabels.sort((a, b) {
+      int cmp =  a.priority.compareTo(b.priority);
+      if( cmp != 0 ) return cmp;
+      return a.text.compareTo(b.text); /// keep order consistent
+    });
 
     for (Label label in renderLabels ) {
+
       /// prevent dupe labels from different tiles
-      if(!seenLabel.containsKey(label.text)) {  ///careful this may not match up with our ondisplay list ?
+      if(!seenLabel.containsKey(label.dedupeKey)) {
 
         /// boundary box check (slight bug that it rotates unlike text)
         
         if( checkLabelOverlaps( label, canvas, debugOptions.labels ) ) {
-          labelsOnDisplay.remove(label.text);
+          labelsOnDisplay.remove(label.dedupeKey);
+
+          if( debugOptions.labels)
+            print("Excluding ${label.text} ${label.dedupeKey} as colliding");
+
+          /// So don't draw this label as colliding
           continue;
         }
 
@@ -506,10 +568,12 @@ class VectorPainter extends CustomPainter {
           canvas.restore();
         }
 
-        seenLabel[label.text] = true;
-        labelsOnDisplay[label.text] = label;
+        seenLabel[label.dedupeKey] = true;
+        labelsOnDisplay[label.dedupeKey] = label;
 
       } else {
+        if( debugOptions.labels )
+          print("Already seen ${label.text} ${label.dedupeKey} so skipping");
       }
     }
   }
