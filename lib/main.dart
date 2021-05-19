@@ -64,7 +64,9 @@ class _MyHomePageState extends State<MyHomePage> {
         tiles: false, // show a tile border
         labels: false, // show a label border thats used for label collision checks
         decoding: false, // show http gets and when decoding is done
-        featureSummary: false
+        featureSummary: false,
+        features: false,
+        roads: true
     );
 
     var fmap =  FlutterMap(

@@ -29,7 +29,8 @@ class GeomStore {
   List<Map<String, PathInfo>> pathStore; /// rename/rejig as not really paths as such...
   List<Label> labels;
   List<Offset> points;
-  GeomStore( this.pathStore, this.labels, this.points );
+  List<Map> roadList;
+  GeomStore( this.pathStore, this.labels, this.points, this.roadList );
 }
 
 class PathInfo {
@@ -116,7 +117,7 @@ class MapboxTile {
     Map layerSummary = {};
 
     List labelPointlist = [];
-    List roadList = [];
+    List roadLabelList = [];
 
     for( var layer in vt.layers) {
 
@@ -286,7 +287,12 @@ class MapboxTile {
           if(geomType == GeomType.point) item = point;
           if(geomType == GeomType.linestring || geomType == GeomType.polygon) item = path;
 
-          print("$geomType ${layer.name} ${featureInfo} ${item}");
+          if( debugOptions.features ) print("$geomType ${layer.name} $featureInfo $item");
+
+          if(layer.name == 'road') {
+            var name = featureInfo['ref'] ?? featureInfo['name'];
+            roadLabelList.add({'name': name, 'path': path, 'class': featureInfo['class'] });
+          }
 
           fullGeomMap[geomType].add([type, layer.name, featureInfo, item]); /// not sure if we need this fully yet....
         }
@@ -303,9 +309,9 @@ class MapboxTile {
             pathMap[key].path.addPath(path, Offset(0, 0));
             pathMap[key].count++;
             tileStats.paths++;
-            summaryAdd(summaryKey, includeSummary);
+            if( debugOptions.featureSummary ) summaryAdd(summaryKey, includeSummary);
           } else {
-            summaryAdd(summaryKey, excludeSummary);
+            if( debugOptions.featureSummary ) summaryAdd(summaryKey, excludeSummary);
           }
           path = null;
         }
@@ -349,7 +355,7 @@ class MapboxTile {
               ..text = textSpan;
 
             cachedInfo.geomInfo.labels.add(
-              Label( info.toString(), pointInfo[0], textPainter, pointInfo[3], pointInfo[4] ) ); /// use named params ?
+              Label( info.toString(), pointInfo[0], textPainter, pointInfo[3], pointInfo[4] ) ); /// use named params and a class for pointInfo ?
 
           }
           tileStats.labels++;
@@ -360,6 +366,30 @@ class MapboxTile {
         }
       }
     }
+
+
+    for (var road in roadLabelList) {
+      /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+          if( road['path'] == null ) continue;
+
+          var metrics = road['path'].computeMetrics();
+          for( dartui.PathMetric metric in metrics) {
+
+            var halfway = metric.getTangentForOffset(metric.length / 2);
+
+            if( metric.length < 100.0) {
+              continue;
+            }
+
+            road['halfway'] = halfway.position;
+            road['angle'] = halfway.angle;
+            road['painter'] = getRoadPainter(road['name']);
+          }
+
+          if(road['name'] != null && road['halfway'] != null) cachedInfo.geomInfo.roadList.add(road);
+    }
+
+    /// ///////////////////////////////////////////////////////////////////////////////////////////// /////////////////////////////////////////////////////
 
     ///tileStats.dump();
     if( debugOptions.featureSummary ) {
@@ -415,7 +445,6 @@ class VectorPainter extends CustomPainter {
     
     Map<String, bool> tileCoordsDisplayed = {};
     List<Label> renderLabels = [];
-    List<Label> lowPriRenderLabels = [];
 
     if( usePerspective ) {
       var m = Matrix4.identity()
@@ -492,30 +521,56 @@ class VectorPainter extends CustomPainter {
       PositionInfo pos = cachedVectorDataMap[tileCoordsKey].positionInfo;
 
       Matrix4 matrix;
-      if( !usePerspective) {
+      if (!usePerspective) {
         matrix = Matrix4.identity();
-        matrix..translate(pos.point.x, pos.point.y)
+        matrix
+          ..translate(pos.point.x, pos.point.y)
           ..scale(pos.scale);
-
       } else {
         matrix = Matrix4.identity()
           ..rotateY(devicePerspectiveAngle * 0.0174)
           ..setEntry(3, 2, 0.0015) // perspective
           ..rotateX(rotatePerspective)
 
-          // normal position
+        // normal position
           ..translate(pos.point.x, pos.point.y)
           ..scale(pos.scale, pos.scale);
       }
 
-      /// There's a slight issue as labels aren't reverse transformed to account for
-      /// widget rotations. Gets fiddly, but we could probably sort if we care enough
-      for (Label label in cachedVectorDataMap[tileCoordsKey].geomInfo.labels) {
-        label.transformedPoint = MatrixUtils.transformPoint(matrix, label.point);
-        _updateLabelBounding( label );
-        renderLabels.add(label);
+      /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      if (debugOptions.roads) {
+        for (var road in cachedVectorDataMap[tileCoordsKey].geomInfo.roadList) {
+          if (road['name'] == null) continue;
+
+          var tp = MatrixUtils.transformPoint(matrix, road['halfway']);
+
+          canvas
+              .save(); // can we transform all first, as save is quite expensive...
+          canvas.translate(tp.dx, tp.dy); // text height offset back to center
+          canvas.rotate(-road['angle']);
+
+          var roadPointPaint = pointPaint;
+          roadPointPaint.color = Colors.yellow;
+          canvas.drawPoints(PointMode.points, [ Offset(0.0, 0.0)], pointPaint);
+
+          /// make offset calculate based on stroke width ? /// ////////////////////
+          _drawTextAt(road["text"], Offset(0.0, -17.0), canvas, 1, road['painter']); /// check scaling of text........./// ////////////////////////
+
+          canvas.restore();
+        }
       }
-    }
+
+        /// There's a slight issue as labels aren't reverse transformed to account for
+        /// widget rotations. Gets fiddly, but we could probably sort if we care enough
+        for (Label label in cachedVectorDataMap[tileCoordsKey].geomInfo
+            .labels) {
+          label.transformedPoint =
+              MatrixUtils.transformPoint(matrix, label.point);
+          _updateLabelBounding(label);
+          renderLabels.add(label);
+        }
+      }
+
 
     /// Not sure this sort makes any diff. The general idea was that labels seem
     /// to glitch in which is displayed, as a lot is happening and there is no
@@ -538,21 +593,21 @@ class VectorPainter extends CustomPainter {
       /// prevent dupe labels from different tiles
       if(!seenLabel.containsKey(label.dedupeKey)) {
 
+        /// Can we cache checkOverlaps or the display of tiles at certain betweem zoom levels /// //////////////////////////////////////////
+
         /// boundary box check (slight bug that it rotates unlike text)
-        
         if( checkLabelOverlaps( label, canvas, debugOptions.labels ) ) {
           labelsOnDisplay.remove(label.dedupeKey);
 
           if( debugOptions.labels)
             print("Excluding ${label.text} ${label.dedupeKey} as colliding");
 
-          /// So don't draw this label as colliding
-          continue;
+          continue; // Skip this one as colliding
         }
 
         canvas.drawPoints( PointMode.points, [ label.transformedPoint ], pointPaint );
 
-        /// if its rotated, we want to keep the text unrotated
+        /// if map rotated, we want to keep most non-road labels unrotated
         var drawPoint = label.transformedPoint;
         if( isRotated) {
           drawPoint = Offset(0.0, 0.0);
@@ -619,7 +674,7 @@ class VectorPainter extends CustomPainter {
     label.boundNW = Offset( label.transformedPoint.dx - (labelLength * widthFactor / 2) , label.transformedPoint.dy - 4);
     label.boundSE = Offset(label.boundNW.dx + (labelLength * widthFactor ), label.boundNW.dy + heightFactor );
 
-    }
+  }
 
   void _debugTiles(Canvas canvas, VTile tile) {
 
@@ -681,3 +736,20 @@ class VectorPainter extends CustomPainter {
           cachedVectorDataMap != oldDelegate.cachedVectorDataMap;
 }
 
+TextPainter getRoadPainter(String text) {
+  TextStyle textStyle = TextStyle(
+      color: Colors.black,
+      fontSize: 14 //scale == 1 ? scale : 16 / scale, // diffratio, ?
+  );
+  TextSpan textSpan = TextSpan(
+    text: text,
+    style: textStyle,
+  );
+
+  return TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center)
+    ..layout(minWidth: 0, maxWidth: double.infinity)
+    ..text = textSpan;
+}

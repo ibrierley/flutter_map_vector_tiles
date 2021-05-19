@@ -427,8 +427,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     } else {
       List<Label> labelList = [];
       if(!_cachedVectorData.containsKey(coordsKey)) {
-        _cachedVectorData[coordsKey] = VTCache(
-          null, 'gettingHttp', coordsKey, _tileZoom, PositionInfo(),  GeomStore([], labelList, [])
+        _cachedVectorData[coordsKey] = VTCache( /// hmm this is a bit of a mess, needs some refactoring
+          null, 'gettingHttp', coordsKey, _tileZoom, PositionInfo(),  GeomStore([], labelList, [], [])
         );
 
       }
@@ -851,8 +851,10 @@ class DebugOptions {
   bool labels;
   bool decoding;
   bool featureSummary;
+  bool features;
+  bool roads;
 
-  DebugOptions({ this.tiles = false, this.labels = false, this.decoding = false, this.featureSummary = false });
+  DebugOptions({ this.tiles = false, this.labels = false, this.decoding = false, this.featureSummary = false, this.features = false, this.roads = false });
 }
 
 
