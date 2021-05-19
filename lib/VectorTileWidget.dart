@@ -843,6 +843,7 @@ class Optimisations {
   bool pinchZoomOption;
   bool hairline;
   bool hairlineOption;
+
   Optimisations( { this.pinchZoom = false, this.pinchZoomOption = false, this.hairline = false, this.hairlineOption = false });
 }
 
@@ -853,8 +854,9 @@ class DebugOptions {
   bool featureSummary;
   bool features;
   bool roads;
+  bool skipRoadLabels;
 
-  DebugOptions({ this.tiles = false, this.labels = false, this.decoding = false, this.featureSummary = false, this.features = false, this.roads = false });
+  DebugOptions({ this.tiles = false, this.labels = false, this.decoding = false, this.featureSummary = false, this.features = false, this.roads = false, this.skipRoadLabels = true });
 }
 
 

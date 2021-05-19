@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'dart:ui' as dartui;
 import 'dart:ui';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'vector_tile.pb.dart' as vector_tile;
@@ -10,6 +11,9 @@ import 'package:flutter_map_vector_tile/VectorTileWidget.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:vector_math/vector_math_64.dart' as VectorMath hide Colors;
 import 'dart:math' as DartMath;
+
+const RADTODEG = 57.2958;
+const DEGTORAD = 0.0174533;
 
 int decodeZigZag( int byte ) { /// decodes from mapbox small int style
   return ((byte >> 1) ^ -(byte & 1)).toInt();
@@ -64,6 +68,14 @@ class VTCache {
   VTCache( this.units, this.state, this.coordsKey, this.tileZoom, this.positionInfo, this.geomInfo);
 }
 
+class Road {
+  String text;
+  String thisClass;
+  Path path;
+
+  Road(this.text, this.thisClass, this.path);
+}
+
 class Label {
   String text;
   String dedupeKey;
@@ -71,9 +83,12 @@ class Label {
   Offset transformedPoint;
   Offset boundNW;
   Offset boundSE;
+  bool isRoad;
+  bool keepUpright = true;
+  double angle;
   int priority = 3;
   TextPainter textPainter;
-  Label( this.text, this.point, this.textPainter, this.dedupeKey, this.priority );
+  Label( this.text, this.point, this.textPainter, this.dedupeKey, this.priority , { this.isRoad = false, this.angle = 0.0});
 }
 
 class TileStats {
@@ -117,7 +132,7 @@ class MapboxTile {
     Map layerSummary = {};
 
     List labelPointlist = [];
-    List roadLabelList = [];
+    List<Road> roadLabelList = [];
 
     for( var layer in vt.layers) {
 
@@ -291,7 +306,7 @@ class MapboxTile {
 
           if(layer.name == 'road') {
             var name = featureInfo['ref'] ?? featureInfo['name'];
-            roadLabelList.add({'name': name, 'path': path, 'class': featureInfo['class'] });
+            roadLabelList.add( Road( name, featureInfo['class'], path ) );
           }
 
           fullGeomMap[geomType].add([type, layer.name, featureInfo, item]); /// not sure if we need this fully yet....
@@ -336,26 +351,10 @@ class MapboxTile {
 
           if (info != null) {
 
-            /// feel like this shouldn't be here, but is an optimisation.
-            /// Cache it in the Vector Painter ?
-            TextStyle textStyle = TextStyle(
-                color: Colors.black,
-                fontSize: 14 //scale == 1 ? scale : 16 / scale, // diffratio, ?
-            );
-            TextSpan textSpan = TextSpan(
-              text: info.toString(),
-              style: textStyle,
-            );
-
-            var textPainter = TextPainter(
-                text: textSpan,
-                textDirection: TextDirection.ltr,
-                textAlign: TextAlign.center)
-              ..layout(minWidth: 0, maxWidth: double.infinity)
-              ..text = textSpan;
-
+            /// feel like getNewPainter should be cached and set in the painter...
+            /// also use better params for pointInfo and maybe a class..
             cachedInfo.geomInfo.labels.add(
-              Label( info.toString(), pointInfo[0], textPainter, pointInfo[3], pointInfo[4] ) ); /// use named params and a class for pointInfo ?
+              Label( info.toString(), pointInfo[0], getNewPainter(info.toString()), pointInfo[3], pointInfo[4] ) );
 
           }
           tileStats.labels++;
@@ -367,29 +366,27 @@ class MapboxTile {
       }
     }
 
+    if( !debugOptions.skipRoadLabels) {
+      for (var road in roadLabelList) {
+        if( road.path == null ) continue;
 
-    for (var road in roadLabelList) {
-      /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-          if( road['path'] == null ) continue;
+        var halfway;
+        var metrics = road.path.computeMetrics();
+        for( dartui.PathMetric metric in metrics) {
+          /// get halfway point to display text at along along road
+          halfway = metric.getTangentForOffset(metric.length / 2);
 
-          var metrics = road['path'].computeMetrics();
-          for( dartui.PathMetric metric in metrics) {
-
-            var halfway = metric.getTangentForOffset(metric.length / 2);
-
-            if( metric.length < 100.0) {
-              continue;
-            }
-
-            road['halfway'] = halfway.position;
-            road['angle'] = halfway.angle;
-            road['painter'] = getRoadPainter(road['name']);
+          if( metric.length < 100.0) { /// Make this into an option min pathsize for labels
+            continue;
           }
+        }
 
-          if(road['name'] != null && road['halfway'] != null) cachedInfo.geomInfo.roadList.add(road);
+        if(road.text != null && halfway != null)
+          cachedInfo.geomInfo.labels.add(
+              Label( road.text, halfway.position, getNewPainter(road.text), road.text, 3, angle: halfway.angle, isRoad: true ) ); /// use named params and a class for pointInfo
+
+      }
     }
-
-    /// ///////////////////////////////////////////////////////////////////////////////////////////// /////////////////////////////////////////////////////
 
     ///tileStats.dump();
     if( debugOptions.featureSummary ) {
@@ -537,36 +534,15 @@ class VectorPainter extends CustomPainter {
           ..scale(pos.scale, pos.scale);
       }
 
-      /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-      if (debugOptions.roads) {
-        for (var road in cachedVectorDataMap[tileCoordsKey].geomInfo.roadList) {
-          if (road['name'] == null) continue;
-
-          var tp = MatrixUtils.transformPoint(matrix, road['halfway']);
-
-          canvas
-              .save(); // can we transform all first, as save is quite expensive...
-          canvas.translate(tp.dx, tp.dy); // text height offset back to center
-          canvas.rotate(-road['angle']);
-
-          var roadPointPaint = pointPaint;
-          roadPointPaint.color = Colors.yellow;
-          canvas.drawPoints(PointMode.points, [ Offset(0.0, 0.0)], pointPaint);
-
-          /// make offset calculate based on stroke width ? /// ////////////////////
-          _drawTextAt(road["text"], Offset(0.0, -17.0), canvas, 1, road['painter']); /// check scaling of text........./// ////////////////////////
-
-          canvas.restore();
-        }
-      }
-
         /// There's a slight issue as labels aren't reverse transformed to account for
         /// widget rotations. Gets fiddly, but we could probably sort if we care enough
         for (Label label in cachedVectorDataMap[tileCoordsKey].geomInfo
             .labels) {
           label.transformedPoint =
               MatrixUtils.transformPoint(matrix, label.point);
+
           _updateLabelBounding(label);
+
           renderLabels.add(label);
         }
       }
@@ -585,7 +561,8 @@ class VectorPainter extends CustomPainter {
     renderLabels.sort((a, b) {
       int cmp =  a.priority.compareTo(b.priority);
       if( cmp != 0 ) return cmp;
-      return a.text.compareTo(b.text); /// keep order consistent
+
+      return a.text.compareTo(b.text); /// keep order consistent...hmm sometimes we have dupe names that may swap from diff tiles...
     });
 
     for (Label label in renderLabels ) {
@@ -596,31 +573,55 @@ class VectorPainter extends CustomPainter {
         /// Can we cache checkOverlaps or the display of tiles at certain betweem zoom levels /// //////////////////////////////////////////
 
         /// boundary box check (slight bug that it rotates unlike text)
-        if( checkLabelOverlaps( label, canvas, debugOptions.labels ) ) {
+        if( checkLabelOverlaps( label, canvas, debugOptions.labels ) ) { /// or maybe only recheck them when we have new tiles or a big inbetween zoom switch ?
           labelsOnDisplay.remove(label.dedupeKey);
 
           if( debugOptions.labels)
             print("Excluding ${label.text} ${label.dedupeKey} as colliding");
 
-          continue; // Skip this one as colliding
+          continue; /// Skip this one as colliding
         }
 
-        canvas.drawPoints( PointMode.points, [ label.transformedPoint ], pointPaint );
+        if( !label.isRoad)
+          canvas.drawPoints( PointMode.points, [ label.transformedPoint ], pointPaint );
 
         /// if map rotated, we want to keep most non-road labels unrotated
         var drawPoint = label.transformedPoint;
-        if( isRotated) {
-          drawPoint = Offset(0.0, 0.0);
-          canvas.save(); // can we transform all first, as save is quite expensive...
-          canvas.translate(label.transformedPoint.dx, label.transformedPoint.dy);
-          canvas.rotate(-widgetRotation * 0.0174533);
-        }
 
-        _drawTextAt(label.text, drawPoint, canvas, 1,
-            label.textPainter); // we don't want to scale text
+        if( label.isRoad ) { // dont want to reverse rotate like normal labels
+          drawPoint = Offset(0.0, -17.0);
+          canvas.save(); //
+          canvas.translate(label.transformedPoint.dx, label.transformedPoint.dy ); // text height offset back to center
 
-        if( isRotated ) {
+          /// If a road label is upside down, make it good
+          var angleDeg = label.angle * RADTODEG - widgetRotation;
+
+          if( angleDeg < -90 && angleDeg > -180) angleDeg += 180;
+          if( angleDeg > 90 && angleDeg < 180 ) angleDeg  -= 180;
+          angleDeg += widgetRotation;
+
+          canvas.rotate(-angleDeg * DEGTORAD);
+
+          _drawTextAt(label.text, drawPoint, canvas, 1,
+              label.textPainter); //
           canvas.restore();
+
+        } else {
+          if (isRotated) { // we need to realign the text so its upright
+            drawPoint = Offset(0.0, 0.0);
+            canvas
+                .save(); // can we transform all first, as save is quite expensive...
+            canvas.translate(
+                label.transformedPoint.dx, label.transformedPoint.dy);
+            canvas.rotate(-widgetRotation * 0.0174533);
+          }
+
+          _drawTextAt(label.text, drawPoint, canvas, 1,
+              label.textPainter); // we don't want to scale text
+
+          if (isRotated) {
+            canvas.restore();
+          }
         }
 
         seenLabel[label.dedupeKey] = true;
@@ -667,13 +668,18 @@ class VectorPainter extends CustomPainter {
   }
 
   void _updateLabelBounding(Label label) {
-    var widthFactor = 10.0;
-    var heightFactor = 40.0;
+    var widthFactor = 8.0;
+    ///var heightFactor = 40.0;
     var labelLength = label.text.length;
 
-    label.boundNW = Offset( label.transformedPoint.dx - (labelLength * widthFactor / 2) , label.transformedPoint.dy - 4);
-    label.boundSE = Offset(label.boundNW.dx + (labelLength * widthFactor ), label.boundNW.dy + heightFactor );
+    label.boundNW = Offset( label.transformedPoint.dx - (labelLength * widthFactor / 2) , label.transformedPoint.dy - (labelLength * widthFactor / 2));
 
+    label.boundSE = Offset( label.boundNW.dx + (labelLength * widthFactor ), label.boundNW.dy + (labelLength * widthFactor ) );
+
+    // Original, but would now need to take into account rotated bounding boxes, so going for an easy option above of just making it square
+    // We may want to try rotated boxes, but could be expensive
+    // label.boundNW = Offset( label.transformedPoint.dx - (labelLength * widthFactor / 2) , label.transformedPoint.dy - 4);
+    // label.boundSE = Offset( label.boundNW.dx + (labelLength * widthFactor ), label.boundNW.dy + heightFactor );
   }
 
   void _debugTiles(Canvas canvas, VTile tile) {
@@ -736,7 +742,7 @@ class VectorPainter extends CustomPainter {
           cachedVectorDataMap != oldDelegate.cachedVectorDataMap;
 }
 
-TextPainter getRoadPainter(String text) {
+TextPainter getNewPainter(String text) {
   TextStyle textStyle = TextStyle(
       color: Colors.black,
       fontSize: 14 //scale == 1 ? scale : 16 / scale, // diffratio, ?

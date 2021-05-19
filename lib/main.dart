@@ -58,7 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     Optimisations optimisations = Optimisations(
         pinchZoomOption: true, // use hairlines for speed when zooming
-        hairlineOption: true // use hairlines on paths at low zoom (true recommended)
+        hairlineOption: true, // use hairlines on paths at low zoom (true recommended)
     );
     DebugOptions debugOptions = DebugOptions(
         tiles: false, // show a tile border
@@ -66,7 +66,8 @@ class _MyHomePageState extends State<MyHomePage> {
         decoding: false, // show http gets and when decoding is done
         featureSummary: false,
         features: false,
-        roads: true
+        roads: false,
+        skipRoadLabels: true
     );
 
     var fmap =  FlutterMap(
