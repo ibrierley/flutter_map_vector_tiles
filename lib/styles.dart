@@ -184,7 +184,7 @@ class Styles {
       },
       "housenum_label": {
         'include': true,
-        'default': { 'color': Colors.black, 'min': 21, 'max': 21},
+        'default': { 'color': Colors.black, 'min': 17, 'max': 21},
       },
       "mountain_peak_label": {
         'include': true,

@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'dart:ui' as dartui;
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'vector_tile.pb.dart' as vector_tile;
@@ -79,6 +80,7 @@ class Road {
 class Label {
   String text;
   String dedupeKey;
+  String coordsKey;
   Offset point;
   Offset transformedPoint;
   Offset boundNW;
@@ -88,7 +90,7 @@ class Label {
   double angle;
   int priority = 3;
   TextPainter textPainter;
-  Label( this.text, this.point, this.textPainter, this.dedupeKey, this.priority , { this.isRoad = false, this.angle = 0.0});
+  Label( this.text, this.point, this.textPainter, this.dedupeKey, this.priority, this.coordsKey, { this.isRoad = false, this.angle = 0.0});
 }
 
 class TileStats {
@@ -103,12 +105,13 @@ class MapboxTile {
     map[ key ] = map.containsKey(key) ? map[ key ]++ : 1;
   }
 
-  static void decode( coordsKey, cachedInfo, options, vectorStyles, tileZoom, DebugOptions debugOptions ) {
+  static void decode( coordsKey, VTCache cachedInfo, options, vectorStyles, tileZoom, DebugOptions debugOptions ) {
 
     Map<GeomType,List> fullGeomMap = { GeomType.linestring: [], GeomType.polygon: [], GeomType.point:  []}; /// I don't know if we will want this..may be better to separate into roads, labels, paths etc...?
     Map<String, int> includeSummary = {};
     Map<String, int> excludeSummary = {};
     TileStats tileStats = new TileStats();
+    cachedInfo.state = 'Decoding';
 
     vector_tile.Tile vt;
 
@@ -250,7 +253,8 @@ class MapboxTile {
                 point = Offset(ncx, ncy);
                 pointList.add(point);
 
-                var dedupeKey = featureInfo['name'];
+                var dedupeKey = featureInfo['name'] ?? point.toString();
+                dedupeKey += '_' + coordsKey;
                 var priority = 1; // 1 is best priority
 
                 /// We want a poi or a shop label to appear rather than a housenum if poss
@@ -354,7 +358,7 @@ class MapboxTile {
             /// feel like getNewPainter should be cached and set in the painter...
             /// also use better params for pointInfo and maybe a class..
             cachedInfo.geomInfo.labels.add(
-              Label( info.toString(), pointInfo[0], getNewPainter(info.toString()), pointInfo[3], pointInfo[4] ) );
+              Label( info.toString(), pointInfo[0], getNewPainter(info.toString()), pointInfo[3], pointInfo[4], coordsKey ) );
 
           }
           tileStats.labels++;
@@ -366,7 +370,7 @@ class MapboxTile {
       }
     }
 
-    if( !debugOptions.skipRoadLabels) {
+    if(!debugOptions.skipRoadLabels) {
       for (var road in roadLabelList) {
         if( road.path == null ) continue;
 
@@ -383,7 +387,7 @@ class MapboxTile {
 
         if(road.text != null && halfway != null)
           cachedInfo.geomInfo.labels.add(
-              Label( road.text, halfway.position, getNewPainter(road.text), road.text, 3, angle: halfway.angle, isRoad: true ) ); /// use named params and a class for pointInfo
+              Label( road.text, halfway.position, getNewPainter(road.text), road.text + '|' + coordsKey, 3, coordsKey, angle: halfway.angle, isRoad: true ) ); /// use named params and a class for pointInfo
 
       }
     }
@@ -395,6 +399,7 @@ class MapboxTile {
     }
 
     ///print("$fullGeomMap");
+    cachedInfo.state = 'Decoded';
   }
 }
 
@@ -406,14 +411,19 @@ class VectorPainter extends CustomPainter {
   final dimensions;
   final tilesToRender;
   final tileZoom;
-  final cachedVectorDataMap;
+  final Map<String, VTCache> cachedVectorDataMap;
   final underZoom;
   final usePerspective;
   final debugOptions;
   final rotation;
   final Optimisations optimisations;
 
-  static final Map<String, Label> labelsOnDisplay = {};
+  static Map<String, Map<String, Label>> cachedLabelsPerTile = {};
+  static DateTime timeSinceLastClean;
+  static Map<String, bool> prevTilesLoaded = {};
+  static Map<String, bool> prevDisplayedLabels = {};
+  static double prevTileZoom = 0.0;
+  static List<Label> prevLabels = [];
 
   TextPainter cachedTextPainter = TextPainter(
       textDirection: TextDirection.ltr,
@@ -428,12 +438,15 @@ class VectorPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
 
-    var seenLabel = {};
     var rotatePerspective = -1.25; //-1.25; // only used if we're using perspective enabled
     var widgetRotation = this.rotation;
     var isRotated = false;
     if(widgetRotation != 0.0 ) isRotated = true;
     var devicePerspectiveAngle =  DartMath.atan2( size.width/2 , size.height) * 57.2958;
+
+    Map<String, Label> wantedLabels = {};
+    List<Label> hiPriQueue = [];
+
 
     var pointPaint = Paint()
       ..color = Colors.grey
@@ -441,7 +454,6 @@ class VectorPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
     
     Map<String, bool> tileCoordsDisplayed = {};
-    List<Label> renderLabels = [];
 
     if( usePerspective ) {
       var m = Matrix4.identity()
@@ -505,34 +517,32 @@ class VectorPainter extends CustomPainter {
 
     if( usePerspective ) canvas.restore();
 
-    /// we want to keep previous labels displayed to show first if tiles
-    /// haven't gone out of view
-
-    labelsOnDisplay.removeWhere((key, keyLabel) => !tileCoordsDisplayed.containsKey(keyLabel));
-
     /// Calculated transformed Label position and do collision detection
     /// to decide which to cull.
     /// All labels should come on top of paths etc, so moved loop out here
     for (var tile in tilesToRender) {
+
       String tileCoordsKey = tileCoordsToKey(tile.coords);
       PositionInfo pos = cachedVectorDataMap[tileCoordsKey].positionInfo;
+      
+      if( cachedVectorDataMap[tileCoordsKey].state != 'Decoded' ) continue;
 
-      Matrix4 matrix;
-      if (!usePerspective) {
-        matrix = Matrix4.identity();
-        matrix
-          ..translate(pos.point.x, pos.point.y)
-          ..scale(pos.scale);
-      } else {
-        matrix = Matrix4.identity()
-          ..rotateY(devicePerspectiveAngle * 0.0174)
-          ..setEntry(3, 2, 0.0015) // perspective
-          ..rotateX(rotatePerspective)
+        Matrix4 matrix;
+        if (!usePerspective) {
+          matrix = Matrix4.identity();
+          matrix
+            ..translate(pos.point.x, pos.point.y)
+            ..scale(pos.scale);
+        } else {
+          matrix = Matrix4.identity()
+            ..rotateY(devicePerspectiveAngle * 0.0174)
+            ..setEntry(3, 2, 0.0015) // perspective
+            ..rotateX(rotatePerspective)
 
-        // normal position
-          ..translate(pos.point.x, pos.point.y)
-          ..scale(pos.scale, pos.scale);
-      }
+          // normal position
+            ..translate(pos.point.x, pos.point.y)
+            ..scale(pos.scale, pos.scale);
+        }
 
         /// There's a slight issue as labels aren't reverse transformed to account for
         /// widget rotations. Gets fiddly, but we could probably sort if we care enough
@@ -541,96 +551,107 @@ class VectorPainter extends CustomPainter {
           label.transformedPoint =
               MatrixUtils.transformPoint(matrix, label.point);
 
-          _updateLabelBounding(label);
+          wantedLabels[label.dedupeKey] = label;
 
-          renderLabels.add(label);
+          _updateLabelBounding(label);
         }
       }
 
+    Map qMap = {};
+    for( var label in prevLabels) {
+      if( wantedLabels.containsKey(label.dedupeKey)) {
+        if(!checkLabelOverlaps(hiPriQueue, label, canvas)) {
+          hiPriQueue.add(label);
+          qMap[label.dedupeKey] = label;
+        }
+      }
+    }
 
-    /// Not sure this sort makes any diff. The general idea was that labels seem
-    /// to glitch in which is displayed, as a lot is happening and there is no
-    /// order as the tiles come in and out, so I was trying to at least make sure
-    /// a random ordering doesn't mean one label gets past collision detection one
-    /// frame when it didn't before. We also need to be careful to remember the
-    /// labels must be consistent accross tiles and tile changes
+    List<Label> nextQ = [];
+    for( var dedupeKey in wantedLabels.keys) {
+      if(qMap.containsKey(dedupeKey)) {
+        continue;
+      }
+      nextQ.add(wantedLabels[dedupeKey]);
+    }
 
-    ///renderLabels.sort((a, b) => a.text.compareTo(b.text));
-
-    /// housenum_labels last
-    renderLabels.sort((a, b) {
+    nextQ.sort((a, b) {
       int cmp =  a.priority.compareTo(b.priority);
       if( cmp != 0 ) return cmp;
 
-      return a.text.compareTo(b.text); /// keep order consistent...hmm sometimes we have dupe names that may swap from diff tiles...
+      return a.dedupeKey.compareTo(b.dedupeKey); /// keep order consistent..
     });
 
-    for (Label label in renderLabels ) {
+    for( Label label in nextQ) {
+      if(checkLabelOverlaps(hiPriQueue, label, canvas)) {
+        continue;
+      }
+      hiPriQueue.add(label);
+    }
 
-      /// prevent dupe labels from different tiles
-      if(!seenLabel.containsKey(label.dedupeKey)) {
+    prevLabels = []; // reset our list of labels to carry over as hipri q
+    Map<String, Label> justSeenLabels = {};
 
-        /// Can we cache checkOverlaps or the display of tiles at certain betweem zoom levels /// //////////////////////////////////////////
+    for (Label label in hiPriQueue) {
 
-        /// boundary box check (slight bug that it rotates unlike text)
-        if( checkLabelOverlaps( label, canvas, debugOptions.labels ) ) { /// or maybe only recheck them when we have new tiles or a big inbetween zoom switch ?
-          labelsOnDisplay.remove(label.dedupeKey);
+      if(justSeenLabels.containsKey(label.dedupeKey)) continue;
 
-          if( debugOptions.labels)
-            print("Excluding ${label.text} ${label.dedupeKey} as colliding");
+      prevDisplayedLabels[label.dedupeKey] = true;
 
-          continue; /// Skip this one as colliding
-        }
+      if( !label.isRoad)
+        canvas.drawPoints( PointMode.points, [ label.transformedPoint ], pointPaint );
 
-        if( !label.isRoad)
-          canvas.drawPoints( PointMode.points, [ label.transformedPoint ], pointPaint );
+      /// if map rotated, we want to keep most non-road labels unrotated
+      var drawPoint = label.transformedPoint;
 
-        /// if map rotated, we want to keep most non-road labels unrotated
-        var drawPoint = label.transformedPoint;
+      if( label.isRoad ) { // dont want to reverse rotate like normal labels
+        drawPoint = Offset(0.0, -17.0);
+        canvas.save(); //
+        canvas.translate(label.transformedPoint.dx, label.transformedPoint.dy ); // text height offset back to center
 
-        if( label.isRoad ) { // dont want to reverse rotate like normal labels
-          drawPoint = Offset(0.0, -17.0);
-          canvas.save(); //
-          canvas.translate(label.transformedPoint.dx, label.transformedPoint.dy ); // text height offset back to center
+        /// If a road label is upside down, make it good
+        var angleDeg = label.angle * RADTODEG - widgetRotation;
 
-          /// If a road label is upside down, make it good
-          var angleDeg = label.angle * RADTODEG - widgetRotation;
+        if( angleDeg < -90 && angleDeg > -180) angleDeg += 180;
+        if( angleDeg > 90 && angleDeg < 180 ) angleDeg  -= 180;
+        angleDeg += widgetRotation;
 
-          if( angleDeg < -90 && angleDeg > -180) angleDeg += 180;
-          if( angleDeg > 90 && angleDeg < 180 ) angleDeg  -= 180;
-          angleDeg += widgetRotation;
+        canvas.rotate(-angleDeg * DEGTORAD);
 
-          canvas.rotate(-angleDeg * DEGTORAD);
-
-          _drawTextAt(label.text, drawPoint, canvas, 1,
-              label.textPainter); //
-          canvas.restore();
-
-        } else {
-          if (isRotated) { // we need to realign the text so its upright
-            drawPoint = Offset(0.0, 0.0);
-            canvas
-                .save(); // can we transform all first, as save is quite expensive...
-            canvas.translate(
-                label.transformedPoint.dx, label.transformedPoint.dy);
-            canvas.rotate(-widgetRotation * 0.0174533);
-          }
-
-          _drawTextAt(label.text, drawPoint, canvas, 1,
-              label.textPainter); // we don't want to scale text
-
-          if (isRotated) {
-            canvas.restore();
-          }
-        }
-
-        seenLabel[label.dedupeKey] = true;
-        labelsOnDisplay[label.dedupeKey] = label;
+        _drawTextAt(label.text, drawPoint, canvas, 1,
+            label.textPainter); //
+        canvas.restore();
 
       } else {
-        if( debugOptions.labels )
-          print("Already seen ${label.text} ${label.dedupeKey} so skipping");
+        if (isRotated) { // we need to realign the text so its upright
+          drawPoint = Offset(0.0, 0.0);
+          canvas
+              .save(); // can we transform all first, as save is quite expensive...
+          canvas.translate(
+              label.transformedPoint.dx, label.transformedPoint.dy);
+          canvas.rotate(-widgetRotation * 0.0174533);
+        }
+
+        _drawTextAt(label.text, drawPoint, canvas, 1,
+            label.textPainter); // we don't want to scale text
+
+        if (isRotated) {
+          canvas.restore();
+        }
       }
+
+      prevLabels.add(label);
+      justSeenLabels[label.dedupeKey] = label;
+
+      if( debugOptions.labels )
+        print("Already seen ${label.text} ${label.dedupeKey} so skipping");
+    }
+
+    if( debugOptions.labels ) {
+      justSeenLabels.forEach((key, label) {
+        debugRect(canvas, label);
+      });
+
     }
   }
 
@@ -643,15 +664,11 @@ class VectorPainter extends CustomPainter {
 
 
 
-  bool checkLabelOverlaps( Label label, Canvas canvas, debugLabels  ) { // add fontsize (14) to the check...
+  bool checkLabelOverlaps( List labelsToCheck, Label label, Canvas canvas  ) { // add fontsize (14) to the check...
 
-    if( debugLabels ) debugRect(canvas, label);
     bool collides = false;
 
-    labelsOnDisplay.keys.forEach((key) {
-
-      Label compareLabel = labelsOnDisplay[key];  // [coord, label]
-
+    labelsToCheck.forEach((compareLabel) {
       if( compareLabel != label) {
 
         if ((label.boundNW.dx < compareLabel.boundSE.dx) &&
@@ -660,6 +677,9 @@ class VectorPainter extends CustomPainter {
             (label.boundSE.dy > compareLabel.boundNW.dy)) {
 
           collides = true;
+
+          return collides; // skip the rest
+
         }
       }
     });
@@ -668,18 +688,17 @@ class VectorPainter extends CustomPainter {
   }
 
   void _updateLabelBounding(Label label) {
-    var widthFactor = 8.0;
-    ///var heightFactor = 40.0;
+    var widthFactor = 9.0; // how big as a ratio of text to size up
     var labelLength = label.text.length;
+    var padding = 5.0;
 
-    label.boundNW = Offset( label.transformedPoint.dx - (labelLength * widthFactor / 2) , label.transformedPoint.dy - (labelLength * widthFactor / 2));
+    label.boundNW = Offset( label.transformedPoint.dx - (labelLength * widthFactor / 2) - padding , label.transformedPoint.dy - (labelLength * widthFactor / 2) - padding);
 
-    label.boundSE = Offset( label.boundNW.dx + (labelLength * widthFactor ), label.boundNW.dy + (labelLength * widthFactor ) );
+    label.boundSE = Offset( label.boundNW.dx + (labelLength * widthFactor ) + padding, label.boundNW.dy + (labelLength * widthFactor ) + padding);
 
     // Original, but would now need to take into account rotated bounding boxes, so going for an easy option above of just making it square
     // We may want to try rotated boxes, but could be expensive
-    // label.boundNW = Offset( label.transformedPoint.dx - (labelLength * widthFactor / 2) , label.transformedPoint.dy - 4);
-    // label.boundSE = Offset( label.boundNW.dx + (labelLength * widthFactor ), label.boundNW.dy + heightFactor );
+
   }
 
   void _debugTiles(Canvas canvas, VTile tile) {

@@ -67,7 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
         featureSummary: false,
         features: false,
         roads: false,
-        skipRoadLabels: true
+        skipRoadLabels: false
     );
 
     var fmap =  FlutterMap(
