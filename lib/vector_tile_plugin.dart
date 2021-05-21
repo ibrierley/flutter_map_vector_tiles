@@ -442,6 +442,8 @@ class VectorPainter extends CustomPainter {
     var widgetRotation = this.rotation;
     var isRotated = false;
     if(widgetRotation != 0.0 ) isRotated = true;
+    widgetRotation = widgetRotation % 360;
+
     var devicePerspectiveAngle =  DartMath.atan2( size.width/2 , size.height) * 57.2958;
 
     Map<String, Label> wantedLabels = {};
@@ -605,20 +607,31 @@ class VectorPainter extends CustomPainter {
       var drawPoint = label.transformedPoint;
 
       if( label.isRoad ) { // dont want to reverse rotate like normal labels
-        drawPoint = Offset(0.0, -17.0);
+        drawPoint =  Offset(0.0, -17.0);
         canvas.save(); //
         canvas.translate(label.transformedPoint.dx, label.transformedPoint.dy ); // text height offset back to center
 
-        /// If a road label is upside down, make it good
-        var angleDeg = label.angle * RADTODEG - widgetRotation;
+        /// If a road label is upside down, make it good .. //// move this to a sep method
+        var angleDeg = -label.angle * RADTODEG;
+        angleDeg += 90;
+        var orig = angleDeg;
 
-        if( angleDeg < -90 && angleDeg > -180) angleDeg += 180;
-        if( angleDeg > 90 && angleDeg < 180 ) angleDeg  -= 180;
-        angleDeg += widgetRotation;
+        if(angleDeg > 180) angleDeg -= 180;
+        if(angleDeg < 0) angleDeg += 180;
 
-        canvas.rotate(-angleDeg * DEGTORAD);
+        if(widgetRotation + angleDeg > 180 && ((widgetRotation + angleDeg < 360))) {
+          angleDeg -= 180;
+        }
 
-        _drawTextAt(label.text, drawPoint, canvas, 1,
+        angleDeg -= 90;
+
+        if(label.text != null) { /// remove
+          ///print("${label.dedupeKey} ${label.angle} orig $orig   angleDeg: $angleDeg  widgetRot is $widgetRotation ");
+        }
+
+        canvas.rotate((angleDeg )* DEGTORAD);
+
+        _drawTextAt(drawPoint, canvas, 1,
             label.textPainter); //
         canvas.restore();
 
@@ -632,7 +645,7 @@ class VectorPainter extends CustomPainter {
           canvas.rotate(-widgetRotation * 0.0174533);
         }
 
-        _drawTextAt(label.text, drawPoint, canvas, 1,
+        _drawTextAt(drawPoint, canvas, 1,
             label.textPainter); // we don't want to scale text
 
         if (isRotated) {
@@ -655,7 +668,7 @@ class VectorPainter extends CustomPainter {
     }
   }
 
-  void _drawTextAt(String text, Offset position, Canvas canvas, scale, textPainter) {
+  void _drawTextAt(Offset position, Canvas canvas, scale, textPainter) {
 
     Offset drawPosition =
       Offset(position.dx - textPainter.width / 2, position.dy + (textPainter.height/2));
