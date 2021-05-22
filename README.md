@@ -13,13 +13,18 @@ This is a proof of concept of using Vector Tiles (currently just Mapbox). It's n
 Features that "should" work.
 
 Mapbox Vector tile processing with a default optimised for Flutter styling.
+
 Flexible UnderZoom tile loading (loading tile levels from a lower zoom, in order to reduce the amount of tiles to download).
+
 Collision detection on labels. There's a LOT of potential overlapping text. So this reduces it.
+
 Labels kept upright during rotation.
+
 Road labels that are angled to a road contour (not curved along it though, possible future enhancement, but will be some performance issues likely).
 
 Here's an example https://www.youtube.com/watch?v=GsXPMghCawA&t=4s
 [Example in action](https://www.youtube.com/watch?v=GsXPMghCawA&t=4s)
+
 
 There are quite a few caveats:
 
