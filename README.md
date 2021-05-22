@@ -22,6 +22,9 @@ Labels kept upright during rotation.
 
 Road labels that are angled to a road contour (not curved along it though, possible future enhancement, but will be some performance issues likely).
 
+You can use png images instead of vector tiles, it will simply paint them on the Canvas. To use
+set useImages: true and make sure you set the correct tile url for pngs, rather than Vector tiles.
+
 [Example in action](https://www.youtube.com/watch?v=GsXPMghCawA&t=4s)
 
 
