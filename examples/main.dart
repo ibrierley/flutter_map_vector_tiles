@@ -3,13 +3,11 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'vector_tile_plugin.dart';
 import 'package:flutter_map_vector_tile/VectorTileWidget.dart';
-import 'package:flutter/rendering.dart';
-import 'styles.dart';
 
 
 void main() {
   //debugPaintSizeEnabled = true;
-  //debugPaintBaselinesEnabled = false;
+  //debugPaintBaselinesEnabled = true;
   //debugPaintLayerBordersEnabled = true;
   //debugPaintPointersEnabled = false;
   //debugRepaintRainbowEnabled = false;
@@ -29,7 +27,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Vector Tile Demo',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.grey,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: MyHomePage(title: 'Vector Tile Demo'),
@@ -57,39 +55,50 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<dynamic,dynamic>>(
-      future: Styles.getJsonTestStyle("assets/data/streets.json"),
-      builder: (BuildContext context, AsyncSnapshot<Map<dynamic,dynamic>> snapshot) {
-        if(snapshot.hasData) {
-          var vectorStyle = snapshot.data;
-          return new FlutterMap(
+
+    Optimisations optimisations = Optimisations(
+        pinchZoomOption: true, // use hairlines for speed when zooming
+        hairlineOption: true, // use hairlines on paths at low zoom (true recommended)
+    );
+    DebugOptions debugOptions = DebugOptions(
+        tiles: false, // show a tile border
+        labels: false, // show a label border thats used for label collision checks
+        decoding: false, // show http gets and when decoding is done
+        featureSummary: false,
+        features: false,
+        roads: false,
+        skipRoadLabels: false
+    );
+
+    var fmap =  FlutterMap(
             mapController: mapController,
             options: new MapOptions(
               plugins: [
                 VectorTilePlugin(),
               ],
-              interactiveFlags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+              interactiveFlags: InteractiveFlag.all, // MapEventMoveStart& ~InteractiveFlag.rotate,
               center: LatLng(50.8323646,-0.1871463),
-              zoom: 12.3,
-              ///rotation: 45,
+              zoom: 17.3,
+              //rotation: 45,
             ),
             layers: [
               VectorTileLayerPluginOptions(
-                urlTemplate: 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?access_token=<INSERT MAPBOX API KEY>',
+                urlTemplate: 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?mapbox://styles/gibble/ckoe1dv003l7s17pb219opzj0&access_token=pk.eyJ1IjoiZ2liYmxlIiwiYSI6ImNqbjBlZDB6ejFrODcza3Fsa3o3eXR1MzkifQ.pC89zLnuSWrRdCkDrsmynQ',
                 //subdomains: ['a', 'b', 'c'],
                 useCanvas: true,
-                useImages: true, //true,
-                useBackupImages: true,
-                usePerspective: false,
-                levelUpDiff: 2,
-                vectorStyle: vectorStyle,
+                //useImages: false, //disabled, code currently removed, but could be added, not sure I currently see the benefit
+                useBackupTiles: true, //use a previously loaded tile if current one not available yet
+                usePerspective: false, // experimental, doesn't work with rotate on
+                underZoom: 0, // how many zoom levels above current one to use instead, try 1 or 2 for example
+                debugOptions: debugOptions,
+                mapController: mapController,
+                optimisations: optimisations,
               ),
             ],
           );
-        }
-        return Text("Loading style...");
-      }
-    );
+
+        return fmap;
+
   }
 
 
