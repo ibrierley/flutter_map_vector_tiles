@@ -425,7 +425,6 @@ class VectorPainter extends CustomPainter {
   static Map<String, Map<String, Label>> cachedLabelsPerTile = {};
   static DateTime timeSinceLastClean;
   static Map<String, bool> prevTilesLoaded = {};
-  static Map<String, bool> prevDisplayedLabels = {};
   static double prevTileZoom = 0.0;
   static List<Label> prevLabels = [];
 
@@ -453,13 +452,10 @@ class VectorPainter extends CustomPainter {
     Map<String, Label> wantedLabels = {};
     List<Label> hiPriQueue = [];
 
-
     var pointPaint = Paint()
       ..color = Colors.grey
       ..strokeWidth = 5
       ..strokeCap = StrokeCap.round;
-    
-    Map<String, bool> tileCoordsDisplayed = {};
 
     if( usePerspective ) {
       var m = Matrix4.identity()
@@ -476,8 +472,6 @@ class VectorPainter extends CustomPainter {
     for (var tile in tilesToRender) {
       String tileCoordsKey = tileCoordsToKey(tile.coords);
       PositionInfo pos = cachedVectorDataMap[tileCoordsKey].positionInfo;
-      
-      tileCoordsDisplayed[tileCoordsKey] = true;
 
       Matrix4 matrix = Matrix4.identity()
           ..translate( pos.point.x,  pos.point.y )
@@ -613,8 +607,6 @@ class VectorPainter extends CustomPainter {
 
       if(justSeenLabels.containsKey(label.dedupeKey)) continue;
 
-      prevDisplayedLabels[label.dedupeKey] = true;
-
       if( !label.isRoad)
         canvas.drawPoints( PointMode.points, [ label.transformedPoint ], pointPaint );
 
@@ -731,7 +723,7 @@ class VectorPainter extends CustomPainter {
     if(angleDeg > 180) angleDeg -= 180;
     if(angleDeg < 0) angleDeg += 180;
 
-    if(widgetRotation + angleDeg > 180 && ((widgetRotation + angleDeg < 360))) {
+    if(widgetRotation + angleDeg > 180 && (widgetRotation + angleDeg < 360)) {
       angleDeg -= 180;
     }
 
@@ -790,7 +782,6 @@ class VectorPainter extends CustomPainter {
     paint.strokeWidth = 3.0;
 
     canvas.drawPath( path, paint);
-
   }
 
   @override
