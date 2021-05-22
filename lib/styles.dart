@@ -53,8 +53,8 @@ class Styles {
       'secondary_link': { 'color': Colors.blueGrey.shade600,  'min': 12, 'max' : 21, 'hairline': { "<" : 14 } },
       'tertiary':     { 'color': Colors.blueGrey.shade600,    'min': 13, 'max' : 21, 'hairline': { "<" : 14 } },
       'tertiary_link': { 'color': Colors.blueGrey.shade600,   'min': 13, 'max' : 21, 'hairline': { "<" : 14 } },
-      'path':         { 'color': Colors.brown.shade500,       'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
-      'track':        { 'color': Colors.brown.shade400,       'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
+      'path':         { 'color': Colors.brown.shade400,       'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
+      'track':        { 'color': Colors.brown.shade300,       'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
       'residential':  { 'color': Colors.blueGrey.shade600,                 'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
       'major_rail':   { 'color': Colors.blueGrey.shade900,    'min': 13, 'max' : 21, 'hairline': { "<" : 12 } }, // make prob darker than roads...
       'minor_rail':   { 'color': Colors.blueGrey.shade900,    'min': 14, 'max' : 21, 'hairline': { "<" : 13 } },
