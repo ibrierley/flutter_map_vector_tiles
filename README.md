@@ -22,7 +22,6 @@ Labels kept upright during rotation.
 
 Road labels that are angled to a road contour (not curved along it though, possible future enhancement, but will be some performance issues likely).
 
-Here's an example https://www.youtube.com/watch?v=GsXPMghCawA&t=4s
 [Example in action](https://www.youtube.com/watch?v=GsXPMghCawA&t=4s)
 
 
