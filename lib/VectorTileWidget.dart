@@ -437,57 +437,39 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
         DefaultCacheManager().getSingleFile(url).then( ( value ) async {
 
-          if( vectorOptions.useImages == false ) {
-            _cachedVectorData[coordsKey].units = value.readAsBytesSync();
+          try {
+            _cachedVectorData[coordsKey].state = 'got';
 
-            /// move this to a catchError maybe, not sure it will do anything here now ?
-            /// does it just fail or return null...
-            if (_cachedVectorData[coordsKey].units == null) {
-              print("Not in cache so doing an http retry");
-              var response = await retry.RetryClient(http.Client()).get(
-                  Uri.parse(url));
-              _cachedVectorData[coordsKey].units = response.body.codeUnits;
-            } else {
-              if (debugOptions.decoding) {
-                print("Got $coordsKey via DefaultCacheManager");
-              }
-            }
+            var bytes = value.readAsBytesSync();
 
-            try {
-              _cachedVectorData[coordsKey].state = 'got';
+            if( !vectorOptions.useImages ) {
+
+              _cachedVectorData[coordsKey].units = bytes;
 
               MapboxTile.decode(
                   coordsKey, _cachedVectorData[coordsKey], {}, {}, _tileZoom,
                   debugOptions);
 
-              _recentTilesCompleted[coordsKey] = DateTime.now();
+            } else {
 
-              ///backup tiles uses these to know which it can use as a backup
-              _outstandingTileLoads.remove(coordsKey);
-
-              if (debugOptions.decoding) print("decoded $coordsKey}");
-
-              setState(() {});
-
-            } catch (e) {
-              print("$e");
-            }
-          } else {
-
-              await decodeImageFromList(value.readAsBytesSync()).then(( image ){
+              await decodeImageFromList(bytes).then(( image ){
                 _cachedVectorData[coordsKey].image = image;
-
-                setState(() {});
               });
+            }
 
+            _recentTilesCompleted[coordsKey] = DateTime.now();
+
+            ///backup tiles uses these to know which it can use as a backup
+            _outstandingTileLoads.remove(coordsKey);
+
+            if (debugOptions.decoding) print("decoded $coordsKey}");
+
+            setState(() {});
+
+          } catch (e) {
+            print("$e");
           }
-
-        } );
-
-
-
-
-
+        });
       }
     }
 
