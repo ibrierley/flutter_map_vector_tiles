@@ -563,6 +563,17 @@ class VectorPainter extends CustomPainter {
         }
       }
 
+    _orderLabelsAndDraw(wantedLabels, hiPriQueue, canvas, pointPaint, widgetRotation, isRotated);
+  }
+
+  void _drawTextAt(Offset position, Canvas canvas, scale, textPainter) {
+
+    Offset drawPosition =
+      Offset(position.dx - textPainter.width / 2, position.dy + (textPainter.height/2));
+    textPainter.paint(canvas, drawPosition);
+  }
+
+  void _orderLabelsAndDraw (wantedLabels, hiPriQueue, canvas, pointPaint, widgetRotation, isRotated) {
     Map qMap = {};
     for( var label in prevLabels) {
       if( wantedLabels.containsKey(label.dedupeKey)) {
@@ -621,13 +632,6 @@ class VectorPainter extends CustomPainter {
         debugRect(canvas, label);
       });
     }
-  }
-
-  void _drawTextAt(Offset position, Canvas canvas, scale, textPainter) {
-
-    Offset drawPosition =
-      Offset(position.dx - textPainter.width / 2, position.dy + (textPainter.height/2));
-    textPainter.paint(canvas, drawPosition);
   }
 
   void _drawLabels(Label label, Canvas canvas, bool isRotated, double widgetRotation) {
