@@ -26,7 +26,7 @@ class VectorWidget extends StatefulWidget {
   final tileZoom;
   final underZoom;
   final usePerspective;
-  final debugOptions;
+  DebugOptions debugOptions = DebugOptions();
   final optimisations;
   final useImages;
 
@@ -112,44 +112,45 @@ class VectorTilePluginLayer extends StatefulWidget {
 class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProviderStateMixin {
   MapState get map => widget.mapState;
 
-  VectorTileLayerPluginOptions vectorOptions;
-  Bounds _globalTileRange;
-  Tuple2<double, double> _wrapX;
-  Tuple2<double, double> _wrapY;
-  double _tileZoom;
-  VectorLevel _level;
-  StreamSubscription _moveSub;
-  CustomPoint _tileSize;
+  VectorTileLayerPluginOptions vectorOptions = VectorTileLayerPluginOptions();
+  Bounds? _globalTileRange;
+  Tuple2<double, double>? _wrapX;
+  Tuple2<double, double>? _wrapY;
+  double _tileZoom = 12;
+  VectorLevel _level = VectorLevel();
+  StreamSubscription? _moveSub;
+  late CustomPoint _tileSize;
 
-  ValueNotifier<int> paintNotifier;
+  ValueNotifier<int>? paintNotifier;
 
   final Map<double, VectorLevel> _levels = {};
 
   Map<String, VTCache>_cachedVectorData = {};
-  Timer _housekeepingTimer;
+  Timer? _housekeepingTimer;
 
   Map<String, DateTime> _outstandingTileLoads = {};
   Map<String, DateTime> _recentTilesCompleted = {};
-  Map vectorStyle;
+  Map? vectorStyle;
 
   int _secondsBetweenListCleanups = 20;
   DateTime _lastTileListCleanupTime = DateTime.now();
 
-  LatLng _prevCenter;
-  int underZoom;
-  Optimisations optimisations;
-  DebugOptions debugOptions;
+  LatLng? _prevCenter;
+  int underZoom = 0;
+  late Optimisations optimisations;
+  late DebugOptions debugOptions;
 
   @override
   void initState() {
     vectorOptions = widget.vectorTileLayerOptions;
-    optimisations = vectorOptions.optimisations;
-    debugOptions = vectorOptions.debugOptions;
-    underZoom = vectorOptions.underZoom;
+    optimisations = vectorOptions.optimisations ?? Optimisations();
+    debugOptions = vectorOptions.debugOptions ?? DebugOptions();
+    underZoom = vectorOptions.underZoom ?? 0;
     vectorStyle = vectorOptions.vectorStyle;
 
-    if( vectorOptions.mapController != null ) {
-      vectorOptions.mapController.mapEventStream.listen((event) {
+    var mapController = vectorOptions.mapController;
+    if( mapController != null ) {
+      mapController.mapEventStream.listen((event) {
 
         /// hack to see if we can speed up pinchzooms...
         /// use hairline if middle of pinchzoom
@@ -178,7 +179,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   void dispose() {
     super.dispose();
     _moveSub?.cancel();
-    _housekeepingTimer.cancel();
+    _housekeepingTimer?.cancel();
     vectorOptions.tileProvider.dispose();
   }
 
@@ -228,10 +229,10 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     /// We try and preload some tiles if option set, so with panning there isn't such
     /// a delay in loading the next tile.
 
-    int miny = tileRange.min.y - 0; // leaving these in there as was playing to adjust with extra tile loading
-    int maxy = tileRange.max.y + 0;
-    int minx = tileRange.min.x - 0;
-    int maxx = tileRange.max.x + 0;
+    int miny = (tileRange.min.y - 0).toInt(); // leaving these in there as was playing to adjust with extra tile loading
+    int maxy = (tileRange.max.y + 0).toInt();
+    int minx = (tileRange.min.x - 0).toInt();
+    int maxx = (tileRange.max.x + 0).toInt();
 
 
     _prevCenter ??= map.center;
@@ -323,7 +324,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
                     /// careful here getting the different zoom level for the old key vs it needing a new zoom level to scale in new level...
                     ///backupCoords.z = coords.z; /// However, now we want to rewrite the z level so it will scale in current zoom, not old
                     _backupTiles[backupTileKey] =
-                        VTile(backupCoords, _tileZoom, false, backupCoords);
+                        VTile(backupCoords, false, backupCoords);
 
                     /// NOTE KEY MAY ODDLY NOT MATCH COORDS IF ITS A BACKUP TILE!
                     _haveBackupTileMap[coordsKey] = backupTileKey;
@@ -341,7 +342,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     if (queue.isNotEmpty) {
       for (var i = 0; i < queue.length; i++) {
         _tiles[_tileCoordsToKey(queue[i])] =
-            VTile(_wrapCoords(queue[i]), null, true, null);
+            VTile(_wrapCoords(queue[i]), true, null);
       }
     }
 
@@ -349,7 +350,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     for (var tile in _tiles.values) {
       if ((_level != null) && (tile.coords.z - _level.zoom).abs() <= 1 + math.pow(2, underZoom)) {
         if (!_cachedVectorData.containsKey(_tileCoordsToKey(tile.coords))) {
-          if ( debugOptions.decoding) print("Calling fechData for ${tile.coords} ");
           fetchData(tile.coords, 1);
         } else {
           tilesToRender.add(tile);
@@ -374,14 +374,13 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     var allTilesToRender = backupTilesToRender + tilesToRender;
 
     for (var tile in allTilesToRender) {
-      _cachedVectorData[_tileCoordsToKey(tile.coords)].positionInfo = _createTilePositionInfo(tile); /// need to recreate backup tile info on diff zoom...
+      _cachedVectorData[_tileCoordsToKey(tile.coords)]?.positionInfo = _createTilePositionInfo(tile); /// need to recreate backup tile info on diff zoom...
     }
-
 
     return Container(
            color: Colors.blueGrey,
          child: VectorWidget(widget.mapState.rotation, _cachedVectorData, allTilesToRender, _tileZoom, underZoom,
-             vectorOptions.usePerspective, vectorOptions.debugOptions,
+             vectorOptions.usePerspective, vectorOptions.debugOptions ?? DebugOptions(),
              optimisations, vectorOptions.useImages  )
      );
   }
@@ -391,9 +390,10 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     var tilePos = _getTilePos(coords);
     var level = _levels[coords.z];
     var tileSize = getTileSize();
-    var pos = (tilePos).multiplyBy(level.scale) + level.translatePoint;
-    var width = tileSize.x * level.scale;
-    var height = tileSize.y * level.scale;
+    var scale = level?.scale ?? 1;
+    var pos = (tilePos).multiplyBy(scale) + level!.translatePoint!;
+    var width = (tileSize.x * scale);
+    var height = tileSize.y * scale;
     var coordsKey = _tileCoordsToKey(coords);
 
     PositionInfo tilePositionInfo = PositionInfo(point: pos, width: width, height: height, coordsKey: coordsKey, scale: width / tileSize.x );
@@ -419,7 +419,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       _outstandingTileLoads[coordsKey] = DateTime.now();
 
     if(_cachedVectorData.containsKey(coordsKey)) {
-      if(_cachedVectorData[coordsKey].state == 'trying') { /// Not convinced state does anything really...
+      if(_cachedVectorData[coordsKey]?.state == 'trying') { /// Not convinced state does anything really...
         print("Still trying...returning");
         return null;
       }
@@ -428,32 +428,36 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       List<Label> labelList = [];
       if(!_cachedVectorData.containsKey(coordsKey)) {
         _cachedVectorData[coordsKey] = VTCache( /// hmm this is a bit of a mess, needs some refactoring
-          null, 'gettingHttp', coordsKey, _tileZoom, PositionInfo(),  GeomStore([], labelList, [], [])
+          null, 'gettingHttp', coordsKey, _tileZoom, GeomStore([], labelList, [], [])
         );
 
       }
 
-      if (_cachedVectorData[coordsKey].state == 'gettingHttp') {
+      if (_cachedVectorData[coordsKey]?.state == 'gettingHttp') {
 
         DefaultCacheManager().getSingleFile(url).then( ( value ) async {
 
+          var cachedVectorData = _cachedVectorData[coordsKey];
+
           try {
-            _cachedVectorData[coordsKey].state = 'got';
+            _cachedVectorData[coordsKey]?.state = 'got';
 
             var bytes = value.readAsBytesSync();
 
             if( !vectorOptions.useImages ) {
+              if( cachedVectorData != null )
+                cachedVectorData.units = bytes;
 
-              _cachedVectorData[coordsKey].units = bytes;
-
-              MapboxTile.decode(
-                  coordsKey, _cachedVectorData[coordsKey], {}, {}, _tileZoom,
+              if( cachedVectorData != null )
+                MapboxTile.decode(
+                  coordsKey, cachedVectorData, {}, {}, _tileZoom,
                   debugOptions);
 
             } else {
 
               await decodeImageFromList(bytes).then(( image ){
-                _cachedVectorData[coordsKey].image = image;
+                if( cachedVectorData != null )
+                  cachedVectorData.image = image;
               });
             }
 
@@ -461,8 +465,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
             ///backup tiles uses these to know which it can use as a backup
             _outstandingTileLoads.remove(coordsKey);
-
-            if (debugOptions.decoding) print("decoded $coordsKey}");
 
             setState(() {});
 
@@ -475,8 +477,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
   }
 
-  /// ////////////// END MAIN NEW VECTOR CODE ///////////////////////////////////
-
   CustomPoint getTileSize() {
     return _tileSize;
   }
@@ -488,8 +488,12 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     if (zoom == null) return null;
 
     for (var z in _levels.keys) {
-      if (_levels[z].children.isNotEmpty || z == zoom) {
-        _levels[z].zIndex = maxZoom = (zoom - z).abs();
+      var levelZ = _levels[z];
+      if(levelZ != null)
+        if (levelZ.children.isNotEmpty || z == zoom) {
+          var levelZi = _levels[z];
+          if( levelZi != null)
+            levelZi.zIndex = maxZoom = (zoom - z).abs();
       }
     }
 
@@ -515,8 +519,9 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       }
 
     }
-
-    _level = _levels[zoom];
+    var levelZoom = _levels[zoom];
+    if( levelZoom != null)
+      _level = levelZoom;
 
   }
 
@@ -526,14 +531,19 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     if (level.origin == null) {
       return;
     }
-    var translate = level.origin.multiplyBy(scale) - pixelOrigin;
-    level.translatePoint = translate;
-    level.scale = scale;
+    var origin = level.origin;
+    if( origin != null) {
+      var translate = origin.multiplyBy(scale) - pixelOrigin;
+      level.translatePoint = translate;
+      level.scale = scale;
+    }
   }
 
   void _setZoomTransforms(LatLng center, double zoom) {
     for (var i in _levels.keys) {
-      _setZoomTransform(_levels[i], center, zoom);
+      var levelI = _levels[i];
+      if(levelI != null)
+        _setZoomTransform(levelI, center, zoom);
     }
   }
 
@@ -557,13 +567,14 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     if (_wrapX != null) {
 
+
       var first =
-      (map.project(LatLng(0.0, crs.wrapLng.item1), tileZoom).x / tileSize.x)
+      (map.project(LatLng(0.0, crs.wrapLng!.item1), tileZoom).x / tileSize.x)
           .floor()
           .toDouble();
 
       var second =
-      (map.project(LatLng(0.0, crs.wrapLng.item2), tileZoom).x / tileSize.y)
+      (map.project(LatLng(0.0, crs.wrapLng!.item2), tileZoom).x / tileSize.y)
           .ceil()
           .toDouble();
       _wrapX = Tuple2(first, second);
@@ -573,11 +584,11 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     _wrapY = crs.wrapLat;
     if (_wrapY != null) {
       var first =
-      (map.project(LatLng(crs.wrapLat.item1, 0.0), tileZoom).y / tileSize.x)
+      (map.project(LatLng(crs.wrapLat!.item1, 0.0), tileZoom).y / tileSize.x)
           .floor()
           .toDouble();
       var second =
-      (map.project(LatLng(crs.wrapLat.item2, 0.0), tileZoom).y / tileSize.y)
+      (map.project(LatLng(crs.wrapLat!.item2, 0.0), tileZoom).y / tileSize.y)
           .ceil()
           .toDouble();
       _wrapY = Tuple2(first, second);
@@ -608,7 +619,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     var crs = map.options.crs;
     if (!crs.infinite) {
       var bounds = _globalTileRange;
-      if ((crs.wrapLng == null &&
+      if(bounds != null)
+        if ((crs.wrapLng == null &&
           (coords.x < bounds.min.x || coords.x > bounds.max.x)) ||
           (crs.wrapLat == null &&
               (coords.y < bounds.min.y || coords.y > bounds.max.y))) {
@@ -641,10 +653,10 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   Coords _wrapCoords(Coords coords) {
     var newCoords = Coords(
       _wrapX != null
-          ? wrapNum(coords.x.toDouble(), _wrapX)
+          ? wrapNum(coords.x.toDouble(), _wrapX!)
           : coords.x.toDouble(),
       _wrapY != null
-          ? wrapNum(coords.y.toDouble(), _wrapY)
+          ? wrapNum(coords.y.toDouble(), _wrapY!)
           : coords.y.toDouble(),
     );
     newCoords.z = coords.z.toDouble();
@@ -653,10 +665,10 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
   CustomPoint _getTilePos(Coords coords) {
     var level = _levels[coords.z];
-    return coords.scaleBy(getTileSize()) - level.origin;
+    return coords.scaleBy(getTileSize()) - level!.origin!;
   }
 
-  double wrapNum(double x, Tuple2<double, double> range, [bool includeMax]) {
+  double wrapNum(double x, Tuple2<double, double> range, [bool? includeMax]) {
     var max = range.item2;
     var min = range.item1;
     var d = max - min;
@@ -683,14 +695,14 @@ class VectorTileLayerPluginOptions extends TileLayerOptions {
   /// Is translated to this:
   ///
   /// https://a.tile.openstreetmap.org/12/2177/1259.png
-  final String urlTemplate;
+  final String? urlTemplate;
 
   /// If `true`, inverses Y axis numbering for tiles (turn this on for
   /// [TMS](https://en.wikipedia.org/wiki/Tile_Map_Service) services).
   final bool tms;
 
   /// If not `null`, then tiles will pull's WMS protocol requests
-  final WMSTileLayerOptions wmsOptions;
+  final WMSTileLayerOptions? wmsOptions;
 
   /// Size for the tile.
   /// Default is 256
@@ -757,7 +769,7 @@ class VectorTileLayerPluginOptions extends TileLayerOptions {
   /// unloading them.
   /// final int keepBuffer;
   /// Placeholder to show until tile images are fetched by the provider.
-  ImageProvider placeholderImage;
+  ImageProvider? placeholderImage;
 
   /// Static informations that should replace placeholders in the [urlTemplate].
   /// Applying API keys is a good example on how to use this parameter.
@@ -786,11 +798,11 @@ class VectorTileLayerPluginOptions extends TileLayerOptions {
   bool useCanvas;
   bool useBackupTiles;
   bool usePerspective;
-  DebugOptions debugOptions;
-  Map vectorStyle;
-  int underZoom;
-  MapController mapController;
-  Optimisations optimisations;
+  DebugOptions? debugOptions;
+  Map? vectorStyle;
+  int? underZoom;
+  MapController? mapController;
+  Optimisations? optimisations;
 
   VectorTileLayerPluginOptions({
     this.urlTemplate,
@@ -804,7 +816,7 @@ class VectorTileLayerPluginOptions extends TileLayerOptions {
     this.placeholderImage,
     this.tileProvider = const NonCachingNetworkTileProvider(),
     this.tms = false,
-    this.wmsOptions = null,
+    this.wmsOptions,
     this.opacity = 1.0,
     this.backupTileExpansionStrategy = const [1, 2, 3, -1, -2],
     this.useImages = true,
@@ -823,20 +835,19 @@ class VectorTileLayerPluginOptions extends TileLayerOptions {
 
 class VectorLevel {
   List children = [];
-  double zIndex;
-  CustomPoint origin;
-  double zoom;
-  CustomPoint translatePoint;
-  double scale;
+  double? zIndex;
+  CustomPoint? origin;
+  double? zoom;
+  CustomPoint? translatePoint;
+  double? scale;
 }
 
 class VTile {
   final Coords coords;
-  final double displayedZ;
   bool current;
   final backupCoords;
 
-  VTile(this.coords, this.displayedZ, this.current, this.backupCoords);
+  VTile(this.coords, this.current, this.backupCoords);
 }
 
 class Optimisations {

@@ -32,11 +32,11 @@ enum GeomType {
 }
 
 class GeomStore {
-  List<Map<String, PathInfo>> pathStore; /// rename/rejig as not really paths as such...
-  List<Label> labels;
-  List<Offset> points;
-  List<Map> roadList;
-  GeomStore( this.pathStore, this.labels, this.points, this.roadList );
+  List<Map<String, PathInfo>> pathStore = []; /// rename/rejig as not really paths as such...
+  List<Label> labels = [];
+  List<Offset> points = [];
+  List<Map> roadList = [];
+  GeomStore(this.pathStore, this.labels, this.points, this.roadList );
 }
 
 class PathInfo {
@@ -55,20 +55,20 @@ class PositionInfo {
   double height;
   String coordsKey;
   double scale;
-  PositionInfo({this.point, this.width, this.height, this.coordsKey, this.scale});
+  PositionInfo({required this.point, required this.width, required this.height, required this.coordsKey, required this.scale});
 
 }
 
 class VTCache {
-  Uint8List units;
+  Uint8List? units;
   String state;
   String coordsKey;
   double tileZoom;
-  PositionInfo positionInfo;
-  GeomStore geomInfo;
-  dartui.Image image;
+  PositionInfo? positionInfo;
+  GeomStore? geomInfo;
+  dartui.Image? image;
 
-  VTCache( this.units, this.state, this.coordsKey, this.tileZoom, this.positionInfo, this.geomInfo);
+  VTCache( this.units, this.state, this.coordsKey, this.tileZoom, this.geomInfo);
 }
 
 class Road {
@@ -84,19 +84,20 @@ class Label {
   String dedupeKey;
   String coordsKey;
   Offset point;
-  Offset transformedPoint;
-  Offset boundNW;
-  Offset boundSE;
-  int boundNWx; // trying ints for performance
-  int boundNWy;
-  int boundSEx;
-  int boundSEy;
+  Offset? transformedPoint;
+  Offset? boundNW;
+  Offset? boundSE;
+  int boundNWx = 0; // trying ints for performance
+  int boundNWy = 0;
+  int boundSEx = 0;
+  int boundSEy = 0;
   bool isRoad;
   bool keepUpright = true;
   double angle;
   int priority = 3;
   TextPainter textPainter;
-  Label( this.text, this.point, this.textPainter, this.dedupeKey, this.priority, this.coordsKey, { this.isRoad = false, this.angle = 0.0});
+  Label( {required this.text, required this.point, required this.textPainter,
+    required this.dedupeKey, required this.priority, required this.coordsKey,  this.isRoad = false, this.angle = 0.0 } );
 }
 
 class TileStats {
@@ -118,24 +119,25 @@ class MapboxTile {
     Map<String, int> excludeSummary = {};
     TileStats tileStats = new TileStats();
     cachedInfo.state = 'Decoding';
+    late vector_tile.Tile vt;
 
-    vector_tile.Tile vt;
+    var units = cachedInfo.units;
 
-    try {
-      vt = vector_tile.Tile.fromBuffer(cachedInfo.units);
-    } catch (e) {
-      print("Problem getting from buffer $e");
-    }
+    if(units != null)
+      vt = vector_tile.Tile.fromBuffer(units);
 
     int reps = 0;
 
     Map<String, int> layerOrderMap = Styles.defaultLayerOrder();
 
     if(layerOrderMap.keys.length > 0) {
+
       vt.layers.sort((a, b) {
         return (layerOrderMap[ a.name ] ?? 15).compareTo(
             layerOrderMap[ b.name ] ?? 15);
       });
+
+
     }
 
     Map layerSummary = {};
@@ -143,7 +145,7 @@ class MapboxTile {
     List labelPointlist = [];
     List<Road> roadLabelList = [];
 
-    for( var layer in vt.layers) {
+    for(var layer in vt.layers) {
 
       Map<String, PathInfo> pathMap = {};  //path => path, class => class, type => type, layer => layer
 
@@ -157,7 +159,7 @@ class MapboxTile {
 
       var command = '';
 
-      dartui.Path path;
+      dartui.Path? path;
       List<Offset> pointList = [];
 
       for (var feature in layer.features) {
@@ -186,7 +188,7 @@ class MapboxTile {
         List<Offset> polyPoints = [];
 
         var type = feature.type.toString();
-        GeomType geomType;
+        GeomType geomType = GeomType.linestring;
 
         if(layerSummary.containsKey(type)) {
           layerSummary[type]++;
@@ -221,7 +223,7 @@ class MapboxTile {
                 polyPoints = [];
                 geomType = GeomType.polygon;
               } else {
-                path.close();
+                path?.close();
               }
 
             } else {
@@ -286,7 +288,7 @@ class MapboxTile {
                 geomType = GeomType.polygon;
               } else if (type == 'LINESTRING') {
 
-                path.lineTo(ncx, ncy);
+                path?.lineTo(ncx, ncy);
                 tileStats.linePoints++;
                 geomType = GeomType.linestring;
               }
@@ -308,18 +310,23 @@ class MapboxTile {
         var key = "L:$layerString>T:$type>C:$thisClass";
         var summaryKey = key + "|" + tileZoom.toString();
 
-        if(includeFeature && geomType != null) {
+        if(includeFeature) {
           if(geomType == GeomType.point) item = point;
           if(geomType == GeomType.linestring || geomType == GeomType.polygon) item = path;
 
           if( debugOptions.features ) print("$geomType ${layer.name} $featureInfo $item");
 
           if(layer.name == 'road') {
+
             var name = featureInfo['ref'] ?? featureInfo['name'];
-            roadLabelList.add( Road( name, featureInfo['class'], path ) );
+            if( name == null) name = "";
+
+            if( path != null )
+              roadLabelList.add( Road( name, featureInfo['class'], path ) );
           }
 
-          fullGeomMap[geomType].add([type, layer.name, featureInfo, item]); /// not sure if we need this fully yet....
+          if(fullGeomMap[geomType] != null)
+            fullGeomMap[geomType]?.add([type, layer.name, featureInfo, item]); /// not sure if we need this fully yet....
         }
 
         if (!options.containsKey('labelsOnly') && path != null) {
@@ -331,8 +338,8 @@ class MapboxTile {
               pathMap[key] = PathInfo(dartui.Path(), thisClass, type, layerString, 1 );
             }
 
-            pathMap[key].path.addPath(path, Offset(0, 0));
-            pathMap[key].count++;
+            pathMap[key]?.path.addPath(path, Offset(0, 0));
+            pathMap[key]?.count++;
             tileStats.paths++;
             if( debugOptions.featureSummary ) summaryAdd(summaryKey, includeSummary);
           } else {
@@ -342,7 +349,7 @@ class MapboxTile {
         }
       }
 
-      cachedInfo.geomInfo.pathStore.add(pathMap);
+      cachedInfo.geomInfo?.pathStore.add(pathMap);
 
     } // layer
 
@@ -363,8 +370,10 @@ class MapboxTile {
 
             /// feel like getNewPainter should be cached and set in the painter...
             /// also use better params for pointInfo and maybe a class..
-            cachedInfo.geomInfo.labels.add(
-              Label( info.toString(), pointInfo[0], getNewPainter(info.toString()), pointInfo[3], pointInfo[4], coordsKey ) );
+            cachedInfo.geomInfo?.labels.add(
+              Label( text: info.toString(), point: pointInfo[0],
+                  textPainter: getNewPainter(info.toString()), dedupeKey: pointInfo[3],
+                  priority: pointInfo[4], coordsKey: coordsKey ) );
 
           }
           tileStats.labels++;
@@ -378,7 +387,6 @@ class MapboxTile {
 
     if(!debugOptions.skipRoadLabels) {
       for (var road in roadLabelList) {
-        if( road.path == null ) continue;
 
         var halfway;
         var metrics = road.path.computeMetrics();
@@ -392,8 +400,10 @@ class MapboxTile {
         }
 
         if(road.text != null && halfway != null)
-          cachedInfo.geomInfo.labels.add(
-              Label( road.text, halfway.position, getNewPainter(road.text), road.text + '|' + coordsKey, 3, coordsKey, angle: halfway.angle, isRoad: true ) ); /// use named params and a class for pointInfo
+          cachedInfo.geomInfo?.labels.add(
+              Label( text: road.text, point: halfway.position, textPainter: getNewPainter(road.text),
+                  dedupeKey: road.text + '|' + coordsKey, priority: 3,
+                  coordsKey: coordsKey, angle: halfway.angle, isRoad: true ) ); /// use named params and a class for pointInfo
 
       }
     }
@@ -426,7 +436,7 @@ class VectorPainter extends CustomPainter {
   final useImages;
 
   static Map<String, Map<String, Label>> cachedLabelsPerTile = {};
-  static DateTime timeSinceLastClean;
+  static DateTime timeSinceLastClean = DateTime.now();
   static Map<String, bool> prevTilesLoaded = {};
   static double prevTileZoom = 0.0;
   static List<Label> prevLabels = [];
@@ -475,17 +485,18 @@ class VectorPainter extends CustomPainter {
     /// Drawing normal paths
     for (var tile in tilesToRender) {
       String tileCoordsKey = tileCoordsToKey(tile.coords);
-      PositionInfo pos = cachedVectorDataMap[tileCoordsKey].positionInfo;
+      PositionInfo? pos = cachedVectorDataMap[tileCoordsKey]?.positionInfo;
 
       if(useImages) {
-        if ((pos != null) && (cachedVectorDataMap[tileCoordsKey].image != null)) {
-          paintTile(canvas, pos, cachedVectorDataMap[tileCoordsKey].image);
+        if ((pos != null) && (cachedVectorDataMap[tileCoordsKey]?.image != null)) {
+          paintTile(canvas, pos, cachedVectorDataMap[tileCoordsKey]?.image);
         }
         continue;
       }
 
-      Matrix4 matrix = Matrix4.identity()
-        ..translate(pos.point.x, pos.point.y)
+      Matrix4 matrix = Matrix4.identity();
+      if(pos != null)
+        matrix..translate(pos.point.x.toDouble(), pos.point.y.toDouble())
         ..scale(pos.scale);
 
       canvas.save();
@@ -502,16 +513,17 @@ class VectorPainter extends CustomPainter {
       // Rect myRect = Offset(pos['pos'].x, pos['pos'].y) & Size(adjustedSize.dx, adjustedSize.dy);
       // canvas.clipRect(myRect);
 
-      for (var layer in cachedVectorDataMap[tileCoordsToKey(tile.coords)]
-          .geomInfo.pathStore) {
+      var dataMap = cachedVectorDataMap[tileCoordsToKey(tile.coords)]?.geomInfo?.pathStore ?? [];
+
+      for (var layer in dataMap) {
         for (var layerKey in layer.keys) {
           /// we have a map for each layer, paths should be combined to same syle/type
           var pathMap = layer[layerKey];
 
-          if (pathMap.path != null) {
+          if (pathMap?.path != null) {
             var style = Styles.getStyle2(
-                pathMap.layerString, pathMap.type, pathMap.pclass, tileZoom,
-                pos.scale, 2);
+                pathMap?.layerString, pathMap?.type, pathMap?.pclass, tileZoom,
+                pos?.scale, 2);
 
             ///canvas.drawPath( pathMap.path.transform(matrix.storage), style );
 
@@ -519,8 +531,8 @@ class VectorPainter extends CustomPainter {
             if (optimisations.pinchZoom) style.strokeWidth = 0.0;
             if (optimisations.hairlineOption && tileZoom < 11)
               style.strokeWidth = 0.0;
-
-            canvas.drawPath(pathMap.path, style);
+            if( pathMap != null)
+              canvas.drawPath(pathMap.path, style);
           }
         }
       }
@@ -541,31 +553,34 @@ class VectorPainter extends CustomPainter {
     /// All labels should come on top of paths etc, so moved loop out here
     for (var tile in tilesToRender) {
       String tileCoordsKey = tileCoordsToKey(tile.coords);
-      PositionInfo pos = cachedVectorDataMap[tileCoordsKey].positionInfo;
+      PositionInfo? pos = cachedVectorDataMap[tileCoordsKey]?.positionInfo;
 
-      if (cachedVectorDataMap[tileCoordsKey].state != 'Decoded') continue;
+      if (cachedVectorDataMap[tileCoordsKey]?.state != 'Decoded') continue;
 
       Matrix4 matrix;
       if (!usePerspective) {
         matrix = Matrix4.identity();
+        if( pos != null )
         matrix
-          ..translate(pos.point.x, pos.point.y)
+          ..translate(pos.point.x.toDouble(), pos.point.y.toDouble())
           ..scale(pos.scale);
       } else {
         matrix = Matrix4.identity()
           ..rotateY(devicePerspectiveAngle * 0.0174)
           ..setEntry(3, 2, 0.0015) // perspective
-          ..rotateX(rotatePerspective)
+          ..rotateX(rotatePerspective);
 
         // normal position
-          ..translate(pos.point.x, pos.point.y)
-          ..scale(pos.scale, pos.scale);
+          if( pos != null )
+            matrix..translate(pos.point.x.toDouble(), pos.point.y.toDouble())
+              ..scale(pos.scale, pos.scale);
       }
 
       /// There's a slight issue as labels aren't reverse transformed to account for
       /// widget rotations. Gets fiddly, but we could probably sort if we care enough
-      for (Label label in cachedVectorDataMap[tileCoordsKey].geomInfo
-          .labels) {
+      ///
+      var labels =  cachedVectorDataMap[tileCoordsKey]?.geomInfo?.labels ?? [];
+      for (Label label in labels) {
         label.transformedPoint =
             MatrixUtils.transformPoint(matrix, label.point);
 
@@ -629,9 +644,12 @@ class VectorPainter extends CustomPainter {
     for (Label label in hiPriQueue) {
       if (justSeenLabels.containsKey(label.dedupeKey)) continue;
 
+      var tp = label.transformedPoint;
+
       if (!label.isRoad)
-        canvas.drawPoints(
-            PointMode.points, [ label.transformedPoint], pointPaint);
+        if( tp != null )
+          canvas.drawPoints(
+            PointMode.points, [ tp ], pointPaint);
 
       _drawLabels(label, canvas, isRotated, widgetRotation);
 
@@ -655,13 +673,15 @@ class VectorPainter extends CustomPainter {
 
     /// if map rotated, we want to keep most non-road labels unrotated
 
+    var transformedPoint = label.transformedPoint;
     if (label.isRoad) { // dont want to reverse rotate like normal labels
 
       drawPoint = Offset(0.0, -17.0);
 
-      canvas.save(); //
-      canvas.translate(label.transformedPoint.dx,
-          label.transformedPoint.dy); // text height offset back to center
+      canvas.save();
+
+      if(transformedPoint != null)
+        canvas.translate(transformedPoint.dx, transformedPoint.dy); // text height offset back to center
 
       /// text can be upside down, try and prevent it
       double angleDeg = getNoneUpsideDownTextAngle(label, widgetRotation);
@@ -671,17 +691,21 @@ class VectorPainter extends CustomPainter {
       _drawTextAt(drawPoint, canvas, 1,
           label.textPainter); //
       canvas.restore();
+
     } else {
+
       if (isRotated) { // we need to realign the text so its upright
         drawPoint = Offset(0.0, 0.0);
         canvas
             .save(); // can we transform all first, as save is quite expensive...
-        canvas.translate(
-            label.transformedPoint.dx, label.transformedPoint.dy);
+        if( transformedPoint != null)
+          canvas.translate(
+            transformedPoint.dx, transformedPoint.dy);
         canvas.rotate(-widgetRotation * 0.0174533);
       }
 
-      _drawTextAt(drawPoint, canvas, 1,
+      if( drawPoint != null)
+        _drawTextAt(drawPoint, canvas, 1,
           label.textPainter); // we don't want to scale text
 
       if (isRotated) {
@@ -703,29 +727,20 @@ class VectorPainter extends CustomPainter {
 
   bool checkLabelOverlaps( List labelsToCheck, Label label, Canvas canvas  ) { // add fontsize (14) to the check...
 
-    bool collides = false;
+    var collides = false;
 
-    labelsToCheck.forEach((compareLabel) {
+    for( var compareLabel in labelsToCheck) {
       if( compareLabel != label) {
-
-        //if ((label.boundNW.dx < compareLabel.boundSE.dx) &&
-        //    (label.boundSE.dx > compareLabel.boundNW.dx) &&
-        //    (label.boundNW.dy < compareLabel.boundSE.dy) &&
-        //    (label.boundSE.dy > compareLabel.boundNW.dy)) {
-        // trying ints for performance as we're not bothered about accuracy
-
         if ((label.boundNWx < compareLabel.boundSEx) &&
             (label.boundSEx > compareLabel.boundNWx) &&
             (label.boundNWy < compareLabel.boundSEy) &&
             (label.boundSEy > compareLabel.boundNWy)) {
 
-        collides = true;
-
-          return collides; // skip the rest
-
+          collides = true;
+          break; // skip the rest
         }
       }
-    });
+    }
 
     return collides;
   }
@@ -738,10 +753,19 @@ class VectorPainter extends CustomPainter {
     //label.boundNW = Offset( label.transformedPoint.dx - (labelLength * widthFactor / 2) - padding , label.transformedPoint.dy - (labelLength * widthFactor / 2) - padding);
     //label.boundSE = Offset( label.boundNW.dx + (labelLength * widthFactor ) + padding, label.boundNW.dy + (labelLength * widthFactor ) + padding);
     // Seeing if ints will speed things up, as we don't really care about accuracy and do a lot of collision checks, prob overoptimisation
-    label.boundNWx = (label.transformedPoint.dx - (labelLength * widthFactor / 2) - padding).toInt();
-    label.boundNWy = (label.transformedPoint.dy - (labelLength * widthFactor / 2) - padding).toInt();
-    label.boundSEx = (label.boundNWx + (labelLength * widthFactor ) + padding).toInt();
-    label.boundSEy = (label.boundNWy + (labelLength * widthFactor ) + padding).toInt();
+    var tp = label.transformedPoint;
+    if( tp != null ) {
+      label.boundNWx =
+          (tp.dx - (labelLength * widthFactor / 2) -
+              padding).toInt();
+      label.boundNWy =
+          (tp.dy - (labelLength * widthFactor / 2) -
+              padding).toInt();
+      label.boundSEx =
+          (label.boundNWx + (labelLength * widthFactor) + padding).toInt();
+      label.boundSEy =
+          (label.boundNWy + (labelLength * widthFactor) + padding).toInt();
+    }
 
     // Original, but would now need to take into account rotated bounding boxes, so going for an easy option above of just making it square
     // We may want to try rotated boxes, but could be expensive
@@ -802,10 +826,16 @@ class VectorPainter extends CustomPainter {
 
   void debugRect(canvas, Label label) {
     Path path = Path();
-    path.moveTo(label.boundNW.dx, label.boundNW.dy);
-    path.lineTo(label.boundSE.dx, label.boundNW.dy);
-    path.lineTo(label.boundSE.dx, label.boundSE.dy);
-    path.lineTo(label.boundNW.dx, label.boundSE.dy);
+
+    var nw = label.boundNW;
+    var se = label.boundSE;
+
+    if(nw != null && se != null) { // null safety nonsense :D
+      path.moveTo(nw.dx, nw.dy);
+      path.lineTo(se.dx, nw.dy);
+      path.lineTo(se.dx, se.dy);
+      path.lineTo(nw.dx, se.dy);
+    }
     path.close();
 
     var paint = Paint();

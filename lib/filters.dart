@@ -11,14 +11,14 @@ class Filters {
     };
 
     /// exclude whole label names
-    if(includeExcludeLabels['layer_names'].containsKey(layerString)) {
-      if(!includeExcludeLabels['layer_names'][layerString]) return false;
+    if(includeExcludeLabels['layer_names']!.containsKey(layerString)) {
+      if(!includeExcludeLabels['layer_names']![layerString]!) return false;
     }
 
     /// exclude classes
     var myClass = featureInfo['class'];
-    if(includeExcludeLabels.containsKey(layerString) && includeExcludeLabels[layerString].containsKey(myClass)) {
-      if (includeExcludeLabels[layerString][myClass] == false) {
+    if(includeExcludeLabels.containsKey(layerString) && includeExcludeLabels[layerString]!.containsKey(myClass)) {
+      if (includeExcludeLabels[layerString]![myClass] == false) {
         return false;
       }
     }

@@ -2,8 +2,8 @@
 //  Generated code. Do not modify.
 //  source: vector_tile.proto
 //
-// @dart = 2.3
-// ignore_for_file: camel_case_types,non_constant_identifier_names,library_prefixes,unused_import,unused_shown_name,return_of_invalid_type
+// @dart = 2.12
+// ignore_for_file: annotate_overrides,camel_case_types,unnecessary_const,non_constant_identifier_names,library_prefixes,unused_import,unused_shown_name,return_of_invalid_type,unnecessary_this,prefer_final_fields
 
 import 'dart:core' as $core;
 
@@ -15,23 +15,63 @@ import 'vector_tile.pbenum.dart';
 export 'vector_tile.pbenum.dart';
 
 class Tile_Value extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo('Tile.Value', package: const $pb.PackageName('vector_tile'), createEmptyInstance: create)
-    ..aOS(1, 'stringValue')
-    ..a<$core.double>(2, 'floatValue', $pb.PbFieldType.OF)
-    ..a<$core.double>(3, 'doubleValue', $pb.PbFieldType.OD)
-    ..aInt64(4, 'intValue')
-    ..a<$fixnum.Int64>(5, 'uintValue', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(6, 'sintValue', $pb.PbFieldType.OS6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aOB(7, 'boolValue')
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Tile.Value', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'vector_tile'), createEmptyInstance: create)
+    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'stringValue')
+    ..a<$core.double>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'floatValue', $pb.PbFieldType.OF)
+    ..a<$core.double>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'doubleValue', $pb.PbFieldType.OD)
+    ..aInt64(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'intValue')
+    ..a<$fixnum.Int64>(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'uintValue', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(6, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'sintValue', $pb.PbFieldType.OS6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOB(7, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'boolValue')
     ..hasExtensions = true
   ;
 
   Tile_Value._() : super();
-  factory Tile_Value() => create();
+  factory Tile_Value({
+    $core.String? stringValue,
+    $core.double? floatValue,
+    $core.double? doubleValue,
+    $fixnum.Int64? intValue,
+    $fixnum.Int64? uintValue,
+    $fixnum.Int64? sintValue,
+    $core.bool? boolValue,
+  }) {
+    final _result = create();
+    if (stringValue != null) {
+      _result.stringValue = stringValue;
+    }
+    if (floatValue != null) {
+      _result.floatValue = floatValue;
+    }
+    if (doubleValue != null) {
+      _result.doubleValue = doubleValue;
+    }
+    if (intValue != null) {
+      _result.intValue = intValue;
+    }
+    if (uintValue != null) {
+      _result.uintValue = uintValue;
+    }
+    if (sintValue != null) {
+      _result.sintValue = sintValue;
+    }
+    if (boolValue != null) {
+      _result.boolValue = boolValue;
+    }
+    return _result;
+  }
   factory Tile_Value.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Tile_Value.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   Tile_Value clone() => Tile_Value()..mergeFromMessage(this);
-  Tile_Value copyWith(void Function(Tile_Value) updates) => super.copyWith((message) => updates(message as Tile_Value));
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Tile_Value copyWith(void Function(Tile_Value) updates) => super.copyWith((message) => updates(message as Tile_Value)) as Tile_Value; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
   @$core.pragma('dart2js:noInline')
   static Tile_Value create() => Tile_Value._();
@@ -39,7 +79,7 @@ class Tile_Value extends $pb.GeneratedMessage {
   static $pb.PbList<Tile_Value> createRepeated() => $pb.PbList<Tile_Value>();
   @$core.pragma('dart2js:noInline')
   static Tile_Value getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Tile_Value>(create);
-  static Tile_Value _defaultInstance;
+  static Tile_Value? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get stringValue => $_getSZ(0);
@@ -106,20 +146,48 @@ class Tile_Value extends $pb.GeneratedMessage {
 }
 
 class Tile_Feature extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo('Tile.Feature', package: const $pb.PackageName('vector_tile'), createEmptyInstance: create)
-    ..a<$fixnum.Int64>(1, 'id', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..p<$core.int>(2, 'tags', $pb.PbFieldType.KU3)
-    ..e<Tile_GeomType>(3, 'type', $pb.PbFieldType.OE, defaultOrMaker: Tile_GeomType.UNKNOWN, valueOf: Tile_GeomType.valueOf, enumValues: Tile_GeomType.values)
-    ..p<$core.int>(4, 'geometry', $pb.PbFieldType.KU3)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Tile.Feature', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'vector_tile'), createEmptyInstance: create)
+    ..a<$fixnum.Int64>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'id', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..p<$core.int>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'tags', $pb.PbFieldType.KU3)
+    ..e<Tile_GeomType>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: Tile_GeomType.UNKNOWN, valueOf: Tile_GeomType.valueOf, enumValues: Tile_GeomType.values)
+    ..p<$core.int>(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'geometry', $pb.PbFieldType.KU3)
     ..hasRequiredFields = false
   ;
 
   Tile_Feature._() : super();
-  factory Tile_Feature() => create();
+  factory Tile_Feature({
+    $fixnum.Int64? id,
+    $core.Iterable<$core.int>? tags,
+    Tile_GeomType? type,
+    $core.Iterable<$core.int>? geometry,
+  }) {
+    final _result = create();
+    if (id != null) {
+      _result.id = id;
+    }
+    if (tags != null) {
+      _result.tags.addAll(tags);
+    }
+    if (type != null) {
+      _result.type = type;
+    }
+    if (geometry != null) {
+      _result.geometry.addAll(geometry);
+    }
+    return _result;
+  }
   factory Tile_Feature.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Tile_Feature.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   Tile_Feature clone() => Tile_Feature()..mergeFromMessage(this);
-  Tile_Feature copyWith(void Function(Tile_Feature) updates) => super.copyWith((message) => updates(message as Tile_Feature));
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Tile_Feature copyWith(void Function(Tile_Feature) updates) => super.copyWith((message) => updates(message as Tile_Feature)) as Tile_Feature; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
   @$core.pragma('dart2js:noInline')
   static Tile_Feature create() => Tile_Feature._();
@@ -127,7 +195,7 @@ class Tile_Feature extends $pb.GeneratedMessage {
   static $pb.PbList<Tile_Feature> createRepeated() => $pb.PbList<Tile_Feature>();
   @$core.pragma('dart2js:noInline')
   static Tile_Feature getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Tile_Feature>(create);
-  static Tile_Feature _defaultInstance;
+  static Tile_Feature? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get id => $_getI64(0);
@@ -155,22 +223,58 @@ class Tile_Feature extends $pb.GeneratedMessage {
 }
 
 class Tile_Layer extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo('Tile.Layer', package: const $pb.PackageName('vector_tile'), createEmptyInstance: create)
-    ..aQS(1, 'name')
-    ..pc<Tile_Feature>(2, 'features', $pb.PbFieldType.PM, subBuilder: Tile_Feature.create)
-    ..pPS(3, 'keys')
-    ..pc<Tile_Value>(4, 'values', $pb.PbFieldType.PM, subBuilder: Tile_Value.create)
-    ..a<$core.int>(5, 'extent', $pb.PbFieldType.OU3, defaultOrMaker: 4096)
-    ..a<$core.int>(15, 'version', $pb.PbFieldType.QU3, defaultOrMaker: 1)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Tile.Layer', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'vector_tile'), createEmptyInstance: create)
+    ..aQS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'name')
+    ..pc<Tile_Feature>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'features', $pb.PbFieldType.PM, subBuilder: Tile_Feature.create)
+    ..pPS(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'keys')
+    ..pc<Tile_Value>(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'values', $pb.PbFieldType.PM, subBuilder: Tile_Value.create)
+    ..a<$core.int>(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'extent', $pb.PbFieldType.OU3, defaultOrMaker: 4096)
+    ..a<$core.int>(15, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'version', $pb.PbFieldType.QU3, defaultOrMaker: 1)
     ..hasExtensions = true
   ;
 
   Tile_Layer._() : super();
-  factory Tile_Layer() => create();
+  factory Tile_Layer({
+    $core.String? name,
+    $core.Iterable<Tile_Feature>? features,
+    $core.Iterable<$core.String>? keys,
+    $core.Iterable<Tile_Value>? values,
+    $core.int? extent,
+    $core.int? version,
+  }) {
+    final _result = create();
+    if (name != null) {
+      _result.name = name;
+    }
+    if (features != null) {
+      _result.features.addAll(features);
+    }
+    if (keys != null) {
+      _result.keys.addAll(keys);
+    }
+    if (values != null) {
+      _result.values.addAll(values);
+    }
+    if (extent != null) {
+      _result.extent = extent;
+    }
+    if (version != null) {
+      _result.version = version;
+    }
+    return _result;
+  }
   factory Tile_Layer.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Tile_Layer.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   Tile_Layer clone() => Tile_Layer()..mergeFromMessage(this);
-  Tile_Layer copyWith(void Function(Tile_Layer) updates) => super.copyWith((message) => updates(message as Tile_Layer));
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Tile_Layer copyWith(void Function(Tile_Layer) updates) => super.copyWith((message) => updates(message as Tile_Layer)) as Tile_Layer; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
   @$core.pragma('dart2js:noInline')
   static Tile_Layer create() => Tile_Layer._();
@@ -178,7 +282,7 @@ class Tile_Layer extends $pb.GeneratedMessage {
   static $pb.PbList<Tile_Layer> createRepeated() => $pb.PbList<Tile_Layer>();
   @$core.pragma('dart2js:noInline')
   static Tile_Layer getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Tile_Layer>(create);
-  static Tile_Layer _defaultInstance;
+  static Tile_Layer? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get name => $_getSZ(0);
@@ -218,17 +322,33 @@ class Tile_Layer extends $pb.GeneratedMessage {
 }
 
 class Tile extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo('Tile', package: const $pb.PackageName('vector_tile'), createEmptyInstance: create)
-    ..pc<Tile_Layer>(3, 'layers', $pb.PbFieldType.PM, subBuilder: Tile_Layer.create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Tile', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'vector_tile'), createEmptyInstance: create)
+    ..pc<Tile_Layer>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'layers', $pb.PbFieldType.PM, subBuilder: Tile_Layer.create)
     ..hasExtensions = true
   ;
 
   Tile._() : super();
-  factory Tile() => create();
+  factory Tile({
+    $core.Iterable<Tile_Layer>? layers,
+  }) {
+    final _result = create();
+    if (layers != null) {
+      _result.layers.addAll(layers);
+    }
+    return _result;
+  }
   factory Tile.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Tile.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   Tile clone() => Tile()..mergeFromMessage(this);
-  Tile copyWith(void Function(Tile) updates) => super.copyWith((message) => updates(message as Tile));
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Tile copyWith(void Function(Tile) updates) => super.copyWith((message) => updates(message as Tile)) as Tile; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
   @$core.pragma('dart2js:noInline')
   static Tile create() => Tile._();
@@ -236,7 +356,7 @@ class Tile extends $pb.GeneratedMessage {
   static $pb.PbList<Tile> createRepeated() => $pb.PbList<Tile>();
   @$core.pragma('dart2js:noInline')
   static Tile getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Tile>(create);
-  static Tile _defaultInstance;
+  static Tile? _defaultInstance;
 
   @$pb.TagNumber(3)
   $core.List<Tile_Layer> get layers => $_getList(0);

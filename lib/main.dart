@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key? key, this.title = "Flutter Map"}) : super(key: key);
 
   final String title;
 
@@ -46,7 +46,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
-  MapController mapController;
+  MapController? mapController;
 
   @override
   void initState() {

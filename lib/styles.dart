@@ -266,18 +266,18 @@ class Styles {
   };
 
   static bool includeFeature(layerString, type, thisClass, zoom) { //reduce code...
-    var includeFeature = classColorStyles['default']['include'];
+    var includeFeature = classColorStyles['default']!['include'];
 
     if(classColorStyles.containsKey(layerString)) {
-      includeFeature = classColorStyles[layerString]['include'];
+      includeFeature = classColorStyles[layerString]!['include'];
 
-      var classOptions = classColorStyles[layerString]['default'];
+      var classOptions = classColorStyles[layerString]!['default'];
 
-      if( classColorStyles[layerString].containsKey('types') && classColorStyles[layerString]['types'].containsKey(type)) { // types match in styling
-        classOptions = classColorStyles[layerString]['types'][type];
+      if( classColorStyles[layerString]!.containsKey('types') && classColorStyles[layerString]!['types'].containsKey(type)) { // types match in styling
+        classOptions = classColorStyles[layerString]!['types'][type];
 
-      } else if( classColorStyles[layerString].containsKey(thisClass) ) { // normal class match in styling
-        classOptions = classColorStyles[layerString][thisClass];
+      } else if( classColorStyles[layerString]!.containsKey(thisClass) ) { // normal class match in styling
+        classOptions = classColorStyles[layerString]![thisClass];
       }
 
       if( includeFeature && classOptions.containsKey('min') ) {
@@ -314,22 +314,22 @@ class Styles {
     var useHairline = false;
 
     if(styleInfo.containsKey(layerString)) {
-      if(styleInfo[layerString].containsKey(className)) {
-        if(styleInfo[layerString][className].containsKey('hairline')) { // tidy a bit
-          if( tileZoom < styleInfo[layerString][className]['hairline']['<']) {
+      if(styleInfo[layerString]!.containsKey(className)) {
+        if(styleInfo[layerString]![className].containsKey('hairline')) { // tidy a bit
+          if( tileZoom < styleInfo[layerString]![className]['hairline']['<']) {
             useHairline = true;
           }
         }
-        paint.color = styleInfo[layerString][className]['color'];
+        paint.color = styleInfo[layerString]![className]['color'];
       } else {
-        paint.color = styleInfo[layerString]['default']['color'];
+        paint.color = styleInfo[layerString]!['default']['color'];
       }
     }
 
     if(classStrokeWidthClasses.containsKey(layerString)) {
-      paint.strokeWidth = classStrokeWidthClasses[layerString][className] ?? classStrokeWidthClasses[layerString]['default'];
+      paint.strokeWidth = classStrokeWidthClasses[layerString]![className] ?? classStrokeWidthClasses[layerString]!['default']!;
     } else {
-      paint.strokeWidth = classStrokeWidthClasses['default']['default'];
+      paint.strokeWidth = classStrokeWidthClasses['default']!['default']!;
     }
 
     paint.strokeWidth =  (paint.strokeWidth / scale); ///.ceilToDouble();
