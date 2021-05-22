@@ -28,6 +28,7 @@ class VectorWidget extends StatefulWidget {
   final usePerspective;
   final debugOptions;
   final optimisations;
+  final useImages;
 
   VectorWidget(
       this.rotation,
@@ -38,6 +39,7 @@ class VectorWidget extends StatefulWidget {
       this.usePerspective,
       this.debugOptions,
       this.optimisations,
+      this.useImages,
       );
 
   @override
@@ -63,7 +65,7 @@ class _VectorWidgetState extends State<VectorWidget> {
             isComplex: true, //Tells flutter to cache the painter.
             painter: VectorPainter( dimensions, widget.rotation, widget.tilesToRender, widget.tileZoom,
                 widget.cachedVectorDataMap, widget.underZoom, widget.usePerspective,
-                widget.debugOptions, widget.optimisations ) )
+                widget.debugOptions, widget.optimisations, widget.useImages ) )
        )
     );
 
@@ -147,9 +149,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     vectorStyle = vectorOptions.vectorStyle;
 
     if( vectorOptions.mapController != null ) {
-      ///print("have a map controller");
       vectorOptions.mapController.mapEventStream.listen((event) {
-        ///print("Map event $event ${ event.zoom } ${event.source } ");
 
         /// hack to see if we can speed up pinchzooms...
         /// use hairline if middle of pinchzoom
@@ -382,7 +382,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
            color: Colors.blueGrey,
          child: VectorWidget(widget.mapState.rotation, _cachedVectorData, allTilesToRender, _tileZoom, underZoom,
              vectorOptions.usePerspective, vectorOptions.debugOptions,
-             optimisations  )
+             optimisations, vectorOptions.useImages  )
      );
   }
 
@@ -437,38 +437,57 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
         DefaultCacheManager().getSingleFile(url).then( ( value ) async {
 
+          if( vectorOptions.useImages == false ) {
             _cachedVectorData[coordsKey].units = value.readAsBytesSync();
+
             /// move this to a catchError maybe, not sure it will do anything here now ?
             /// does it just fail or return null...
-            if( _cachedVectorData[coordsKey].units == null ) {
+            if (_cachedVectorData[coordsKey].units == null) {
               print("Not in cache so doing an http retry");
-              var response = await retry.RetryClient(http.Client()).get(Uri.parse(url));
+              var response = await retry.RetryClient(http.Client()).get(
+                  Uri.parse(url));
               _cachedVectorData[coordsKey].units = response.body.codeUnits;
             } else {
-              if( debugOptions.decoding) {
+              if (debugOptions.decoding) {
                 print("Got $coordsKey via DefaultCacheManager");
               }
             }
 
             try {
-            _cachedVectorData[coordsKey].state = 'got';
+              _cachedVectorData[coordsKey].state = 'got';
 
-            MapboxTile.decode(coordsKey, _cachedVectorData[coordsKey], {}, {}, _tileZoom, debugOptions);
+              MapboxTile.decode(
+                  coordsKey, _cachedVectorData[coordsKey], {}, {}, _tileZoom,
+                  debugOptions);
 
-            _recentTilesCompleted[coordsKey] = DateTime.now(); ///backup tiles uses these to know which it can use as a backup
-            _outstandingTileLoads.remove(coordsKey);
+              _recentTilesCompleted[coordsKey] = DateTime.now();
 
-            if( debugOptions.decoding ) print("decoded $coordsKey}");
+              ///backup tiles uses these to know which it can use as a backup
+              _outstandingTileLoads.remove(coordsKey);
 
-            setState(() {
+              if (debugOptions.decoding) print("decoded $coordsKey}");
 
-            });
+              setState(() {});
 
             } catch (e) {
               print("$e");
             }
+          } else {
+
+              await decodeImageFromList(value.readAsBytesSync()).then(( image ){
+                _cachedVectorData[coordsKey].image = image;
+
+                setState(() {});
+              });
+
+          }
 
         } );
+
+
+
+
+
       }
     }
 

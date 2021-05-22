@@ -83,10 +83,12 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             layers: [
               VectorTileLayerPluginOptions(
-                urlTemplate: 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?mapbox://styles/gibble/ckoe1dv003l7s17pb219opzj0&access_token=pk.eyJ1IjoiZ2liYmxlIiwiYSI6ImNqbjBlZDB6ejFrODcza3Fsa3o3eXR1MzkifQ.pC89zLnuSWrRdCkDrsmynQ',
-                //subdomains: ['a', 'b', 'c'],
+                ///urlTemplate: 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?mapbox://styles/gibble/ckoe1dv003l7s17pb219opzj0&access_token=pk.eyJ1IjoiZ2liYmxlIiwiYSI6ImNqbjBlZDB6ejFrODcza3Fsa3o3eXR1MzkifQ.pC89zLnuSWrRdCkDrsmynQ',
+                subdomains: ['a', 'b', 'c'],
+                urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+
                 useCanvas: true,
-                //useImages: false, //disabled, code currently removed, but could be added, not sure I currently see the benefit
+                useImages: true, //disabled, code currently removed, but could be added, not sure I currently see the benefit
                 useBackupTiles: true, //use a previously loaded tile if current one not available yet
                 usePerspective: false, // experimental, doesn't work with rotate on
                 underZoom: 0, // how many zoom levels above current one to use instead, try 1 or 2 for example

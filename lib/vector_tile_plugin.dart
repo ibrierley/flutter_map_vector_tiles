@@ -12,6 +12,7 @@ import 'package:flutter_map_vector_tile/VectorTileWidget.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:vector_math/vector_math_64.dart' as VectorMath hide Colors;
 import 'dart:math' as DartMath;
+import 'package:flutter/painting.dart';
 
 const RADTODEG = 57.2958;
 const DEGTORAD = 0.0174533;
@@ -65,6 +66,7 @@ class VTCache {
   double tileZoom;
   PositionInfo positionInfo;
   GeomStore geomInfo;
+  dartui.Image image;
 
   VTCache( this.units, this.state, this.coordsKey, this.tileZoom, this.positionInfo, this.geomInfo);
 }
@@ -421,6 +423,7 @@ class VectorPainter extends CustomPainter {
   final debugOptions;
   final rotation;
   final Optimisations optimisations;
+  final useImages;
 
   static Map<String, Map<String, Label>> cachedLabelsPerTile = {};
   static DateTime timeSinceLastClean;
@@ -434,20 +437,21 @@ class VectorPainter extends CustomPainter {
 
   List<Map<String, bool>> layerDisplaySegments = Filters.layerDisplaySegments();
 
-  VectorPainter(Offset this.dimensions, double this.rotation,  List<VTile> this.tilesToRender, this.tileZoom,
+  VectorPainter(Offset this.dimensions, double this.rotation,
+      List<VTile> this.tilesToRender, this.tileZoom,
       this.cachedVectorDataMap, this.underZoom, this.usePerspective,
-      this.debugOptions, this.optimisations);
+      this.debugOptions, this.optimisations, this.useImages);
 
   @override
   void paint(Canvas canvas, Size size) {
-
     var rotatePerspective = -1.25; //-1.25; // only used if we're using perspective enabled
     var widgetRotation = this.rotation;
     var isRotated = false;
-    if(widgetRotation != 0.0 ) isRotated = true;
+    if (widgetRotation != 0.0) isRotated = true;
     widgetRotation = widgetRotation % 360;
 
-    var devicePerspectiveAngle =  DartMath.atan2( size.width/2 , size.height) * 57.2958;
+    var devicePerspectiveAngle = DartMath.atan2(size.width / 2, size.height) *
+        57.2958;
 
     Map<String, Label> wantedLabels = {};
     List<Label> hiPriQueue = [];
@@ -457,7 +461,7 @@ class VectorPainter extends CustomPainter {
       ..strokeWidth = 5
       ..strokeCap = StrokeCap.round;
 
-    if( usePerspective ) {
+    if (usePerspective) {
       var m = Matrix4.identity()
         ..rotateY(
             devicePerspectiveAngle * 0.0174) // device vanishing point offset
@@ -465,7 +469,7 @@ class VectorPainter extends CustomPainter {
         ..rotateX(rotatePerspective); // horizontal level angle change
 
       canvas.save();
-      canvas.transform( m.storage );
+      canvas.transform(m.storage);
     }
 
     /// Drawing normal paths
@@ -473,9 +477,16 @@ class VectorPainter extends CustomPainter {
       String tileCoordsKey = tileCoordsToKey(tile.coords);
       PositionInfo pos = cachedVectorDataMap[tileCoordsKey].positionInfo;
 
+      if(useImages) {
+        if ((pos != null) && (cachedVectorDataMap[tileCoordsKey].image != null)) {
+          paintTile(canvas, pos, cachedVectorDataMap[tileCoordsKey].image);
+        }
+        continue;
+      }
+
       Matrix4 matrix = Matrix4.identity()
-          ..translate( pos.point.x,  pos.point.y )
-          ..scale( pos.scale );
+        ..translate(pos.point.x, pos.point.y)
+        ..scale(pos.scale);
 
       canvas.save();
       canvas.transform(matrix.storage);
@@ -491,87 +502,97 @@ class VectorPainter extends CustomPainter {
       // Rect myRect = Offset(pos['pos'].x, pos['pos'].y) & Size(adjustedSize.dx, adjustedSize.dy);
       // canvas.clipRect(myRect);
 
-      for (var layer in cachedVectorDataMap[tileCoordsToKey(tile.coords)].geomInfo.pathStore) {
-        for (var layerKey in layer.keys) { /// we have a map for each layer, paths should be combined to same syle/type
+      for (var layer in cachedVectorDataMap[tileCoordsToKey(tile.coords)]
+          .geomInfo.pathStore) {
+        for (var layerKey in layer.keys) {
+          /// we have a map for each layer, paths should be combined to same syle/type
           var pathMap = layer[layerKey];
 
-          if( pathMap.path != null ) {
-            var style = Styles.getStyle2( pathMap.layerString, pathMap.type, pathMap.pclass, tileZoom, pos.scale, 2 );
+          if (pathMap.path != null) {
+            var style = Styles.getStyle2(
+                pathMap.layerString, pathMap.type, pathMap.pclass, tileZoom,
+                pos.scale, 2);
+
             ///canvas.drawPath( pathMap.path.transform(matrix.storage), style );
 
             /// if we've pinchzooming, use thin lines for speed
-            if( optimisations.pinchZoom ) style.strokeWidth = 0.0;
-            if( optimisations.hairlineOption && tileZoom < 11) style.strokeWidth = 0.0;
+            if (optimisations.pinchZoom) style.strokeWidth = 0.0;
+            if (optimisations.hairlineOption && tileZoom < 11)
+              style.strokeWidth = 0.0;
 
-            canvas.drawPath( pathMap.path, style );
-
+            canvas.drawPath(pathMap.path, style);
           }
         }
       }
-      if( debugOptions.tiles ) { /// display tile square and coords
+      if (debugOptions.tiles) {
+        /// display tile square and coords
         _debugTiles(canvas, tile);
       }
 
-       canvas.restore();
+      canvas.restore();
     }
 
-    if( usePerspective ) canvas.restore();
+    if (usePerspective) canvas.restore();
+
+    if (useImages) return;
 
     /// Calculated transformed Label position and do collision detection
     /// to decide which to cull.
     /// All labels should come on top of paths etc, so moved loop out here
     for (var tile in tilesToRender) {
-
       String tileCoordsKey = tileCoordsToKey(tile.coords);
       PositionInfo pos = cachedVectorDataMap[tileCoordsKey].positionInfo;
-      
-      if( cachedVectorDataMap[tileCoordsKey].state != 'Decoded' ) continue;
 
-        Matrix4 matrix;
-        if (!usePerspective) {
-          matrix = Matrix4.identity();
-          matrix
-            ..translate(pos.point.x, pos.point.y)
-            ..scale(pos.scale);
-        } else {
-          matrix = Matrix4.identity()
-            ..rotateY(devicePerspectiveAngle * 0.0174)
-            ..setEntry(3, 2, 0.0015) // perspective
-            ..rotateX(rotatePerspective)
+      if (cachedVectorDataMap[tileCoordsKey].state != 'Decoded') continue;
 
-          // normal position
-            ..translate(pos.point.x, pos.point.y)
-            ..scale(pos.scale, pos.scale);
-        }
+      Matrix4 matrix;
+      if (!usePerspective) {
+        matrix = Matrix4.identity();
+        matrix
+          ..translate(pos.point.x, pos.point.y)
+          ..scale(pos.scale);
+      } else {
+        matrix = Matrix4.identity()
+          ..rotateY(devicePerspectiveAngle * 0.0174)
+          ..setEntry(3, 2, 0.0015) // perspective
+          ..rotateX(rotatePerspective)
 
-        /// There's a slight issue as labels aren't reverse transformed to account for
-        /// widget rotations. Gets fiddly, but we could probably sort if we care enough
-        for (Label label in cachedVectorDataMap[tileCoordsKey].geomInfo
-            .labels) {
-          label.transformedPoint =
-              MatrixUtils.transformPoint(matrix, label.point);
-
-          wantedLabels[label.dedupeKey] = label;
-
-          _updateLabelBounding(label);
-        }
+        // normal position
+          ..translate(pos.point.x, pos.point.y)
+          ..scale(pos.scale, pos.scale);
       }
 
-    _orderLabelsAndDraw(wantedLabels, hiPriQueue, canvas, pointPaint, widgetRotation, isRotated);
+      /// There's a slight issue as labels aren't reverse transformed to account for
+      /// widget rotations. Gets fiddly, but we could probably sort if we care enough
+      for (Label label in cachedVectorDataMap[tileCoordsKey].geomInfo
+          .labels) {
+        label.transformedPoint =
+            MatrixUtils.transformPoint(matrix, label.point);
+
+        wantedLabels[label.dedupeKey] = label;
+
+        _updateLabelBounding(label);
+      }
+    }
+
+    _orderLabelsAndDraw(
+        wantedLabels, hiPriQueue, canvas, pointPaint, widgetRotation,
+        isRotated);
   }
 
   void _drawTextAt(Offset position, Canvas canvas, scale, textPainter) {
-
     Offset drawPosition =
-      Offset(position.dx - textPainter.width / 2, position.dy + (textPainter.height/2));
+    Offset(position.dx - textPainter.width / 2,
+        position.dy + (textPainter.height / 2));
     textPainter.paint(canvas, drawPosition);
   }
 
-  void _orderLabelsAndDraw (wantedLabels, hiPriQueue, canvas, pointPaint, widgetRotation, isRotated) {
+  void _orderLabelsAndDraw(wantedLabels, hiPriQueue, canvas, pointPaint,
+      widgetRotation, isRotated) {
     Map qMap = {};
-    for( var label in prevLabels) {
-      if( wantedLabels.containsKey(label.dedupeKey)) {
-        if(!checkLabelOverlaps(hiPriQueue, label, canvas)) {
+    for (var label in prevLabels) {
+      if (wantedLabels.containsKey(label.dedupeKey)) {
+        if (!checkLabelOverlaps(hiPriQueue, label, canvas)) {
           hiPriQueue.add(label);
           qMap[label.dedupeKey] = label;
         }
@@ -579,22 +600,24 @@ class VectorPainter extends CustomPainter {
     }
 
     List<Label> nextQ = [];
-    for( var dedupeKey in wantedLabels.keys) {
-      if(qMap.containsKey(dedupeKey)) {
+    for (var dedupeKey in wantedLabels.keys) {
+      if (qMap.containsKey(dedupeKey)) {
         continue;
       }
       nextQ.add(wantedLabels[dedupeKey]);
     }
 
     nextQ.sort((a, b) {
-      int cmp =  a.priority.compareTo(b.priority);
-      if( cmp != 0 ) return cmp;
+      int cmp = a.priority.compareTo(b.priority);
+      if (cmp != 0) return cmp;
 
-      return a.dedupeKey.compareTo(b.dedupeKey); /// keep order consistent..
+      return a.dedupeKey.compareTo(b.dedupeKey);
+
+      /// keep order consistent..
     });
 
-    for( Label label in nextQ) {
-      if(checkLabelOverlaps(hiPriQueue, label, canvas)) {
+    for (Label label in nextQ) {
+      if (checkLabelOverlaps(hiPriQueue, label, canvas)) {
         continue;
       }
       hiPriQueue.add(label);
@@ -604,50 +627,50 @@ class VectorPainter extends CustomPainter {
     Map<String, Label> justSeenLabels = {};
 
     for (Label label in hiPriQueue) {
+      if (justSeenLabels.containsKey(label.dedupeKey)) continue;
 
-      if(justSeenLabels.containsKey(label.dedupeKey)) continue;
-
-      if( !label.isRoad)
-        canvas.drawPoints( PointMode.points, [ label.transformedPoint ], pointPaint );
+      if (!label.isRoad)
+        canvas.drawPoints(
+            PointMode.points, [ label.transformedPoint], pointPaint);
 
       _drawLabels(label, canvas, isRotated, widgetRotation);
 
       prevLabels.add(label);
       justSeenLabels[label.dedupeKey] = label;
 
-      if( debugOptions.labels )
+      if (debugOptions.labels)
         print("Already seen ${label.text} ${label.dedupeKey} so skipping");
     }
 
-    if( debugOptions.labels ) {
+    if (debugOptions.labels) {
       justSeenLabels.forEach((key, label) {
         debugRect(canvas, label);
       });
     }
   }
 
-  void _drawLabels(Label label, Canvas canvas, bool isRotated, double widgetRotation) {
-
+  void _drawLabels(Label label, Canvas canvas, bool isRotated,
+      double widgetRotation) {
     var drawPoint = label.transformedPoint;
 
     /// if map rotated, we want to keep most non-road labels unrotated
 
-    if( label.isRoad ) { // dont want to reverse rotate like normal labels
+    if (label.isRoad) { // dont want to reverse rotate like normal labels
 
-      drawPoint =  Offset(0.0, -17.0);
+      drawPoint = Offset(0.0, -17.0);
 
       canvas.save(); //
-      canvas.translate(label.transformedPoint.dx, label.transformedPoint.dy ); // text height offset back to center
+      canvas.translate(label.transformedPoint.dx,
+          label.transformedPoint.dy); // text height offset back to center
 
       /// text can be upside down, try and prevent it
       double angleDeg = getNoneUpsideDownTextAngle(label, widgetRotation);
 
-      canvas.rotate((angleDeg )* DEGTORAD);
+      canvas.rotate((angleDeg) * DEGTORAD);
 
       _drawTextAt(drawPoint, canvas, 1,
           label.textPainter); //
       canvas.restore();
-
     } else {
       if (isRotated) { // we need to realign the text so its upright
         drawPoint = Offset(0.0, 0.0);
@@ -667,6 +690,15 @@ class VectorPainter extends CustomPainter {
     }
   }
 
+  void paintTile(canvas, pos, image) {
+    paintImage(canvas: canvas,
+        rect: Rect.fromLTWH(pos.point.x, pos.point.y, pos.width, pos.height),
+        scale: pos.scale,
+        fit: BoxFit.fill,
+        alignment: Alignment.topLeft,
+        filterQuality: FilterQuality.high,
+        image: image);
+  }
 
 
   bool checkLabelOverlaps( List labelsToCheck, Label label, Canvas canvas  ) { // add fontsize (14) to the check...
