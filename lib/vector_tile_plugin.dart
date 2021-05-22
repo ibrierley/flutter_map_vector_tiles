@@ -85,6 +85,10 @@ class Label {
   Offset transformedPoint;
   Offset boundNW;
   Offset boundSE;
+  int boundNWx; // trying ints for performance
+  int boundNWy;
+  int boundSEx;
+  int boundSEy;
   bool isRoad;
   bool keepUpright = true;
   double angle;
@@ -603,55 +607,7 @@ class VectorPainter extends CustomPainter {
       if( !label.isRoad)
         canvas.drawPoints( PointMode.points, [ label.transformedPoint ], pointPaint );
 
-      /// if map rotated, we want to keep most non-road labels unrotated
-      var drawPoint = label.transformedPoint;
-
-      if( label.isRoad ) { // dont want to reverse rotate like normal labels
-        drawPoint =  Offset(0.0, -17.0);
-        canvas.save(); //
-        canvas.translate(label.transformedPoint.dx, label.transformedPoint.dy ); // text height offset back to center
-
-        /// If a road label is upside down, make it good .. //// move this to a sep method
-        var angleDeg = -label.angle * RADTODEG;
-        angleDeg += 90;
-        var orig = angleDeg;
-
-        if(angleDeg > 180) angleDeg -= 180;
-        if(angleDeg < 0) angleDeg += 180;
-
-        if(widgetRotation + angleDeg > 180 && ((widgetRotation + angleDeg < 360))) {
-          angleDeg -= 180;
-        }
-
-        angleDeg -= 90;
-
-        if(label.text != null) { /// remove
-          ///print("${label.dedupeKey} ${label.angle} orig $orig   angleDeg: $angleDeg  widgetRot is $widgetRotation ");
-        }
-
-        canvas.rotate((angleDeg )* DEGTORAD);
-
-        _drawTextAt(drawPoint, canvas, 1,
-            label.textPainter); //
-        canvas.restore();
-
-      } else {
-        if (isRotated) { // we need to realign the text so its upright
-          drawPoint = Offset(0.0, 0.0);
-          canvas
-              .save(); // can we transform all first, as save is quite expensive...
-          canvas.translate(
-              label.transformedPoint.dx, label.transformedPoint.dy);
-          canvas.rotate(-widgetRotation * 0.0174533);
-        }
-
-        _drawTextAt(drawPoint, canvas, 1,
-            label.textPainter); // we don't want to scale text
-
-        if (isRotated) {
-          canvas.restore();
-        }
-      }
+      _drawLabels(label, canvas, isRotated, widgetRotation);
 
       prevLabels.add(label);
       justSeenLabels[label.dedupeKey] = label;
@@ -664,7 +620,6 @@ class VectorPainter extends CustomPainter {
       justSeenLabels.forEach((key, label) {
         debugRect(canvas, label);
       });
-
     }
   }
 
@@ -673,6 +628,47 @@ class VectorPainter extends CustomPainter {
     Offset drawPosition =
       Offset(position.dx - textPainter.width / 2, position.dy + (textPainter.height/2));
     textPainter.paint(canvas, drawPosition);
+  }
+
+  void _drawLabels(Label label, Canvas canvas, bool isRotated, double widgetRotation) {
+
+    var drawPoint = label.transformedPoint;
+
+    /// if map rotated, we want to keep most non-road labels unrotated
+
+    if( label.isRoad ) { // dont want to reverse rotate like normal labels
+
+      drawPoint =  Offset(0.0, -17.0);
+
+      canvas.save(); //
+      canvas.translate(label.transformedPoint.dx, label.transformedPoint.dy ); // text height offset back to center
+
+      /// text can be upside down, try and prevent it
+      double angleDeg = getNoneUpsideDownTextAngle(label, widgetRotation);
+
+      canvas.rotate((angleDeg )* DEGTORAD);
+
+      _drawTextAt(drawPoint, canvas, 1,
+          label.textPainter); //
+      canvas.restore();
+
+    } else {
+      if (isRotated) { // we need to realign the text so its upright
+        drawPoint = Offset(0.0, 0.0);
+        canvas
+            .save(); // can we transform all first, as save is quite expensive...
+        canvas.translate(
+            label.transformedPoint.dx, label.transformedPoint.dy);
+        canvas.rotate(-widgetRotation * 0.0174533);
+      }
+
+      _drawTextAt(drawPoint, canvas, 1,
+          label.textPainter); // we don't want to scale text
+
+      if (isRotated) {
+        canvas.restore();
+      }
+    }
   }
 
 
@@ -684,12 +680,18 @@ class VectorPainter extends CustomPainter {
     labelsToCheck.forEach((compareLabel) {
       if( compareLabel != label) {
 
-        if ((label.boundNW.dx < compareLabel.boundSE.dx) &&
-            (label.boundSE.dx > compareLabel.boundNW.dx) &&
-            (label.boundNW.dy < compareLabel.boundSE.dy) &&
-            (label.boundSE.dy > compareLabel.boundNW.dy)) {
+        //if ((label.boundNW.dx < compareLabel.boundSE.dx) &&
+        //    (label.boundSE.dx > compareLabel.boundNW.dx) &&
+        //    (label.boundNW.dy < compareLabel.boundSE.dy) &&
+        //    (label.boundSE.dy > compareLabel.boundNW.dy)) {
+        // trying ints for performance as we're not bothered about accuracy
 
-          collides = true;
+        if ((label.boundNWx < compareLabel.boundSEx) &&
+            (label.boundSEx > compareLabel.boundNWx) &&
+            (label.boundNWy < compareLabel.boundSEy) &&
+            (label.boundSEy > compareLabel.boundNWy)) {
+
+        collides = true;
 
           return collides; // skip the rest
 
@@ -705,13 +707,33 @@ class VectorPainter extends CustomPainter {
     var labelLength = label.text.length;
     var padding = 5.0;
 
-    label.boundNW = Offset( label.transformedPoint.dx - (labelLength * widthFactor / 2) - padding , label.transformedPoint.dy - (labelLength * widthFactor / 2) - padding);
-
-    label.boundSE = Offset( label.boundNW.dx + (labelLength * widthFactor ) + padding, label.boundNW.dy + (labelLength * widthFactor ) + padding);
+    //label.boundNW = Offset( label.transformedPoint.dx - (labelLength * widthFactor / 2) - padding , label.transformedPoint.dy - (labelLength * widthFactor / 2) - padding);
+    //label.boundSE = Offset( label.boundNW.dx + (labelLength * widthFactor ) + padding, label.boundNW.dy + (labelLength * widthFactor ) + padding);
+    // Seeing if ints will speed things up, as we don't really care about accuracy and do a lot of collision checks, prob overoptimisation
+    label.boundNWx = (label.transformedPoint.dx - (labelLength * widthFactor / 2) - padding).toInt();
+    label.boundNWy = (label.transformedPoint.dy - (labelLength * widthFactor / 2) - padding).toInt();
+    label.boundSEx = (label.boundNWx + (labelLength * widthFactor ) + padding).toInt();
+    label.boundSEy = (label.boundNWy + (labelLength * widthFactor ) + padding).toInt();
 
     // Original, but would now need to take into account rotated bounding boxes, so going for an easy option above of just making it square
     // We may want to try rotated boxes, but could be expensive
 
+  }
+
+  double getNoneUpsideDownTextAngle(Label label, double widgetRotation) {
+    var angleDeg = -label.angle * RADTODEG;
+    angleDeg += 90;
+
+    if(angleDeg > 180) angleDeg -= 180;
+    if(angleDeg < 0) angleDeg += 180;
+
+    if(widgetRotation + angleDeg > 180 && ((widgetRotation + angleDeg < 360))) {
+      angleDeg -= 180;
+    }
+
+    angleDeg -= 90;
+
+    return angleDeg;
   }
 
   void _debugTiles(Canvas canvas, VTile tile) {
