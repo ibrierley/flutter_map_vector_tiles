@@ -45,6 +45,7 @@ class PathInfo {
   String type;
   String layerString;
   int count;
+  Paint? style;
 
   PathInfo(this.path, this.pclass, this.type, this.layerString, this.count);
 }
@@ -513,26 +514,30 @@ class VectorPainter extends CustomPainter {
       // Rect myRect = Offset(pos['pos'].x, pos['pos'].y) & Size(adjustedSize.dx, adjustedSize.dy);
       // canvas.clipRect(myRect);
 
-      var dataMap = cachedVectorDataMap[tileCoordsToKey(tile.coords)]?.geomInfo?.pathStore ?? [];
+      List<Map<String, PathInfo>> dataMap = cachedVectorDataMap[tileCoordsKey]?.geomInfo?.pathStore ?? [];
 
-      for (var layer in dataMap) {
+      for (Map<String, PathInfo> layer in dataMap) {
         for (var layerKey in layer.keys) {
-          /// we have a map for each layer, paths should be combined to same syle/type
-          var pathMap = layer[layerKey];
+          /// we have a map for each layer, paths should be combined to same style/type
+          PathInfo? pathMap = layer[layerKey];
 
           if (pathMap?.path != null) {
-            var style = Styles.getStyle2(
+            // cache style if we can to save lookups, we may want to add
+            // a method to reload new styles in though
+            var style = pathMap?.style ?? Styles.getStyle(
                 pathMap?.layerString, pathMap?.type, pathMap?.pclass, tileZoom,
                 pos?.scale, 2);
 
             ///canvas.drawPath( pathMap.path.transform(matrix.storage), style );
 
             /// if we've pinchzooming, use thin lines for speed
+            var oldStrokeWidth = style.strokeWidth;
             if (optimisations.pinchZoom) style.strokeWidth = 0.0;
-            if (optimisations.hairlineOption && tileZoom < 11)
-              style.strokeWidth = 0.0;
             if( pathMap != null)
               canvas.drawPath(pathMap.path, style);
+            style.strokeWidth = oldStrokeWidth;
+
+            if( style.color == Colors.yellow) print("Found default style for ${pathMap?.pclass}");
           }
         }
       }

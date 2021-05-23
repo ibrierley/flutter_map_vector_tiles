@@ -24,184 +24,295 @@ class Styles {
   }
 
   static Map<String, Map<String, dynamic>> classColorStyles = {
-
+    
     "default": {
       'include': true,
-      'default': { 'color': Colors.yellow, 'min': 10, 'max': 21},
+      'default':  [ [0, 22, { 'color': Colors.yellow, 'strokeWidth': 0.0}],
+      ],
     },
 
     "admin": {
       'include': true,
-      'default': { 'color': Colors.deepPurple, 'min': 0, 'max': 21, 'hairline': { "<" : 0 } },
+      'default':  [ [0, 22, { 'color': Colors.deepPurple, 'strokeWidth': 0.0}],
+      ],
     },
 
     ///mapbox streets
     ///hairline = switch to a hairline width of 0 for optimisation at low zoom levels where we dont care
+
     "road": {
       'include': true,
-      'default':      { 'color': Colors.yellow,    'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
-      'service':      { 'color': Colors.blueGrey.shade600,    'min': 14, 'max' : 21, 'hairline': { "<" : 14 } },
-      'street':       { 'color': Colors.blueGrey.shade600,    'min': 15, 'max' : 21, 'hairline': { "<" : 14 },  },
-      'pedestrian':   { 'color': Colors.blueGrey.shade600,    'min': 15, 'max' : 21, 'hairline': { "<" : 14 }, 'thick': { ">": 14 } },
-      'street_limited': { 'color': Colors.blueGrey.shade600,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 }, 'thick': { ">": 14 } },
-      'motorway' :    { 'color': Colors.blueGrey.shade400,    'min': 5,  'max' : 21, 'hairline': { "<" : 0 },  'thick': { ">": 14 } }, /// 5,21,10
-      'trunk':        { 'color': Colors.blueGrey.shade400,    'min': 8,  'max' : 21, 'hairline': { "<" : 0 }, 'thick': { ">": 14 } }, /// 5,21,10
-      'trunk_link':   { 'color': Colors.blueGrey.shade400,    'min': 10,  'max' : 21, 'hairline': { "<" : 0 }, 'thick': { ">": 14 } }, /// 7,21,10
-      'primary' :     { 'color': Colors.blueGrey.shade400,    'min': 17, 'max' : 21, 'hairline': { "<" : 13 }, 'thick': { ">": 14 } }, // A roads
-      'primary_link': { 'color': Colors.blueGrey.shade400,    'min': 17, 'max' : 21, 'hairline': { "<" : 13 }, 'thick': { ">": 14 } },
-      'secondary':    { 'color': Colors.blueGrey.shade400,    'min': 12, 'max' : 21, 'hairline': { "<" : 14 }, 'thick': { ">": 14 } } ,
-      'secondary_link': { 'color': Colors.blueGrey.shade400,  'min': 12, 'max' : 21, 'hairline': { "<" : 14 }, 'thick': { ">": 14 } } ,
-      'tertiary':     { 'color': Colors.blueGrey.shade400,    'min': 13, 'max' : 21, 'hairline': { "<" : 14 }, 'thick': { ">": 14 } },
-      'tertiary_link': { 'color': Colors.blueGrey.shade400,   'min': 13, 'max' : 21, 'hairline': { "<" : 14 }, 'thick': { ">": 14 }  },
-      'path':         { 'color': Colors.brown.shade400,       'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
-      'track':        { 'color': Colors.brown.shade300,       'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
-      'residential':  { 'color': Colors.blueGrey.shade600,    'min': 16, 'max' : 21, 'hairline': { "<" : 14 }, 'thick': { ">": 14 } },
-      'major_rail':   { 'color': Colors.blueGrey.shade900,    'min': 13, 'max' : 21, 'hairline': { "<" : 12 } }, // make prob darker than roads...
-      'minor_rail':   { 'color': Colors.blueGrey.shade900,    'min': 14, 'max' : 21, 'hairline': { "<" : 13 } },
-      'service_rail': { 'color': Colors.blueGrey.shade900,    'min': 13, 'max' : 21, 'hairline': { "<" : 13 } },
-      'construction': { 'color': Colors.brown,                'min': 14, 'max' : 21, 'hairline': { "<" : 13 } },
-      'ferry':        { 'color': Colors.brown,                'min': 13, 'max' : 21, 'hairline': { "<" : 13 } },
+      'default':      [ [0, 22, { 'color': Colors.yellow, 'strokeWidth' : 0.0  }     ],
+                        [16,22, { 'color': Colors.yellow, 'strokeWidth' : 10.0 }     ],
+      ],
+      'service':      [ [0, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
+                        [16,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+      ],
+      'street':       [ [0, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+      ],
+      'pedestrian':   [ [0, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+      ],
+      'street_limited':[[0, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+      ],
+      'motorway':     [ [0, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
+                        [14,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+      ],
+      'trunk':        [ [0, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+      ],
+      'trunk_link':    [[0, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+      ],
+      'primary':     [  [0, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+      ],
+      'primary_link': [ [0, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+      ],
+      'secondary':   [  [0, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+      ],
+      'secondary_link':[[0, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+      ],
+      'tertiary':     [ [0, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+      ],
+      'tertiary_link': [[0, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+      ],
+      'residential':  [ [0, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+      ],
+      'path':         [ [0, 22, { 'color': Colors.brown.shade400,    'strokeWidth' : 0.0  }     ],
+      ],
+      'track':        [ [0, 22, { 'color': Colors.brown.shade300,    'strokeWidth' : 0.0  }     ],
+      ],
+      'major_rail':   [ [0, 22, { 'color': Colors.blueGrey.shade900, 'strokeWidth' : 0.0  }     ],
+      ],
+      'minor_rail':   [ [0, 22, { 'color': Colors.blueGrey.shade900, 'strokeWidth' : 0.0  }     ],
+      ],
+      'service_rail': [ [0, 22, { 'color': Colors.blueGrey.shade900, 'strokeWidth' : 0.0  }     ],
+      ],
+      'construction': [ [0, 22, { 'color': Colors.brown, 'strokeWidth' : 0.0  }     ],
+      ],
+      'ferry':        [ [0, 22, { 'color': Colors.brown, 'strokeWidth' : 0.0  }     ],
+      ],
     },
 
     "motorway_junction": {
       'include': true,
-      'default': { 'color': Colors.deepPurple, 'min': 6, 'max' : 21 },
-      },
+      'default':  [ [0, 22, { 'color': Colors.deepPurple, 'strokeWidth': 0.0}],
+      ],
+    },
 
-      "landuse": {
-        'include': true,
-        'default':  { 'color': Colors.lightGreen,          'min': 14, 'max': 21},
-        'airport':  { 'color': Colors.grey,                'min': 12, 'max': 21},
-        'hospital': { 'color': Colors.grey,                'min': 14, 'max': 21},
-        'sand':     { 'color': Colors.amber,                'min': 12, 'max': 21},
-        'playground': { 'color': Colors.green.shade400,     'min': 14, 'max': 21},
-        'grass':    { 'color': Colors.lightGreen,          'min': 12, 'max': 21},
-        'park':     { 'color': Colors.lightGreen,           'min': 12, 'max': 21},
-        'pitch':    { 'color': Colors.green,                'min': 12, 'max': 21},
-        'parking':  { 'color': Colors.green.shade100,       'min': 14, 'max': 21},
-        'wood':     { 'color': Colors.green,                'min': 0, 'max': 21},
-        'agriculture': { 'color': Colors.green.shade700,    'min': 12, 'max': 21},
-        'school':   { 'color': Colors.grey,                 'min': 13, 'max': 21},
-        'scrub' :   { 'color': Colors.grey,                 'min': 0, 'max': 21},
-        'cemetery': { 'color': Colors.green.shade600,       'min': 14, 'max': 21},
-        'rock' :    { 'color': Colors.grey,                 'min': 0, 'max': 21},
-        'glacier' : { 'color': Colors.grey,                 'min': 12, 'max': 21},
-      },
+    "landuse": {
+      'include': true,
+      'default':  [ [14, 22, { 'color': Colors.lightGreen,   'strokeWidth': 0.0 } ],
+      ],
+      'airport':  [ [13, 21, { 'color': Colors.grey,        'strokeWidth': 0.0 } ],
+      ],
+      'hospital':  [ [15, 21, { 'color': Colors.grey,        'strokeWidth': 0.0 } ],
+      ],
+      'sand':     [ [12, 21, { 'color': Colors.amber,       'strokeWidth': 0.0 } ],
+      ],
+      'playground':[[14, 22, { 'color': Colors.green.shade400, 'strokeWidth': 0.0 } ],
+      ],
+      'grass':    [ [13, 22, { 'color': Colors.lightGreen, 'strokeWidth': 0.0 } ],
+      ],
+      'park':     [ [13, 22,  { 'color': Colors.lightGreen, 'strokeWidth': 0.0 } ],
+      ],
+      'pitch':     [ [13, 22,  { 'color': Colors.green,     'strokeWidth': 0.0 } ],
+      ],
+      'parking':     [ [14, 22,  { 'color': Colors.green.shade100, 'strokeWidth': 0.0 } ],
+      ],
+      'wood':       [ [10, 22,  { 'color': Colors.green.shade900,   'strokeWidth': 0.0 } ],
+      ],
+      'agriculture':  [ [13, 22,  { 'color': Colors.green.shade700,   'strokeWidth': 0.0 } ],
+      ],
+      'school':     [ [14, 22,  { 'color': Colors.grey,             'strokeWidth': 0.0 } ],
+      ],
+      'scrub':     [ [10, 22,  { 'color': Colors.green.shade600,   'strokeWidth': 0.0 } ],
+      ],
+      'cemetery':   [ [15, 22,  { 'color': Colors.green.shade700,   'strokeWidth': 0.0 } ],
+      ],
+      'rock':       [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'glacier':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+    },
 
-      "landuse_overlay": {
-        'include': true,
-        'default': { 'color': Colors.green, 'min': 12, 'max': 21},
-        "national_park": { 'color': Colors.green, 'min': 12, 'max': 21},
-        "wetland_noveg" : { 'color': Colors.blueGrey, 'min': 11, 'max': 21},
-        "wetland" : { 'color': Colors.blue.shade700, 'min': 12, 'max': 21},
-      },
+    "landuse_overlay": {
+      'include': true,
+      'default': [ [12, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
+      ],
+      'national_park': [ [12, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
+      ],
+      'wetland_noveg': [ [11, 22, { 'color': Colors.blueGrey, 'strokeWidth': 0.0}],
+      ],
+      'wetland': [ [12, 22, { 'color': Colors.blue.shade700, 'strokeWidth': 0.0}],
+      ],
+    },
 
-      "water": {
-        'include': true,
-        'default': { 'color': Colors.blue.shade500, 'min': 0, 'max': 21},
-      },
-      "waterway": {
-        'include': true,
-        'default': { 'color': Colors.blue.shade700, 'min': 13, 'max': 21},
-        'river':   { 'color': Colors.blue.shade600, 'min': 12, 'max': 21},
-        'canal': { 'color': Colors.blue.shade600, 'min': 12, 'max': 21},
-        'stream': { 'color': Colors.blue.shade900, 'min': 14, 'max': 21},
-        'ditch' : { 'color': Colors.blue.shade600, 'min': 12, 'max': 21},
-      },
-      "transit_stop": {
-          'include': true,
-          "default": { 'color': Colors.deepOrange, 'min': 14, 'max': 21 }
-      },
+    "water": {
+      'include': true,
+      'default': [ [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
+      ],
+    },
 
-      "building": {
-        'include': true,
-        "default": { 'color': Colors.grey.shade600, 'min': 15, 'max': 21 },
-      },
-      "structure": {
-        'include': true,
-        "default": { 'color': Colors.grey.shade600, 'min': 15, 'max': 21 },
-        'fence': { 'color': Colors.brown.shade300, 'min': 15, 'max': 21 },
-      },
-      "barrierline": {
-        'include': true,
-        "default": { 'color': Colors.purple, 'min': 12, 'max': 21},
-      },
-      "aeroway": {
-        'include': true,
-        "default": { 'color': Colors.orange, 'min': 12, 'max': 21},
-      },
-      "waterway_label": {
-        'include': true,
-        'default': { 'color': Colors.black, 'min': 15, 'max': 21},
-      },
-      "poi_label": {
-        'include': true,
-        'default': { 'color': Colors.orangeAccent, 'min': 15, 'max': 21},
-      },
-      "transit_stop_label": {
-        'include': true,
-        'default': { 'color': Colors.black, 'min': 14, 'max': 21},
-      },
-      "road_point": {
-        'include': true,
-        'default': { 'color': Colors.black, 'min': 14, 'max': 21},
-      },
-      "road_label": {
-        'include': true,
-        "default": { 'color': Colors.black, 'min': 14, 'max': 21},
-      },
-      "rail_station_label": {
-        'include': true,
-        "default": { 'color': Colors.black, 'min': 14, 'max': 21},
-      },
-      "natural_label": {
-        'include': true,
-        'default': { 'color': Colors.brown, 'min': 14, 'max': 21},
-        'landform': { 'color': Colors.brown, 'min': 12, 'max': 21},
-        'sea': { 'color': Colors.black, 'min': 0, 'max': 21},
-        'stream': { 'color': Colors.blue.shade800, 'min': 14, 'max': 21},
-      },
+    "waterway": {
+      'include': true,
+      'default': [ [13, 22, { 'color': Colors.blue.shade700, 'strokeWidth': 0.0}],
+      ],
+      'river': [ [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
+      ],
+      'canal': [ [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
+      ],
+      'stream': [ [14, 22, { 'color': Colors.blue.shade900, 'strokeWidth': 0.0}],
+      ],
+      'ditch': [ [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
+      ],
+    },
 
-      'place_label': {
-        'include': true,
-        'default':    { 'color': Colors.black, 'min': 0, 'max': 21},
-        'settlement': { 'color': Colors.black, 'min': 0, 'max': 21},
-        'settlement_subdivision': { 'color': Colors.grey, 'min': 14, 'max': 21},
-        'park_like':  { 'color': Colors.black, 'min': 14, 'max': 21},
-        // types, refine by class doesn't reduce labels enough, but types is useful here..
-        'types' : {
-          'village':  { 'color': Colors.black, 'min': 14, 'max': 21}, //15
-          'suburb':   { 'color': Colors.black, 'min': 14, 'max': 21}, //15
-          'hamlet':   { 'color': Colors.black, 'min': 14, 'max': 21}, //15
-          'city':     { 'color': Colors.black, 'min': 6,  'max': 21}, //6
-          'town':     { 'color': Colors.black, 'min': 10, 'max': 21}, //12
-        }
-      },
+    "transit_stop": {
+      'include': true,
+      'default': [ [14, 22, { 'color': Colors.deepOrange, 'strokeWidth': 0.0}],
+      ],
+    },
 
-      "airport_label": {
-        'include': true,
-        'default': { 'color': Colors.black, 'min': 0, 'max': 21},
-      },
-      "housenum_label": {
-        'include': true,
-        'default': { 'color': Colors.black, 'min': 17, 'max': 21},
-      },
-      "mountain_peak_label": {
-        'include': true,
-        'default': { 'color': Colors.black, 'min': 16, 'max': 21},
-      },
-      "state_label": {
-        'include': true,
-        'default': { 'color': Colors.black, 'min': 13, 'max': 21},
-      },
-      "marine_label": {
-        'include': true,
-        'default': { 'color': Colors.black, 'min': 0, 'max': 21},
-      },
-      "country_label": {
-        'include': true,
-        'default': { 'color': Colors.black, 'min': 0, 'max': 21},
-      },
+    "building": {
+      'include': true,
+      'default': [ [15, 22, { 'color': Colors.grey.shade600, 'strokeWidth': 0.0}],
+      ],
+    },
+
+    "structure": {
+      'include': true,
+      'default': [ [15, 22, { 'color': Colors.grey.shade600, 'strokeWidth': 0.0}],
+      ],
+      'fence':  [ [15, 22, { 'color': Colors.brown.shade300, 'strokeWidth': 0.0}],
+      ],
+    },
+
+    "barrierline": {
+      'include': true,
+      'default': [ [12, 22, { 'color': Colors.purple, 'strokeWidth': 0.0}],
+      ],
+    },
+
+    "aeroway": {
+      'include': true,
+      'default': [ [12, 22, { 'color': Colors.orange, 'strokeWidth': 0.0}],
+      ],
+    },
+
+    "waterway_label": {
+      'include': true,
+      'default': [ [15, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+    },
+
+    "poi_label": {
+      'include': true,
+      'default': [ [15, 22, { 'color': Colors.orangeAccent, 'strokeWidth': 2}],
+      ],
+    },
+
+    "transit_stop_label": {
+      'include': true,
+      'default': [ [14, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+    },
+
+    "road_point": {
+      'include': true,
+      'default': [ [14, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+    },
+
+    "road_label": {
+      'include': true,
+      'default': [ [14, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+    },
+
+    "rail_station_label": {
+      'include': true,
+      'default': [ [14, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+    },
+
+    "natural_label": {
+      'include': true,
+      'default': [ [14, 22, { 'color': Colors.brown, 'strokeWidth': 0.0}],
+      ],
+      'landform':  [ [12, 22, { 'color': Colors.brown, 'strokeWidth': 0.0}],
+      ],
+      'sea':  [ [12, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'stream':  [ [12, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+    },
+
+    "place_label": {
+      'include': true,
+      'default': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'settlement':  [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'settlement_subdivision':  [ [14, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'park_like':  [ [14, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'types' : {
+        'village':  [ [14, 22, { 'color': Colors.black, 'strokeWidth': 0.0}] ], //15
+        'suburb':   [ [14, 22, { 'color': Colors.black, 'strokeWidth': 0.0}] ], //15
+        'hamlet':   [ [14, 22, { 'color': Colors.black, 'strokeWidth': 0.0}] ], //15
+        'city':     [ [6, 22, { 'color': Colors.black, 'strokeWidth': 0.0}] ], //6
+        'town':     [ [10, 22, { 'color': Colors.black, 'strokeWidth': 0.0}] ], //12
+      }
+    },
+
+    "airport_label": {
+      'include': true,
+      'default': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+    },
+
+    "housenum_label": {
+      'include': true,
+      'default': [ [17, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+    },
+
+    "mountain_peak_label": {
+      'include': true,
+      'default': [ [16, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+    },
+
+    "state_label": {
+      'include': true,
+      'default': [ [13, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+    },
+
+    "marine_label": {
+      'include': true,
+      'default': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+    },
+
+    "country_label": {
+      'include': true,
+      'default': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+    },
+
+    /*
 
       ///traffic mapbox
       'traffic': {
@@ -256,6 +367,8 @@ class Styles {
         'include': true,
         'default': { 'color': Colors.grey, 'min': 0, 'max': 21},
       },
+      */
+
 
   };
 
@@ -280,13 +393,13 @@ class Styles {
         classOptions = classColorStyles[layerString]![thisClass];
       }
 
-      if( includeFeature && classOptions.containsKey('min') ) {
+      if( includeFeature && classOptions is Map && classOptions.containsKey('min') ) {
         if( zoom < classOptions['min'] ) {
           includeFeature = false;
         }
       }
 
-      if( includeFeature && classOptions.containsKey('max') ) {
+      if( includeFeature && classOptions is Map && classOptions.containsKey('max') ) {
         if( zoom > classOptions['max'] ) {
           includeFeature = false;
         }
@@ -298,7 +411,7 @@ class Styles {
     return includeFeature;
   }
 
-  static Paint getStyle2(layerString, type, className, tileZoom, scale, diffRatio) {
+  static Paint getStyle(layerString, type, className, tileZoom, scale, diffRatio) {
 
     var paint = Paint()
       ..style = PaintingStyle.stroke
@@ -311,37 +424,57 @@ class Styles {
     if(type == 'LINESTRING' || type == 'line') paint.style = PaintingStyle.stroke; // are roads filled ?
     if(type == 'POLYGON'    || type == 'fill') paint.style = PaintingStyle.fill;
 
-    var useHairline = false;
-    var useThickline = false;
-
-    if(styleInfo.containsKey(layerString)) {
-      if(styleInfo[layerString]!.containsKey(className)) {
-        if(styleInfo[layerString]![className].containsKey('hairline')) { // tidy a bit
-          if( tileZoom < styleInfo[layerString]![className]['hairline']['<']) {
-            useHairline = true;
-          }
-        }
-        if(styleInfo[layerString]![className].containsKey('thick')) { // tidy a bit
-          if( tileZoom > styleInfo[layerString]![className]['thick']['>']) {
-            useThickline = true;
-          }
-        }
-        paint.color = styleInfo[layerString]![className]['color'];
-      } else {
-        paint.color = styleInfo[layerString]!['default']['color'];
-      }
-    }
-
     if(classStrokeWidthClasses.containsKey(layerString)) {
       paint.strokeWidth = classStrokeWidthClasses[layerString]![className] ?? classStrokeWidthClasses[layerString]!['default']!;
     } else {
       paint.strokeWidth = classStrokeWidthClasses['default']!['default']!;
     }
 
+
+    if(styleInfo.containsKey(layerString)) {
+      Map<String, dynamic>? layerClass = styleInfo[layerString] ?? styleInfo['default'];
+      List<List<dynamic>>? featureClass = styleInfo['default']?['default'];
+
+      if (layerClass != null) {
+        if (layerClass.containsKey('types') &&
+            layerClass['types'].containsKey(className)) {
+          featureClass = layerClass['types'][className];
+        }
+      }
+
+      if (layerClass != null && layerClass.containsKey(className)) {
+        featureClass = layerClass[className];
+      }
+
+      if (featureClass is List) {
+
+        if( featureClass != null) {
+          for (var list in featureClass) {
+
+            if (tileZoom >= list[0] && tileZoom <= list[1] && list[2] is Map) {
+              Map options = list[2];
+              if (options.containsKey('color'))
+                paint.color = options['color'];
+              if (list[2].containsKey('strokeWidth'))
+                paint.strokeWidth = options['strokeWidth'];
+            }
+          }}
+
+        //paint.color = styleInfo[layerString]![className]['color'];
+      } else {
+        //paint.color = styleInfo[layerString]!['default']['color'];
+      }
+    }
+
+
+
+
+
     paint.strokeWidth =  (paint.strokeWidth / scale); ///.ceilToDouble();
 
-    if( useHairline ) paint.strokeWidth = 0.0;
-    if( useThickline) paint.strokeWidth = 10.0;
+
+    //if( useHairline ) paint.strokeWidth = 0.0;
+    //if( useThickline) paint.strokeWidth = 10.0;
 
     return paint;
   }
