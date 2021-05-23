@@ -405,10 +405,12 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
   void fetchData(coords, method) async {
 
-    if( coords.z <= 0) {
-      print("Level ${coords.z} too low, not grabbing tile");
+    if( coords.z <= 0 || coords.z > vectorOptions.maxZoom) {
+      print("Level ${coords.z} too low/high, not grabbing tile");
       return null;
     }
+
+    print("Fetching for $coords");
 
     var url = vectorOptions.tileProvider.getTileUrl(
         coords, vectorOptions);
@@ -491,7 +493,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       }
     }
 
-    var max = vectorOptions.maxZoom + underZoom;
+    var max = vectorOptions.maxZoom + underZoom + 5;
 
     for(var tempZoom in [for(var i=1.0; i<max; i+=1.0) i]) {
 
