@@ -418,13 +418,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     if (!_recentTilesCompleted.containsKey(coordsKey))
       _outstandingTileLoads[coordsKey] = DateTime.now();
 
-    if(_cachedVectorData.containsKey(coordsKey)) {
-      if(_cachedVectorData[coordsKey]?.state == 'trying') { /// Not convinced state does anything really...
-        print("Still trying...returning");
-        return null;
-      }
-
-    } else {
+    if(!_cachedVectorData.containsKey(coordsKey))  {
       List<Label> labelList = [];
       if(!_cachedVectorData.containsKey(coordsKey)) {
         _cachedVectorData[coordsKey] = VTCache( /// hmm this is a bit of a mess, needs some refactoring

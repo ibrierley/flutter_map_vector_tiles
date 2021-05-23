@@ -482,7 +482,7 @@ class VectorPainter extends CustomPainter {
       canvas.transform(m.storage);
     }
 
-    /// Drawing normal paths
+    /// Normal paths
     for (var tile in tilesToRender) {
       String tileCoordsKey = tileCoordsToKey(tile.coords);
       PositionInfo? pos = cachedVectorDataMap[tileCoordsKey]?.positionInfo;
@@ -546,11 +546,16 @@ class VectorPainter extends CustomPainter {
 
     if (usePerspective) canvas.restore();
 
+    /// End Normal Paths
+
     if (useImages) return;
+
+    /// Start draw Labels
 
     /// Calculated transformed Label position and do collision detection
     /// to decide which to cull.
     /// All labels should come on top of paths etc, so moved loop out here
+    ///
     for (var tile in tilesToRender) {
       String tileCoordsKey = tileCoordsToKey(tile.coords);
       PositionInfo? pos = cachedVectorDataMap[tileCoordsKey]?.positionInfo;
@@ -578,7 +583,7 @@ class VectorPainter extends CustomPainter {
 
       /// There's a slight issue as labels aren't reverse transformed to account for
       /// widget rotations. Gets fiddly, but we could probably sort if we care enough
-      ///
+
       var labels =  cachedVectorDataMap[tileCoordsKey]?.geomInfo?.labels ?? [];
       for (Label label in labels) {
         label.transformedPoint =
@@ -604,10 +609,11 @@ class VectorPainter extends CustomPainter {
 
   void _orderLabelsAndDraw(wantedLabels, hiPriQueue, canvas, pointPaint,
       widgetRotation, isRotated) {
+
     Map qMap = {};
     for (var label in prevLabels) {
       if (wantedLabels.containsKey(label.dedupeKey)) {
-        if (!checkLabelOverlaps(hiPriQueue, label, canvas)) {
+        if (!checkLabelOverlaps(hiPriQueue, label)) {
           hiPriQueue.add(label);
           qMap[label.dedupeKey] = label;
         }
@@ -632,7 +638,7 @@ class VectorPainter extends CustomPainter {
     });
 
     for (Label label in nextQ) {
-      if (checkLabelOverlaps(hiPriQueue, label, canvas)) {
+      if (checkLabelOverlaps(hiPriQueue, label)) {
         continue;
       }
       hiPriQueue.add(label);
@@ -718,14 +724,15 @@ class VectorPainter extends CustomPainter {
     paintImage(canvas: canvas,
         rect: Rect.fromLTWH(pos.point.x, pos.point.y, pos.width, pos.height),
         scale: pos.scale,
-        fit: BoxFit.fill,
+        fit: BoxFit.fitWidth,
         alignment: Alignment.topLeft,
-        filterQuality: FilterQuality.high,
+        filterQuality: FilterQuality.medium,
+        isAntiAlias: true,
         image: image);
   }
 
 
-  bool checkLabelOverlaps( List labelsToCheck, Label label, Canvas canvas  ) { // add fontsize (14) to the check...
+  bool checkLabelOverlaps( List labelsToCheck, Label label  ) { // add fontsize (14) to the check...
 
     var collides = false;
 
