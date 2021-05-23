@@ -467,6 +467,8 @@ class VectorPainter extends CustomPainter {
     Map<String, Label> wantedLabels = {};
     List<Label> hiPriQueue = [];
 
+    print("$tileZoom");
+
     var pointPaint = Paint()
       ..color = Colors.grey
       ..strokeWidth = 5
