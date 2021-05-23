@@ -87,7 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 subdomains: ['a', 'b', 'c'],
                 ///urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
 
-                useCanvas: true,
+                useCanvas: false,
                 useImages: false, //disabled, code currently removed, but could be added, not sure I currently see the benefit
                 useBackupTiles: true, //use a previously loaded tile if current one not available yet
                 usePerspective: false, // experimental, doesn't work with rotate on

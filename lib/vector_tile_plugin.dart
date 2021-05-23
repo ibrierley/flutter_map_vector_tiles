@@ -536,8 +536,6 @@ class VectorPainter extends CustomPainter {
             if( pathMap != null)
               canvas.drawPath(pathMap.path, style);
             style.strokeWidth = oldStrokeWidth;
-
-            if( style.color == Colors.yellow) print("Found default style for ${pathMap?.pclass}");
           }
         }
       }
@@ -839,15 +837,16 @@ class VectorPainter extends CustomPainter {
   void debugRect(canvas, Label label) {
     Path path = Path();
 
-    var nw = label.boundNW;
-    var se = label.boundSE;
+    var nwx = label.boundNWx.toDouble();
+    var nwy = label.boundNWy.toDouble();
+    var sex = label.boundSEx.toDouble();
+    var sey = label.boundSEy.toDouble();
 
-    if(nw != null && se != null) { // null safety nonsense :D
-      path.moveTo(nw.dx, nw.dy);
-      path.lineTo(se.dx, nw.dy);
-      path.lineTo(se.dx, se.dy);
-      path.lineTo(nw.dx, se.dy);
-    }
+      path.moveTo(nwx, nwy);
+      path.lineTo(sex, nwy);
+      path.lineTo(sex, sey);
+      path.lineTo(nwx, sey);
+
     path.close();
 
     var paint = Paint();

@@ -24,7 +24,7 @@ class Styles {
   }
 
   static Map<String, Map<String, dynamic>> classColorStyles = {
-    
+
     "default": {
       'include': true,
       'default':  [ [0, 22, { 'color': Colors.yellow, 'strokeWidth': 0.0}],
@@ -43,7 +43,7 @@ class Styles {
     "road": {
       'include': true,
       'default':      [ [0, 22, { 'color': Colors.yellow, 'strokeWidth' : 0.0  }     ],
-                        [16,22, { 'color': Colors.yellow, 'strokeWidth' : 10.0 }     ],
+                        [16,22, { 'color': Colors.yellow, 'strokeWidth' : 9.0 }     ],
       ],
       'service':      [ [0, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
                         [16,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
@@ -73,29 +73,29 @@ class Styles {
                         [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
       ],
       'secondary':   [  [0, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 9.0 }     ],
       ],
       'secondary_link':[[0, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 9.0 }     ],
       ],
       'tertiary':     [ [0, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 9.0 }     ],
       ],
       'tertiary_link': [[0, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 9.0 }     ],
       ],
       'residential':  [ [0, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
       ],
-      'path':         [ [0, 22, { 'color': Colors.brown.shade400,    'strokeWidth' : 0.0  }     ],
+      'path':         [ [0, 22, { 'color': Colors.brown.shade400,    'strokeWidth' : 2.0  }     ],
       ],
-      'track':        [ [0, 22, { 'color': Colors.brown.shade300,    'strokeWidth' : 0.0  }     ],
+      'track':        [ [0, 22, { 'color': Colors.brown.shade300,    'strokeWidth' : 2.0  }     ],
       ],
-      'major_rail':   [ [0, 22, { 'color': Colors.blueGrey.shade900, 'strokeWidth' : 0.0  }     ],
+      'major_rail':   [ [0, 22, { 'color': Colors.blueGrey.shade900, 'strokeWidth' : 1.0  }     ],
       ],
-      'minor_rail':   [ [0, 22, { 'color': Colors.blueGrey.shade900, 'strokeWidth' : 0.0  }     ],
+      'minor_rail':   [ [0, 22, { 'color': Colors.blueGrey.shade900, 'strokeWidth' : 1.0  }     ],
       ],
-      'service_rail': [ [0, 22, { 'color': Colors.blueGrey.shade900, 'strokeWidth' : 0.0  }     ],
+      'service_rail': [ [0, 22, { 'color': Colors.blueGrey.shade900, 'strokeWidth' : 1.0  }     ],
       ],
       'construction': [ [0, 22, { 'color': Colors.brown, 'strokeWidth' : 0.0  }     ],
       ],
@@ -129,7 +129,7 @@ class Styles {
       ],
       'parking':     [ [14, 22,  { 'color': Colors.green.shade100, 'strokeWidth': 0.0 } ],
       ],
-      'wood':       [ [10, 22,  { 'color': Colors.green.shade900,   'strokeWidth': 0.0 } ],
+      'wood':       [ [10, 22,  { 'color': Colors.green.shade800,   'strokeWidth': 0.0 } ],
       ],
       'agriculture':  [ [13, 22,  { 'color': Colors.green.shade700,   'strokeWidth': 0.0 } ],
       ],
@@ -217,7 +217,23 @@ class Styles {
 
     "poi_label": {
       'include': true,
-      'default': [ [15, 22, { 'color': Colors.orangeAccent, 'strokeWidth': 2}],
+      'default':        [ [15, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+      'food_and_drink': [ [16, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+      'religion':      [ [15, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+      'sport_and_leisure':[ [15, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+      'food_and_drink_stores': [ [16, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+      'park_like': [ [16, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+      'education': [ [16, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+      'public_facilities': [ [15, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+      ],
+      'commercial_services ': [ [16, 22, { 'color': Colors.black, 'strokeWidth': 2}],
       ],
     },
 
@@ -393,19 +409,19 @@ class Styles {
         classOptions = classColorStyles[layerString]![thisClass];
       }
 
-      if( includeFeature && classOptions is Map && classOptions.containsKey('min') ) {
-        if( zoom < classOptions['min'] ) {
+      if( includeFeature && classOptions is List ) {
+        var listIncludes = false;
+        //print("Checking $layerString $type $thisClass ");
+        for( var entry in classOptions ) {
+          if( zoom >= entry[0] && zoom <= entry[1]) {
+            listIncludes = true; // we have at least one entry for this zoom
+            break;
+          }
+        }
+        if( listIncludes == false ) {
           includeFeature = false;
         }
       }
-
-      if( includeFeature && classOptions is Map && classOptions.containsKey('max') ) {
-        if( zoom > classOptions['max'] ) {
-          includeFeature = false;
-        }
-      }
-    } else {
-      print("[$layerString] is NOT in styling list");
     }
 
     return includeFeature;
@@ -416,20 +432,13 @@ class Styles {
     var paint = Paint()
       ..style = PaintingStyle.stroke
       ..color = Colors.grey
-      ..strokeWidth = 2
+      ..strokeWidth = 30
     ///..strokeCap = StrokeCap.round
       ..isAntiAlias = false;
     var styleInfo = classColorStyles;
 
     if(type == 'LINESTRING' || type == 'line') paint.style = PaintingStyle.stroke; // are roads filled ?
     if(type == 'POLYGON'    || type == 'fill') paint.style = PaintingStyle.fill;
-
-    if(classStrokeWidthClasses.containsKey(layerString)) {
-      paint.strokeWidth = classStrokeWidthClasses[layerString]![className] ?? classStrokeWidthClasses[layerString]!['default']!;
-    } else {
-      paint.strokeWidth = classStrokeWidthClasses['default']!['default']!;
-    }
-
 
     if(styleInfo.containsKey(layerString)) {
       Map<String, dynamic>? layerClass = styleInfo[layerString] ?? styleInfo['default'];
@@ -447,10 +456,8 @@ class Styles {
       }
 
       if (featureClass is List) {
-
         if( featureClass != null) {
           for (var list in featureClass) {
-
             if (tileZoom >= list[0] && tileZoom <= list[1] && list[2] is Map) {
               Map options = list[2];
               if (options.containsKey('color'))
@@ -459,22 +466,14 @@ class Styles {
                 paint.strokeWidth = options['strokeWidth'];
             }
           }}
-
-        //paint.color = styleInfo[layerString]![className]['color'];
-      } else {
-        //paint.color = styleInfo[layerString]!['default']['color'];
       }
     }
 
-
+    if( paint.color == Colors.yellow) print ("$className not found");
 
 
 
     paint.strokeWidth =  (paint.strokeWidth / scale); ///.ceilToDouble();
-
-
-    //if( useHairline ) paint.strokeWidth = 0.0;
-    //if( useThickline) paint.strokeWidth = 10.0;
 
     return paint;
   }
