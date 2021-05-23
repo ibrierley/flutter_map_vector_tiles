@@ -41,21 +41,21 @@ class Styles {
       'include': true,
       'default':      { 'color': Colors.yellow,    'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
       'service':      { 'color': Colors.blueGrey.shade600,    'min': 14, 'max' : 21, 'hairline': { "<" : 14 } },
-      'street':       { 'color': Colors.blueGrey.shade600,    'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
-      'pedestrian':   { 'color': Colors.blueGrey.shade600,    'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
-      'street_limited': { 'color': Colors.blueGrey.shade600,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 } },
-      'motorway' :    { 'color': Colors.blueGrey.shade800,    'min': 5,  'max' : 21, 'hairline': { "<" : 0 } }, /// 5,21,10
-      'trunk':        { 'color': Colors.blueGrey.shade700,    'min': 8,  'max' : 21, 'hairline': { "<" : 0 } }, /// 5,21,10
-      'trunk_link':   { 'color': Colors.blueGrey.shade700,    'min': 10,  'max' : 21, 'hairline': { "<" : 0 } }, /// 7,21,10
-      'primary' :     { 'color': Colors.blueGrey.shade600,    'min': 17, 'max' : 21, 'hairline': { "<" : 13 } }, // A roads
-      'primary_link': { 'color': Colors.blueGrey.shade600,    'min': 17, 'max' : 21, 'hairline': { "<" : 13 } },
-      'secondary':    { 'color': Colors.blueGrey.shade600,    'min': 12, 'max' : 21, 'hairline': { "<" : 14 } },
-      'secondary_link': { 'color': Colors.blueGrey.shade600,  'min': 12, 'max' : 21, 'hairline': { "<" : 14 } },
-      'tertiary':     { 'color': Colors.blueGrey.shade600,    'min': 13, 'max' : 21, 'hairline': { "<" : 14 } },
-      'tertiary_link': { 'color': Colors.blueGrey.shade600,   'min': 13, 'max' : 21, 'hairline': { "<" : 14 } },
+      'street':       { 'color': Colors.blueGrey.shade600,    'min': 15, 'max' : 21, 'hairline': { "<" : 14 },  },
+      'pedestrian':   { 'color': Colors.blueGrey.shade600,    'min': 15, 'max' : 21, 'hairline': { "<" : 14 }, 'thick': { ">": 14 } },
+      'street_limited': { 'color': Colors.blueGrey.shade600,  'min': 15, 'max' : 21, 'hairline': { "<" : 14 }, 'thick': { ">": 14 } },
+      'motorway' :    { 'color': Colors.blueGrey.shade400,    'min': 5,  'max' : 21, 'hairline': { "<" : 0 },  'thick': { ">": 14 } }, /// 5,21,10
+      'trunk':        { 'color': Colors.blueGrey.shade400,    'min': 8,  'max' : 21, 'hairline': { "<" : 0 }, 'thick': { ">": 14 } }, /// 5,21,10
+      'trunk_link':   { 'color': Colors.blueGrey.shade400,    'min': 10,  'max' : 21, 'hairline': { "<" : 0 }, 'thick': { ">": 14 } }, /// 7,21,10
+      'primary' :     { 'color': Colors.blueGrey.shade400,    'min': 17, 'max' : 21, 'hairline': { "<" : 13 }, 'thick': { ">": 14 } }, // A roads
+      'primary_link': { 'color': Colors.blueGrey.shade400,    'min': 17, 'max' : 21, 'hairline': { "<" : 13 }, 'thick': { ">": 14 } },
+      'secondary':    { 'color': Colors.blueGrey.shade400,    'min': 12, 'max' : 21, 'hairline': { "<" : 14 }, 'thick': { ">": 14 } } ,
+      'secondary_link': { 'color': Colors.blueGrey.shade400,  'min': 12, 'max' : 21, 'hairline': { "<" : 14 }, 'thick': { ">": 14 } } ,
+      'tertiary':     { 'color': Colors.blueGrey.shade400,    'min': 13, 'max' : 21, 'hairline': { "<" : 14 }, 'thick': { ">": 14 } },
+      'tertiary_link': { 'color': Colors.blueGrey.shade400,   'min': 13, 'max' : 21, 'hairline': { "<" : 14 }, 'thick': { ">": 14 }  },
       'path':         { 'color': Colors.brown.shade400,       'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
       'track':        { 'color': Colors.brown.shade300,       'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
-      'residential':  { 'color': Colors.blueGrey.shade600,                 'min': 16, 'max' : 21, 'hairline': { "<" : 14 } },
+      'residential':  { 'color': Colors.blueGrey.shade600,    'min': 16, 'max' : 21, 'hairline': { "<" : 14 }, 'thick': { ">": 14 } },
       'major_rail':   { 'color': Colors.blueGrey.shade900,    'min': 13, 'max' : 21, 'hairline': { "<" : 12 } }, // make prob darker than roads...
       'minor_rail':   { 'color': Colors.blueGrey.shade900,    'min': 14, 'max' : 21, 'hairline': { "<" : 13 } },
       'service_rail': { 'color': Colors.blueGrey.shade900,    'min': 13, 'max' : 21, 'hairline': { "<" : 13 } },
@@ -312,12 +312,18 @@ class Styles {
     if(type == 'POLYGON'    || type == 'fill') paint.style = PaintingStyle.fill;
 
     var useHairline = false;
+    var useThickline = false;
 
     if(styleInfo.containsKey(layerString)) {
       if(styleInfo[layerString]!.containsKey(className)) {
         if(styleInfo[layerString]![className].containsKey('hairline')) { // tidy a bit
           if( tileZoom < styleInfo[layerString]![className]['hairline']['<']) {
             useHairline = true;
+          }
+        }
+        if(styleInfo[layerString]![className].containsKey('thick')) { // tidy a bit
+          if( tileZoom > styleInfo[layerString]![className]['thick']['>']) {
+            useThickline = true;
           }
         }
         paint.color = styleInfo[layerString]![className]['color'];
@@ -335,6 +341,7 @@ class Styles {
     paint.strokeWidth =  (paint.strokeWidth / scale); ///.ceilToDouble();
 
     if( useHairline ) paint.strokeWidth = 0.0;
+    if( useThickline) paint.strokeWidth = 10.0;
 
     return paint;
   }

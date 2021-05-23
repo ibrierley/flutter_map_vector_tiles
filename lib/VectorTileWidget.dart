@@ -409,9 +409,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       print("Level ${coords.z} too low/high, not grabbing tile");
       return null;
     }
-
-    print("Fetching for $coords");
-
+    
     var url = vectorOptions.tileProvider.getTileUrl(
         coords, vectorOptions);
 
