@@ -58,7 +58,7 @@ class _VectorWidgetState extends State<VectorWidget> {
     var dimensions = Offset(width,height);
 
     var box = SizedBox(
-        width: width*1.25,
+        width: width*1.25, /// calculate this properly depending on rotation and mobile orientation
         height: height*1.25,
         child: RepaintBoundary (
           child: CustomPaint(
@@ -348,7 +348,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     var tilesToRender = <VTile>[];
     for (var tile in _tiles.values) {
-      if ((_level != null) && (tile.coords.z - _level.zoom).abs() <= 1 + math.pow(2, underZoom)) {
+      if ((tile.coords.z - _level.zoom).abs() <= 1 + math.pow(2, underZoom)) {
         if (!_cachedVectorData.containsKey(_tileCoordsToKey(tile.coords))) {
           fetchData(tile.coords, 1);
         } else {
@@ -491,7 +491,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       }
     }
 
-    var max = vectorOptions.maxZoom + underZoom + 5;
+    var max = vectorOptions.maxZoom + underZoom + 10;
 
     for(var tempZoom in [for(var i=1.0; i<max; i+=1.0) i]) {
 
@@ -503,18 +503,14 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
         level = _levels[tempZoom.toDouble()] = VectorLevel();
         level.zIndex = vectorOptions.maxZoom;
         var newOrigin = map.project(map.unproject(map.getPixelOrigin()), tempZoom);
-        if (newOrigin != null) {
-          level.origin = newOrigin;
-        } else {
-          level.origin = CustomPoint(0.0, 0.0);
-        }
+        level.origin = newOrigin;
         level.zoom = tempZoom;
         _setZoomTransform(level, map.center, map.zoom);
       }
 
     }
     var levelZoom = _levels[zoom];
-    if( levelZoom != null)
+    if(levelZoom != null)
       _level = levelZoom;
 
   }
@@ -801,7 +797,7 @@ class VectorTileLayerPluginOptions extends TileLayerOptions {
   VectorTileLayerPluginOptions({
     this.urlTemplate,
     this.tileSize = 256.0,
-    this.maxZoom = 18.0,
+    this.maxZoom = 25.0,
     this.zoomReverse = false,
     this.zoomOffset = 0.0,
     this.additionalOptions = const <String, String>{},

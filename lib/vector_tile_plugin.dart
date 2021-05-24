@@ -467,8 +467,6 @@ class VectorPainter extends CustomPainter {
     Map<String, Label> wantedLabels = {};
     List<Label> hiPriQueue = [];
 
-    print("$tileZoom");
-
     var pointPaint = Paint()
       ..color = Colors.grey
       ..strokeWidth = 5
@@ -529,6 +527,9 @@ class VectorPainter extends CustomPainter {
             var style = pathMap?.style ?? Styles.getStyle(
                 pathMap?.layerString, pathMap?.type, pathMap?.pclass, tileZoom,
                 pos?.scale, 2);
+
+
+
 
             ///canvas.drawPath( pathMap.path.transform(matrix.storage), style );
 
@@ -762,9 +763,6 @@ class VectorPainter extends CustomPainter {
     var labelLength = label.text.length;
     var padding = 5.0;
 
-    //label.boundNW = Offset( label.transformedPoint.dx - (labelLength * widthFactor / 2) - padding , label.transformedPoint.dy - (labelLength * widthFactor / 2) - padding);
-    //label.boundSE = Offset( label.boundNW.dx + (labelLength * widthFactor ) + padding, label.boundNW.dy + (labelLength * widthFactor ) + padding);
-    // Seeing if ints will speed things up, as we don't really care about accuracy and do a lot of collision checks, prob overoptimisation
     var tp = label.transformedPoint;
     if( tp != null ) {
       label.boundNWx =

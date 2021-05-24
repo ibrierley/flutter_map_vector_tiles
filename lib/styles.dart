@@ -8,18 +8,29 @@ import 'package:flutter/services.dart' show rootBundle;
 
 class Styles {
 
+  /// https://github.com/mapbox/mapbox-gl-js/issues/4225
   static Map<String, int> defaultLayerOrder() {
     return {
-      'water' : 1,
+      'landuse': 5,
       'waterway' : 3,
-      'landuse': 2,
-      'road': 6,
-      'structure': 4,
-      'building' : 5,
-      'poi_label' : 10,
-      'natural_label' : 9,
-      'transit_stop_label' : 12,
-      'place_label' : 13,
+      'water' : 2,
+      'aeroway': 7,
+      'data': 9,
+      'barrierline': 11,
+      'building' : 13,
+      'landuse_overlay': 15,
+      'tunnel': 17,
+      'structure': 19,
+      'road': 21,
+      'bridge': 23,
+      'motorway_junction': 25,
+      'airport_label': 27,
+      'natural_label' : 29,
+      'water_label': 30,
+      'poi_label' : 31,
+      'transit_stop_label' : 33,
+      'place_label' : 35,
+      'house_num_label': 37,
     };
   }
 
@@ -27,7 +38,7 @@ class Styles {
 
     "default": {
       'include': true,
-      'default':  [ [0, 22, { 'color': Colors.yellow, 'strokeWidth': 0.0}],
+      'default':  [ [0, 22, { 'color': Colors.purple, 'strokeWidth': 0.0}],
       ],
     },
 
@@ -42,11 +53,11 @@ class Styles {
 
     "road": {
       'include': true,
-      'default':      [ [0, 22, { 'color': Colors.yellow, 'strokeWidth' : 0.0  }     ],
-                        [16,22, { 'color': Colors.yellow, 'strokeWidth' : 9.0 }     ],
+      'default':      [ [0, 22, { 'color': Colors.orange, 'strokeWidth' : 0.0  }     ],
+                        [16,22, { 'color': Colors.orange, 'strokeWidth' : 2.0 }     ],
       ],
       'service':      [ [12, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
-                        [16,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
       ],
       'street':       [ [15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
                         [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
@@ -59,15 +70,19 @@ class Styles {
       ],
       'motorway':     [ [9, 22, { 'color': Colors.orange,           'strokeWidth' : 0.0  }     ],
                         [15,22, { 'color': Colors.orange.shade200, 'strokeWidth' : 3.0 }     ],
-                        [14,22, { 'color': Colors.orange.shade200, 'strokeWidth' : 10.0 }     ],
+                        [14,22, { 'color': Colors.orange.shade100, 'strokeWidth' : 10.0 }     ],
+      ],
+      'motorway_link':  [ [9, 22, { 'color': Colors.orange,        'strokeWidth' : 0.0  }     ],
+                        [15,22, { 'color': Colors.orange.shade200, 'strokeWidth' : 3.0 }     ],
+                        [14,22, { 'color': Colors.orange.shade100, 'strokeWidth' : 10.0 }     ],
       ],
       'trunk':        [ [9, 22, { 'color': Colors.orangeAccent,    'strokeWidth' : 0.0  }     ],
                         [15,22, { 'color': Colors.orange.shade200, 'strokeWidth' : 3.0 }     ],
-                        [17,22, { 'color': Colors.orange.shade200, 'strokeWidth' : 10.0 }     ],
+                        [17,22, { 'color': Colors.orange.shade100, 'strokeWidth' : 10.0 }     ],
       ],
       'trunk_link':    [[9, 22, { 'color': Colors.orangeAccent,     'strokeWidth' : 0.0  }     ],
-                        [15,22, { 'color': Colors.orange.shade200, 'strokeWidth' : 3.0 }     ],
-                        [17,22, { 'color': Colors.orange.shade200, 'strokeWidth' : 10.0 }     ],
+                        [15,22, { 'color': Colors.orange.shade100, 'strokeWidth' : 3.0 }     ],
+                        [17,22, { 'color': Colors.orange.shade100, 'strokeWidth' : 10.0 }     ],
       ],
       'primary':     [  [12, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 0.0  }     ],
                         [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
@@ -84,10 +99,11 @@ class Styles {
       'tertiary':     [ [14, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
                         [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 9.0 }     ],
       ],
-      'tertiary_link': [[14, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
+      'tertiary_link': [[14, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }   ],
                         [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 9.0 }     ],
       ],
       'residential':  [ [0, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
+                        [16,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 6.0 }     ],
                         [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
       ],
       'path':         [ [0, 22, { 'color': Colors.brown.shade400,    'strokeWidth' : 2.0  }     ],
@@ -100,15 +116,19 @@ class Styles {
       ],
       'service_rail': [ [0, 22, { 'color': Colors.blueGrey.shade900, 'strokeWidth' : 1.0  }     ],
       ],
-      'construction': [ [0, 22, { 'color': Colors.brown, 'strokeWidth' : 0.0  }     ],
+      'construction': [ [0, 22, { 'color': Colors.brown,              'strokeWidth' : 0.0  }     ],
       ],
-      'ferry':        [ [0, 22, { 'color': Colors.blue.shade900, 'strokeWidth' : 0.0  }     ],
+      'ferry':        [ [0, 22, { 'color': Colors.blue.shade900,      'strokeWidth' : 0.0  }     ],
+      ],
+      'golf':         [ [15, 22, { 'color': Colors.brown.shade400,    'strokeWidth' : 2.0  }     ],
+      ],
+      'aerialway':    [ [14, 22, { 'color': Colors.brown.shade400,    'strokeWidth' : 2.0  }     ],
       ],
     },
 
     "motorway_junction": {
       'include': true,
-      'default':  [ [0, 22, { 'color': Colors.deepPurple, 'strokeWidth': 0.0}],
+      'default':  [ [0, 22, { 'color': Colors.deepPurple, 'strokeWidth': 5.0}],
       ],
     },
 
@@ -176,7 +196,11 @@ class Styles {
       ],
       'stream': [ [14, 22, { 'color': Colors.blue.shade900, 'strokeWidth': 0.0}],
       ],
+      'stream_intermittent': [ [13, 22, { 'color': Colors.blue.shade900, 'strokeWidth': 0.0}],
+      ],
       'ditch': [ [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
+      ],
+      'drain': [ [13, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
       ],
     },
 
@@ -197,6 +221,14 @@ class Styles {
       'default': [ [15, 22, { 'color': Colors.grey.shade600, 'strokeWidth': 0.0}],
       ],
       'fence':  [ [15, 22, { 'color': Colors.brown.shade300, 'strokeWidth': 0.0}],
+      ],
+      'hedge':  [ [15, 22, { 'color': Colors.brown.shade300, 'strokeWidth': 0.0}],
+      ],
+      'gate':  [ [16, 22, { 'color': Colors.brown.shade600, 'strokeWidth': 0.0}],
+      ],
+      'land':  [ [16, 22, { 'color': Colors.brown.shade300, 'strokeWidth': 0.0}], // eg pier
+      ],
+      'cliff':  [ [16, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}], // eg pier
       ],
     },
 
@@ -273,6 +305,10 @@ class Styles {
       'sea':  [ [12, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
       ],
       'stream':  [ [12, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'water':  [ [12, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'canal':  [ [15, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
       ],
     },
 
@@ -429,13 +465,15 @@ class Styles {
     var paint = Paint()
       ..style = PaintingStyle.stroke
       ..color = Colors.grey
-      ..strokeWidth = 30
-    ///..strokeCap = StrokeCap.round
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round
       ..isAntiAlias = false;
     var styleInfo = classColorStyles;
 
     if(type == 'LINESTRING' || type == 'line') paint.style = PaintingStyle.stroke; // are roads filled ?
     if(type == 'POLYGON'    || type == 'fill') paint.style = PaintingStyle.fill;
+
+    bool matchedFeature = false;
 
     if(styleInfo.containsKey(layerString)) {
       Map<String, dynamic>? layerClass = styleInfo[layerString] ?? styleInfo['default'];
@@ -445,11 +483,13 @@ class Styles {
         if (layerClass.containsKey('types') &&
             layerClass['types'].containsKey(className)) {
           featureClass = layerClass['types'][className];
+          matchedFeature = true;
         }
       }
 
       if (layerClass != null && layerClass.containsKey(className)) {
         featureClass = layerClass[className];
+        matchedFeature = true;
       }
 
       if (featureClass is List) {
@@ -462,13 +502,12 @@ class Styles {
               if (list[2].containsKey('strokeWidth'))
                 paint.strokeWidth = options['strokeWidth'];
             }
-          }}
+          }
+        }
       }
     }
 
-    if( paint.color == Colors.yellow) print ("$className not found");
-
-
+    if(!matchedFeature) print ("$layerString $type $className $tileZoom not found");
 
     paint.strokeWidth =  (paint.strokeWidth / scale); ///.ceilToDouble();
 
