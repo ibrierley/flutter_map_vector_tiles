@@ -137,8 +137,6 @@ class MapboxTile {
         return (layerOrderMap[ a.name ] ?? 15).compareTo(
             layerOrderMap[ b.name ] ?? 15);
       });
-
-
     }
 
     Map layerSummary = {};
@@ -158,16 +156,14 @@ class MapboxTile {
         layerSummary[layerString] = 0;
       }
 
-      var command = '';
-
-      dartui.Path? path;
-      List<Offset> pointList = [];
-
       for (var feature in layer.features) {
 
         var featureInfo = {};
         var item; // path or point
         var point;
+        dartui.Path? path;
+        List<Offset> pointList = [];
+        var command = '';
 
         for (var tagIndex = 0; tagIndex < feature.tags.length; tagIndex += 2) {
           var valIndex = feature.tags[tagIndex + 1];
@@ -219,7 +215,9 @@ class MapboxTile {
 
               if (feature.type.toString() == 'POLYGON') {
                 if (path == null) path = dartui.Path();
+
                 path.addPolygon(polyPoints, true);
+
                 tileStats.polys++;
                 polyPoints = [];
                 geomType = GeomType.polygon;
@@ -346,8 +344,9 @@ class MapboxTile {
           } else {
             if( debugOptions.featureSummary ) summaryAdd(summaryKey, excludeSummary);
           }
-          path = null;
         }
+
+        path = null;
       }
 
       cachedInfo.geomInfo?.pathStore.add(pathMap);
@@ -503,12 +502,16 @@ class VectorPainter extends CustomPainter {
       canvas.save();
       canvas.transform(matrix.storage);
 
-      // May need to clip off the tile if there are overlapping problems with joining
-      // paths. This may help, but it makes any perspective clipping difficult as its not a rect
-      // unless we clip/draw on a transformed canvas or something fiddly
-      // leaving this code here, just to think about, it doesn't really work
+      /// clip prevents the odd clashing artifact with overlapping tiles features
+      Rect myRect = Offset(0,0) & Size(256.0,256.0);
+      canvas.clipRect(myRect);
 
-      // var clipOffset = Offset(pos['pos'].x, pos['pos'].y);
+      //if we need a clip that isn't already transformed, we can use below..
+      //if( pos != null) {
+      //  var adjustedSize = Offset(256.0, 256.0).scale(pos.scale, pos.scale);
+      //  Rect myRect = Offset(pos.point.x.toDouble(), pos.point.y.toDouble()) & Size(adjustedSize.dx, adjustedSize.dy);
+      //  canvas.clipRect(myRect);
+      //}
       // var adjustedSize = Offset(256.0, 256.0).scale(pos['scale'], pos['scale']);
 
       // Rect myRect = Offset(pos['pos'].x, pos['pos'].y) & Size(adjustedSize.dx, adjustedSize.dy);
@@ -528,22 +531,18 @@ class VectorPainter extends CustomPainter {
                 pathMap?.layerString, pathMap?.type, pathMap?.pclass, tileZoom,
                 pos?.scale, 2);
 
-
-
-
-            ///canvas.drawPath( pathMap.path.transform(matrix.storage), style );
-
             /// if we've pinchzooming, use thin lines for speed
             var oldStrokeWidth = style.strokeWidth;
             if (optimisations.pinchZoom) style.strokeWidth = 0.0;
-            if( pathMap != null)
+
+            if( pathMap != null) {
               canvas.drawPath(pathMap.path, style);
-            style.strokeWidth = oldStrokeWidth;
+              style.strokeWidth = oldStrokeWidth;
+            }
           }
         }
       }
       if (debugOptions.tiles) {
-        /// display tile square and coords
         _debugTiles(canvas, tile);
       }
 
@@ -733,7 +732,7 @@ class VectorPainter extends CustomPainter {
         fit: BoxFit.fitWidth,
         alignment: Alignment.topLeft,
         filterQuality: FilterQuality.medium,
-        isAntiAlias: true,
+        isAntiAlias: false, // true will give unwanted visible tile edges
         image: image);
   }
 

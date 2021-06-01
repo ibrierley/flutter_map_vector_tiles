@@ -310,6 +310,10 @@ class Styles {
       ],
       'canal':  [ [15, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
       ],
+      'river':  [ [15, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'dock':  [ [15, 22, { 'color': Colors.blueGrey, 'strokeWidth': 0.0}],
+      ],
     },
 
     "place_label": {

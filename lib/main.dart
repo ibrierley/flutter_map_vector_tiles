@@ -86,6 +86,16 @@ class _MyHomePageState extends State<MyHomePage> {
                 urlTemplate: 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?mapbox://styles/gibble/ckoe1dv003l7s17pb219opzj0&access_token=pk.eyJ1IjoiZ2liYmxlIiwiYSI6ImNqbjBlZDB6ejFrODcza3Fsa3o3eXR1MzkifQ.pC89zLnuSWrRdCkDrsmynQ',
                 subdomains: ['a', 'b', 'c'],
                 ///urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                ///urlTemplate: "https://tiles.wmflabs.org/osm-no-labels/{z}/{x}/{y}.png",
+                ///urlTemplate: "https://a.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}@2x.png",
+                ///urlTemplate: "https://a.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}@2x.png",
+                ///urlTemplate: "https://a.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}@2x.png",
+                ///urlTemplate: "https://a.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png",
+                ///https://gis.stackexchange.com/questions/334057/base-map-with-no-labels-in-qgis
+                ///https://wiki.openstreetmap.org/wiki/Tile_servers
+                ///https://www.thunderforest.com/docs/vector-maps-api/
+                ///https://mran.microsoft.com/snapshot/2018-03-29/web/packages/mapmisc/vignettes/mapLayers.html
+                ///https://stamen.com/open-source/
 
 
 
