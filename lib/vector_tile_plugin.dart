@@ -460,6 +460,8 @@ class VectorPainter extends CustomPainter {
     if (widgetRotation != 0.0) isRotated = true;
     widgetRotation = widgetRotation % 360;
 
+    print("$tileZoom");
+
     var devicePerspectiveAngle = DartMath.atan2(size.width / 2, size.height) *
         57.2958;
 
@@ -760,7 +762,7 @@ class VectorPainter extends CustomPainter {
   void _updateLabelBounding(Label label) {
     var widthFactor = 9.0; // how big as a ratio of text to size up
     var labelLength = label.text.length;
-    var padding = 5.0;
+    var padding = 10.0;
 
     var tp = label.transformedPoint;
     if( tp != null ) {
