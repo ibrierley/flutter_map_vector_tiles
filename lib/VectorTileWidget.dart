@@ -18,6 +18,7 @@ import 'vector_tile.pb.dart' as vector_tile;
 import 'vector_tile_plugin.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:flutter_map_vector_tile/styles.dart';
 
 class VectorWidget extends StatefulWidget {
   final rotation;
@@ -29,6 +30,7 @@ class VectorWidget extends StatefulWidget {
   DebugOptions debugOptions = DebugOptions();
   final optimisations;
   final useImages;
+  Map vectorStyle;
 
   VectorWidget(
       this.rotation,
@@ -40,10 +42,12 @@ class VectorWidget extends StatefulWidget {
       this.debugOptions,
       this.optimisations,
       this.useImages,
+      this.vectorStyle,
       );
 
   @override
   State<StatefulWidget> createState() {
+    if( vectorStyle == null ) vectorStyle = Styles.mapBoxClassColorStyles;
     return _VectorWidgetState();
   }
 }
@@ -65,7 +69,7 @@ class _VectorWidgetState extends State<VectorWidget> {
             isComplex: true, //Tells flutter to cache the painter.
             painter: VectorPainter( dimensions, widget.rotation, widget.tilesToRender, widget.tileZoom,
                 widget.cachedVectorDataMap, widget.underZoom, widget.usePerspective,
-                widget.debugOptions, widget.optimisations, widget.useImages ) )
+                widget.debugOptions, widget.optimisations, widget.useImages, widget.vectorStyle ) )
        )
     );
 
@@ -130,7 +134,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
   Map<String, DateTime> _outstandingTileLoads = {};
   Map<String, DateTime> _recentTilesCompleted = {};
-  Map? vectorStyle;
+  late Map vectorStyle;
 
   int _secondsBetweenListCleanups = 20;
   DateTime _lastTileListCleanupTime = DateTime.now();
@@ -146,7 +150,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     optimisations = vectorOptions.optimisations ?? Optimisations();
     debugOptions = vectorOptions.debugOptions ?? DebugOptions();
     underZoom = vectorOptions.underZoom ?? 0;
-    vectorStyle = vectorOptions.vectorStyle;
+    vectorStyle = vectorOptions.vectorStyle ?? Styles.mapBoxClassColorStyles;
 
     var mapController = vectorOptions.mapController;
     if( mapController != null ) {
@@ -377,11 +381,13 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       _cachedVectorData[_tileCoordsToKey(tile.coords)]?.positionInfo = _createTilePositionInfo(tile); /// need to recreate backup tile info on diff zoom...
     }
 
+    var vectorStyle = vectorOptions.vectorStyle ?? Styles.mapBoxClassColorStyles;
+
     return Container(
            color: Colors.blueGrey,
          child: VectorWidget(widget.mapState.rotation, _cachedVectorData, allTilesToRender, _tileZoom, underZoom,
              vectorOptions.usePerspective, vectorOptions.debugOptions ?? DebugOptions(),
-             optimisations, vectorOptions.useImages  )
+             optimisations, vectorOptions.useImages, vectorStyle  )
      );
   }
 
@@ -444,7 +450,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
               if( cachedVectorData != null )
                 MapboxTile.decode(
-                  coordsKey, cachedVectorData, {}, {}, _tileZoom,
+                  coordsKey, cachedVectorData, {}, vectorOptions.vectorStyle, _tileZoom,
                   debugOptions);
 
             } else {

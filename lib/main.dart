@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'vector_tile_plugin.dart';
 import 'package:flutter_map_vector_tile/VectorTileWidget.dart';
+import 'package:flutter_map_vector_tile/styles.dart';
 
 
 void main() {
@@ -78,13 +79,14 @@ class _MyHomePageState extends State<MyHomePage> {
               ],
               interactiveFlags: InteractiveFlag.all, // MapEventMoveStart& ~InteractiveFlag.rotate,
               center: LatLng(50.8323646,-0.1871463),
-              zoom: 17.3,
+              zoom: 13.3,
               //rotation: 45,
             ),
             layers: [
               VectorTileLayerPluginOptions(
-                urlTemplate: 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?mapbox://styles/gibble/ckoe1dv003l7s17pb219opzj0&access_token=pk.eyJ1IjoiZ2liYmxlIiwiYSI6ImNqbjBlZDB6ejFrODcza3Fsa3o3eXR1MzkifQ.pC89zLnuSWrRdCkDrsmynQ',
+                //urlTemplate: 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?mapbox://styles/gibble/ckoe1dv003l7s17pb219opzj0&access_token=pk.eyJ1IjoiZ2liYmxlIiwiYSI6ImNqbjBlZDB6ejFrODcza3Fsa3o3eXR1MzkifQ.pC89zLnuSWrRdCkDrsmynQ',
                 subdomains: ['a', 'b', 'c'],
+                urlTemplate: "https://tiles.stadiamaps.com/data/openmaptiles/{z}/{x}/{y}.pbf?api_key=e296edff-4d3c-47ed-8a36-3128af55b57e",
                 ///urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                 ///urlTemplate: "https://tiles.wmflabs.org/osm-no-labels/{z}/{x}/{y}.png",
                 ///urlTemplate: "https://a.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}@2x.png",
@@ -107,6 +109,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 debugOptions: debugOptions,
                 mapController: mapController,
                 optimisations: optimisations,
+                vectorStyle: Styles.stadiaClassColorStyles,
               ),
             ],
           );

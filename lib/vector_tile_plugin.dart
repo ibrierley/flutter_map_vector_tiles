@@ -113,7 +113,7 @@ class MapboxTile {
     map[ key ] = map.containsKey(key) ? map[ key ]++ : 1;
   }
 
-  static void decode( coordsKey, VTCache cachedInfo, options, vectorStyles, tileZoom, DebugOptions debugOptions ) {
+  static void decode( coordsKey, VTCache cachedInfo, options, vectorStyle, tileZoom, DebugOptions debugOptions ) {
 
     Map<GeomType,List> fullGeomMap = { GeomType.linestring: [], GeomType.polygon: [], GeomType.point:  []}; /// I don't know if we will want this..may be better to separate into roads, labels, paths etc...?
     Map<String, int> includeSummary = {};
@@ -303,7 +303,7 @@ class MapboxTile {
         /// Note "type" is a bit confusing, as there seems to be a feature type eg "track",
         /// and a shape type eg "LINESTRING" when decoding
 
-        var includeFeature = Styles.includeFeature(layerString, type, featureInfo['class'], tileZoom);
+        var includeFeature = Styles.includeFeature(vectorStyle, layerString, type, featureInfo['class'], tileZoom);
         var thisClass = featureInfo['class'] ?? 'default';
 
         var key = "L:$layerString>T:$type>C:$thisClass";
@@ -360,7 +360,7 @@ class MapboxTile {
         var layerString = pointInfo[1];
 
         var thisClass = pointInfo[2]['class'] ?? 'default';
-        var includeFeature = Styles.includeFeature(layerString, pointInfo[2]['type'], thisClass, tileZoom);
+        var includeFeature = Styles.includeFeature(vectorStyle, layerString, pointInfo[2]['type'], thisClass, tileZoom);
         var summaryKey = "L:" + layerString + "_C:" + thisClass +"_Z:" + tileZoom.toString();
 
         if( includeFeature ) {
@@ -434,6 +434,7 @@ class VectorPainter extends CustomPainter {
   final rotation;
   final Optimisations optimisations;
   final useImages;
+  final vectorStyle;
 
   static Map<String, Map<String, Label>> cachedLabelsPerTile = {};
   static DateTime timeSinceLastClean = DateTime.now();
@@ -450,7 +451,7 @@ class VectorPainter extends CustomPainter {
   VectorPainter(Offset this.dimensions, double this.rotation,
       List<VTile> this.tilesToRender, this.tileZoom,
       this.cachedVectorDataMap, this.underZoom, this.usePerspective,
-      this.debugOptions, this.optimisations, this.useImages);
+      this.debugOptions, this.optimisations, this.useImages, this.vectorStyle);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -529,7 +530,7 @@ class VectorPainter extends CustomPainter {
           if (pathMap?.path != null) {
             // cache style if we can to save lookups, we may want to add
             // a method to reload new styles in though
-            var style = pathMap?.style ?? Styles.getStyle(
+            var style = pathMap?.style ?? Styles.getStyle(vectorStyle,
                 pathMap?.layerString, pathMap?.type, pathMap?.pclass, tileZoom,
                 pos?.scale, 2);
 
