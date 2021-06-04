@@ -120,8 +120,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 mapController: mapController,
                 optimisations: optimisations,
                 ///vectorStyle: Styles.stadiaClassColorStyles,
-                vectorStyle: Styles.mapBoxClassColorStyles,
-                ///vectorStyle: testStyle,
+                ///vectorStyle: Styles.mapBoxClassColorStyles,
+                vectorStyle: testStyle,
               ),
             ],
           );

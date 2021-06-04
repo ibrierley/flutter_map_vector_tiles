@@ -818,7 +818,7 @@ class Styles {
   return funcCheck( includeFeature, paramsMap );
   }
 
-  static Paint getStyle(style, featureInfo, layerString, type, tileZoom, scale, diffRatio) {
+  static Paint getStyle(style, featureInfo, layerString, type, tileZoom, scale, diffRatio, debugOptions) {
     var paramsMap = { 'layer': layerString, 'type': type, 'zoom': tileZoom, 'diffRatio': diffRatio  };
 
     var className = featureInfo['class'] ?? 'default';
@@ -874,7 +874,7 @@ class Styles {
       }
     }
 
-    if(!matchedFeature) print ("$layerString $type $className $tileZoom not found");
+    if(!matchedFeature && debugOptions.missingFeatures) print ("$layerString $type $className $tileZoom not found");
 
     paint.strokeWidth =  (paint.strokeWidth / scale); ///.ceilToDouble();
 

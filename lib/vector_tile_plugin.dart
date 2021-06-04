@@ -534,7 +534,7 @@ class VectorPainter extends CustomPainter {
             // a method to reload new styles in though
             var style = pathMap?.style ?? Styles.getStyle(vectorStyle, pathMap?.featureInfo,
                 pathMap?.layerString, pathMap?.type, tileZoom,
-                pos?.scale, 2);
+                pos?.scale, 2, debugOptions);
 
             /// if we've pinchzooming, use thin lines for speed
             var oldStrokeWidth = style.strokeWidth;
