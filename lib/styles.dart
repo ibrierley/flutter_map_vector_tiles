@@ -774,10 +774,10 @@ class Styles {
     return checkVar;
   }
 
-  static bool includeFeature(vectorStyle, layerString, type, feature, zoom, debugOptions) { //reduce code...
+  static bool includeFeature(vectorStyle, layerString, type, featureInfo, zoom, debugOptions) { //reduce code...
 
-    var thisClass = feature['class'] ?? 'default';
-    var paramsMap = { 'layer': layerString, 'type': type, 'class': thisClass, 'zoom': zoom };
+    var thisClass = featureInfo['class'] ?? 'default';
+    var paramsMap = { 'layer': layerString, 'type': type, 'class': thisClass, 'zoom': zoom, 'featureInfo': featureInfo };
 
     var style = funcCheck( vectorStyle, paramsMap);
     var includeFeature = funcCheck( style['default'], paramsMap )['include'];
@@ -819,7 +819,7 @@ class Styles {
   }
 
   static Paint getStyle(style, featureInfo, layerString, type, tileZoom, scale, diffRatio, debugOptions) {
-    var paramsMap = { 'layer': layerString, 'type': type, 'zoom': tileZoom, 'diffRatio': diffRatio  };
+    var paramsMap = { 'layer': layerString, 'type': type, 'zoom': tileZoom, 'diffRatio': diffRatio, 'featureInfo': featureInfo };
 
     var className = featureInfo['class'] ?? 'default';
 

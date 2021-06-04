@@ -41,10 +41,10 @@ class GeomStore {
 
 class PathInfo {
   dartui.Path path;
-  String pclass;
-  String type;
-  String layerString;
-  int count;
+  String pclass = "default";
+  String type = "default";
+  String layerString = "default";
+  int count = 0;
   Paint? style;
   Map featureInfo;
 

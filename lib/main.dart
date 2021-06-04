@@ -62,7 +62,14 @@ class _MyHomePageState extends State<MyHomePage> {
       'default': ( paramsMap ) {
         return {
           'include': true,
-          'default': [ [0, 22, { 'color': Colors.purple, 'strokeWidth': 0.0 }], ],
+          ///'default': [ [0, 22, { 'color': Colors.purple, 'strokeWidth': 0.0 }], ],
+          'default': [ [0, 22, { 'color': ( params ) {
+            if(params['type'] == "LINESTRING") {
+              return Colors.black;
+            } else {
+              return Colors.brown;
+            }
+          }, 'strokeWidth': 0.0 }], ],
         };
       }
     };
