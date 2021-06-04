@@ -863,8 +863,11 @@ class DebugOptions {
   bool features;
   bool roads;
   bool skipRoadLabels;
+  bool missingFeatures;
 
-  DebugOptions({ this.tiles = false, this.labels = false, this.decoding = false, this.featureSummary = false, this.features = false, this.roads = false, this.skipRoadLabels = true });
+  DebugOptions({ this.tiles = false, this.labels = false, this.decoding = false,
+    this.featureSummary = false, this.features = false, this.roads = false,
+    this.skipRoadLabels = true, this.missingFeatures = false });
 }
 
 

@@ -46,8 +46,9 @@ class PathInfo {
   String layerString;
   int count;
   Paint? style;
+  Map featureInfo;
 
-  PathInfo(this.path, this.pclass, this.type, this.layerString, this.count);
+  PathInfo(this.path, this.pclass, this.type, this.layerString, this.featureInfo, this.count);
 }
 
 class PositionInfo {
@@ -303,7 +304,7 @@ class MapboxTile {
         /// Note "type" is a bit confusing, as there seems to be a feature type eg "track",
         /// and a shape type eg "LINESTRING" when decoding
 
-        var includeFeature = Styles.includeFeature(vectorStyle, layerString, type, featureInfo['class'], tileZoom);
+        var includeFeature = Styles.includeFeature(vectorStyle, layerString, type, featureInfo, tileZoom, debugOptions);
         var thisClass = featureInfo['class'] ?? 'default';
 
         var key = "L:$layerString>T:$type>C:$thisClass";
@@ -334,7 +335,7 @@ class MapboxTile {
             /// otherwise water can end up on top of a road for example
 
             if(!pathMap.containsKey(key)) {
-              pathMap[key] = PathInfo(dartui.Path(), thisClass, type, layerString, 1 );
+              pathMap[key] = PathInfo(dartui.Path(), thisClass, type, layerString, featureInfo, 1 );
             }
 
             pathMap[key]?.path.addPath(path, Offset(0, 0));
@@ -358,9 +359,10 @@ class MapboxTile {
 
       for(var pointInfo in labelPointlist) {
         var layerString = pointInfo[1];
+        var featureInfo = pointInfo[2]; // redo this to a class ?
 
         var thisClass = pointInfo[2]['class'] ?? 'default';
-        var includeFeature = Styles.includeFeature(vectorStyle, layerString, pointInfo[2]['type'], thisClass, tileZoom);
+        var includeFeature = Styles.includeFeature(vectorStyle, layerString, pointInfo[2]['type'], featureInfo, tileZoom, debugOptions);
         var summaryKey = "L:" + layerString + "_C:" + thisClass +"_Z:" + tileZoom.toString();
 
         if( includeFeature ) {
@@ -530,8 +532,8 @@ class VectorPainter extends CustomPainter {
           if (pathMap?.path != null) {
             // cache style if we can to save lookups, we may want to add
             // a method to reload new styles in though
-            var style = pathMap?.style ?? Styles.getStyle(vectorStyle,
-                pathMap?.layerString, pathMap?.type, pathMap?.pclass, tileZoom,
+            var style = pathMap?.style ?? Styles.getStyle(vectorStyle, pathMap?.featureInfo,
+                pathMap?.layerString, pathMap?.type, tileZoom,
                 pos?.scale, 2);
 
             /// if we've pinchzooming, use thin lines for speed

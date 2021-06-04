@@ -5,7 +5,6 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 
-
 class Styles {
 
   /// https://github.com/mapbox/mapbox-gl-js/issues/4225
@@ -63,7 +62,7 @@ class Styles {
         [15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
         [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
       ],
-      'motorway': [ [0, 11, { 'color': Colors.orange, 'strokeWidth': 0.0}],
+      'motorway': [ [(optionsMap) {return 0;}, (optionsMap){return 11;}, { 'color': Colors.orange, 'strokeWidth': 0.0}],
         [12, 5, { 'color': Colors.orange.shade200, 'strokeWidth': 3.0}],
         [14, 22, { 'color': Colors.orange.shade100, 'strokeWidth': 8.0}],
       ],
@@ -133,10 +132,25 @@ class Styles {
       'bridge': [
         [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
       ],
+      'motorway_construction': [
+        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
       'minor_construction': [
         [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
       ],
+      'path_construction': [
+        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
+      'primary_construction': [
+        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
+      'trunk_construction': [
+        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
       'construction_construction': [
+        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
+      'tertiary_construction': [
         [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
       ],
       'raceway': [
@@ -196,6 +210,24 @@ class Styles {
       ],
       'industrial':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
       ],
+      'retail':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'commercial':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'library':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'track':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'stadium':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'university':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'college':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'bus_station':   [ [12, 22,  { 'color': Colors.grey.shade700,   'strokeWidth': 0.0 } ],
+      ],
+      'railway':   [ [12, 22,  { 'color': Colors.grey.shade700,   'strokeWidth': 0.0 } ],
+      ],
     },
 
     "landcover": {
@@ -246,6 +278,8 @@ class Styles {
       ],
       'lake': [ [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
       ],
+      'river': [ [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
+      ],
       'ocean': [ [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
       ],
       'dock': [ [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
@@ -279,6 +313,10 @@ class Styles {
       'default': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
       ],
       'trunk': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'motorway': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'service': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
       ],
       'path': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
       ],
@@ -730,26 +768,43 @@ class Styles {
 
   };
 
-  static bool includeFeature(vectorStyle, layerString, type, thisClass, zoom) { //reduce code...
-    var includeFeature = vectorStyle['default']!['include'];
+  /// We want to give the option of any var being a func to call..
+  static dynamic funcCheck( dynamic checkVar, Map paramMap ) {
+    if(checkVar is Function) return checkVar( paramMap );
+    return checkVar;
+  }
+
+  static bool includeFeature(vectorStyle, layerString, type, feature, zoom, debugOptions) { //reduce code...
+
+    var thisClass = feature['class'] ?? 'default';
+    var paramsMap = { 'layer': layerString, 'type': type, 'class': thisClass, 'zoom': zoom };
+
+    var style = funcCheck( vectorStyle, paramsMap);
+    var includeFeature = funcCheck( style['default'], paramsMap )['include'];
+
+    if(!vectorStyle.containsKey(layerString)) layerString = 'default';
 
     if(vectorStyle.containsKey(layerString)) {
-      includeFeature = vectorStyle[layerString]!['include'];
+      var layerStyle = funcCheck( vectorStyle[layerString], paramsMap );
 
-      var classOptions = vectorStyle[layerString]!['default'];
+      includeFeature = funcCheck( layerStyle!['include'], paramsMap );
+      var classOptions = funcCheck( layerStyle!['default'], paramsMap );
 
-      if( vectorStyle[layerString]!.containsKey('types') && vectorStyle[layerString]!['types'].containsKey(type)) { // types match in styling
-        classOptions = vectorStyle[layerString]!['types'][type];
+      if( layerStyle!.containsKey('types') && layerStyle!['types'].containsKey(type)) { // types match in styling
+        classOptions = funcCheck( layerStyle!['types'][type], paramsMap );
 
-      } else if( vectorStyle[layerString]!.containsKey(thisClass) ) { // normal class match in styling
-        classOptions = vectorStyle[layerString]![thisClass];
+      } else if( layerStyle!.containsKey(thisClass) ) { // normal class match in styling
+        classOptions = funcCheck( layerStyle![thisClass], paramsMap );
       }
 
       if( includeFeature && classOptions is List ) {
         var listIncludes = false;
-        //print("Checking $layerString $type $thisClass ");
+
         for( var entry in classOptions ) {
-          if( zoom >= entry[0] && zoom <= entry[1]) {
+          var minZoom = funcCheck( entry[0], paramsMap );
+          var maxZoom = funcCheck( entry[1], paramsMap );
+
+          if( zoom >= minZoom && zoom <= maxZoom ) {
             listIncludes = true; // we have at least one entry for this zoom
             break;
           }
@@ -760,10 +815,13 @@ class Styles {
       }
     }
 
-    return includeFeature;
+  return funcCheck( includeFeature, paramsMap );
   }
 
-  static Paint getStyle(vectorStyle, layerString, type, className, tileZoom, scale, diffRatio) {
+  static Paint getStyle(style, featureInfo, layerString, type, tileZoom, scale, diffRatio) {
+    var paramsMap = { 'layer': layerString, 'type': type, 'zoom': tileZoom, 'diffRatio': diffRatio  };
+
+    var className = featureInfo['class'] ?? 'default';
 
     var paint = Paint()
       ..style = PaintingStyle.stroke
@@ -772,38 +830,44 @@ class Styles {
       ..strokeCap = StrokeCap.round
       ..isAntiAlias = false;
 
-
     if(type == 'LINESTRING' || type == 'line') paint.style = PaintingStyle.stroke; // are roads filled ?
     if(type == 'POLYGON'    || type == 'fill') paint.style = PaintingStyle.fill;
 
     bool matchedFeature = false;
+    Map vectorStyle = funcCheck(style, paramsMap);
+
+    if(!vectorStyle.containsKey(layerString)) layerString = 'default';
 
     if(vectorStyle.containsKey(layerString)) {
-      Map<String, dynamic>? layerClass = vectorStyle[layerString] ?? vectorStyle['default'];
-      List<List<dynamic>>? featureClass = vectorStyle['default']?['default'];
+      Map<String, dynamic>? layerClass = funcCheck(vectorStyle[layerString],paramsMap) ?? funcCheck(vectorStyle['default'], paramsMap);
+      List<List<dynamic>>? featureClass = funcCheck(vectorStyle['default'],paramsMap)?['default'];
 
       if (layerClass != null) {
         if (layerClass.containsKey('types') &&
             layerClass['types'].containsKey(className)) {
-          featureClass = layerClass['types'][className];
+          featureClass = funcCheck(layerClass['types'][className], paramsMap);
           matchedFeature = true;
         }
       }
 
       if (layerClass != null && layerClass.containsKey(className)) {
-        featureClass = layerClass[className];
+        featureClass = funcCheck(layerClass[className], paramsMap);
         matchedFeature = true;
       }
 
       if (featureClass is List) {
         if( featureClass != null) {
-          for (var list in featureClass) {
-            if (tileZoom >= list[0] && tileZoom <= list[1] && list[2] is Map) {
-              Map options = list[2];
-              if (options.containsKey('color'))
-                paint.color = options['color'];
-              if (list[2].containsKey('strokeWidth'))
-                paint.strokeWidth = options['strokeWidth'];
+          for (var entry in featureClass) {
+            var minZoom = funcCheck(entry[0], paramsMap);
+            var maxZoom = funcCheck(entry[1], paramsMap);
+            var styleOptions = funcCheck(entry[2], paramsMap);
+
+            if (tileZoom >= minZoom && tileZoom <= maxZoom && styleOptions is Map) {
+
+              if (styleOptions.containsKey('color'))
+                paint.color = funcCheck(styleOptions['color'], paramsMap);
+              if (styleOptions.containsKey('strokeWidth'))
+                paint.strokeWidth = funcCheck(styleOptions['strokeWidth'], paramsMap);
             }
           }
         }
