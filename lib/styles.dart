@@ -5,7 +5,6 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 
-
 class Styles {
 
   /// https://github.com/mapbox/mapbox-gl-js/issues/4225
@@ -34,7 +33,345 @@ class Styles {
     };
   }
 
-  static Map<String, Map<String, dynamic>> classColorStyles = {
+  static Map<String, Map<String, dynamic>> stadiaClassColorStyles = {
+
+    "default": {
+      'include': true,
+      'default': [ [0, 22, { 'color': Colors.purple, 'strokeWidth': 0.0}],
+      ],
+    },
+
+    "transportation": {
+      'include': true,
+      'default': [ [0, 22, { 'color': Colors.orange, 'strokeWidth': 0.0}],
+        [16, 22, { 'color': Colors.orange, 'strokeWidth': 2.0}],
+      ],
+      'service': [
+        [12, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
+        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+      ],
+      'street': [
+        [15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
+        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+      ],
+      'pedestrian': [
+        [15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
+        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+      ],
+      'street_limited': [
+        [15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
+        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+      ],
+      'motorway': [ [(optionsMap) {return 0;}, (optionsMap){return 11;}, { 'color': Colors.orange, 'strokeWidth': 0.0}],
+        [12, 5, { 'color': Colors.orange.shade200, 'strokeWidth': 3.0}],
+        [14, 22, { 'color': Colors.orange.shade100, 'strokeWidth': 8.0}],
+      ],
+      'motorway_link': [ [0, 11, { 'color': Colors.orange, 'strokeWidth': 0.0}],
+        [12, 15, { 'color': Colors.orange.shade200, 'strokeWidth': 3.0}],
+        [14, 22, { 'color': Colors.orange.shade100, 'strokeWidth': 8.0}],
+      ],
+      'trunk': [ [0, 11, { 'color': Colors.orangeAccent, 'strokeWidth': 0.0}],
+        [12, 15, { 'color': Colors.orange.shade200, 'strokeWidth': 3.0}],
+        [17, 22, { 'color': Colors.orange.shade100, 'strokeWidth': 8.0}],
+      ],
+      'trunk_link': [
+        [0, 11, { 'color': Colors.orangeAccent, 'strokeWidth': 0.0}],
+        [12, 16, { 'color': Colors.orange.shade100, 'strokeWidth': 3.0}],
+        [17, 22, { 'color': Colors.orange.shade100, 'strokeWidth': 8.0}],
+      ],
+      'primary': [
+        [11, 16, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 0.0}],
+        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+      ],
+      'primary_link': [
+        [11, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
+        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+      ],
+      'secondary': [
+        [11, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
+        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+      ],
+      'secondary_link': [
+        [11, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
+        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+      ],
+      'tertiary': [
+        [14, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
+        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+      ],
+      'tertiary_link': [
+        [14, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
+        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+      ],
+      'residential': [
+        [14, 15, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
+        [16, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 5.0}],
+        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 7.0}],
+      ],
+      'path': [ [0, 22, { 'color': Colors.brown.shade400, 'strokeWidth': 2.0}],
+      ],
+      'footway': [ [0, 22, { 'color': Colors.brown.shade400, 'strokeWidth': 2.0}],
+      ],
+      'track': [ [0, 22, { 'color': Colors.brown.shade300, 'strokeWidth': 2.0}],
+      ],
+      'major_rail': [
+        [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
+      'minor': [
+        [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
+      'rail': [
+        [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
+      'minor_rail': [
+        [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
+      'service_rail': [
+        [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
+      'bridge': [
+        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
+      'motorway_construction': [
+        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
+      'minor_construction': [
+        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
+      'path_construction': [
+        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
+      'primary_construction': [
+        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
+      'trunk_construction': [
+        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
+      'construction_construction': [
+        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
+      'tertiary_construction': [
+        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
+      'raceway': [
+        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+      ],
+      'construction': [ [14, 22, { 'color': Colors.brown, 'strokeWidth': 0.0}],
+      ],
+      'ferry': [ [0, 22, { 'color': Colors.blue.shade800, 'strokeWidth': 0.0}],
+      ],
+      'golf': [ [15, 22, { 'color': Colors.brown.shade400, 'strokeWidth': 2.0}],
+      ],
+      'aerialway': [
+        [14, 22, { 'color': Colors.brown.shade400, 'strokeWidth': 2.0}],
+      ],
+      'pier': [ [0, 22, { 'color': Colors.blue.shade800, 'strokeWidth': 0.0}],
+      ],
+      'path_construction': [
+        [14, 22, { 'color': Colors.brown.shade400, 'strokeWidth': 2.0}],
+      ],
+    },
+
+    "landuse": {
+      'include': true,
+      'default':  [ [14, 22, { 'color': Colors.lightGreen,   'strokeWidth': 0.0 } ],
+      ],
+      'airport':  [ [13, 21, { 'color': Colors.grey,        'strokeWidth': 0.0 } ],
+      ],
+      'hospital':  [ [15, 21, { 'color': Colors.grey,        'strokeWidth': 0.0 } ],
+      ],
+      'sand':     [ [12, 21, { 'color': Colors.amber,       'strokeWidth': 0.0 } ],
+      ],
+      'playground':[[14, 22, { 'color': Colors.green.shade400, 'strokeWidth': 0.0 } ],
+      ],
+      'grass':    [ [13, 22, { 'color': Colors.lightGreen, 'strokeWidth': 0.0 } ],
+      ],
+      'park':     [ [13, 22,  { 'color': Colors.lightGreen, 'strokeWidth': 0.0 } ],
+      ],
+      'pitch':     [ [13, 22,  { 'color': Colors.green,     'strokeWidth': 0.0 } ],
+      ],
+      'parking':     [ [14, 22,  { 'color': Colors.green.shade100, 'strokeWidth': 0.0 } ],
+      ],
+      'wood':       [ [10, 22,  { 'color': Colors.green.shade800,   'strokeWidth': 0.0 } ],
+      ],
+      'agriculture':  [ [13, 22,  { 'color': Colors.green.shade700,   'strokeWidth': 0.0 } ],
+      ],
+      'school':     [ [14, 22,  { 'color': Colors.grey,             'strokeWidth': 0.0 } ],
+      ],
+      'scrub':     [ [10, 22,  { 'color': Colors.green.shade600,   'strokeWidth': 0.0 } ],
+      ],
+      'cemetery':   [ [15, 22,  { 'color': Colors.green.shade700,   'strokeWidth': 0.0 } ],
+      ],
+      'rock':       [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'glacier':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'residential':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'industrial':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'retail':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'commercial':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'library':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'track':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'stadium':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'university':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'college':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'bus_station':   [ [12, 22,  { 'color': Colors.grey.shade700,   'strokeWidth': 0.0 } ],
+      ],
+      'railway':   [ [12, 22,  { 'color': Colors.grey.shade700,   'strokeWidth': 0.0 } ],
+      ],
+    },
+
+    "landcover": {
+      'include': true,
+      'default':  [ [14, 22, { 'color': Colors.lightGreen,   'strokeWidth': 0.0 } ],
+      ],
+      'airport':  [ [13, 21, { 'color': Colors.grey,        'strokeWidth': 0.0 } ],
+      ],
+      'hospital':  [ [15, 21, { 'color': Colors.grey,        'strokeWidth': 0.0 } ],
+      ],
+      'sand':     [ [12, 21, { 'color': Colors.amber,       'strokeWidth': 0.0 } ],
+      ],
+      'playground':[[14, 22, { 'color': Colors.green.shade400, 'strokeWidth': 0.0 } ],
+      ],
+      'grass':    [ [13, 22, { 'color': Colors.lightGreen, 'strokeWidth': 0.0 } ],
+      ],
+      'park':     [ [13, 22,  { 'color': Colors.lightGreen, 'strokeWidth': 0.0 } ],
+      ],
+      'pitch':     [ [13, 22,  { 'color': Colors.green,     'strokeWidth': 0.0 } ],
+      ],
+      'parking':     [ [14, 22,  { 'color': Colors.green.shade100, 'strokeWidth': 0.0 } ],
+      ],
+      'wood':       [ [10, 22,  { 'color': Colors.green.shade800,   'strokeWidth': 0.0 } ],
+      ],
+      'agriculture':  [ [13, 22,  { 'color': Colors.green.shade700,   'strokeWidth': 0.0 } ],
+      ],
+      'school':     [ [14, 22,  { 'color': Colors.grey,             'strokeWidth': 0.0 } ],
+      ],
+      'scrub':     [ [10, 22,  { 'color': Colors.green.shade600,   'strokeWidth': 0.0 } ],
+      ],
+      'cemetery':   [ [15, 22,  { 'color': Colors.green.shade700,   'strokeWidth': 0.0 } ],
+      ],
+      'rock':       [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'glacier':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'residential':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'industrial':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
+      ],
+      'farmland':    [ [13, 22, { 'color': Colors.lightGreen, 'strokeWidth': 0.0 } ],
+      ],
+    },
+
+    "water": {
+      'include': true,
+      'default': [ [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
+      ],
+      'lake': [ [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
+      ],
+      'river': [ [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
+      ],
+      'ocean': [ [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
+      ],
+      'dock': [ [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
+      ],
+    },
+
+    "building": {
+      'include': true,
+      'default': [ [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 0.0}],
+      ],
+    },
+
+    "boundary": {
+      'include': true,
+      'default': [ [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 0.0}],
+      ],
+    },
+
+    "park": {
+      'include': true,
+      'default': [ [13, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
+      ],
+      'protected_area': [ [13, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
+      ],
+      'nature_reserve': [ [13, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
+      ],
+    },
+
+    "transportation_name": {
+      'include': true,
+      'default': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'trunk': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'motorway': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'service': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'path': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'footway': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'minor': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'tertiary': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'primary': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'secondary': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'track': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+    },
+
+    "waterway": {
+      'include': true,
+      'default': [ [13, 22, { 'color': Colors.blue.shade700, 'strokeWidth': 0.0}],
+      ],
+      'river': [ [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
+      ],
+      'canal': [ [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
+      ],
+      'stream': [ [14, 22, { 'color': Colors.blue.shade900, 'strokeWidth': 0.0}],
+      ],
+      'stream_intermittent': [ [13, 22, { 'color': Colors.blue.shade900, 'strokeWidth': 0.0}],
+      ],
+      'ditch': [ [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
+      ],
+      'drain': [ [13, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
+      ],
+    },
+
+    "aeroway": {
+      'include': true,
+      'default': [ [12, 22, { 'color': Colors.orange, 'strokeWidth': 0.0}],
+      ],
+      'runway': [ [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 0.0}],
+      ],
+      'taxiway': [ [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 0.0}],
+      ],
+      'helipad': [ [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 0.0}],
+      ],
+      'aerodrome': [ [12, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
+      ],
+      'apron': [ [12, 22, { 'color': Colors.blueGrey.shade700, 'strokeWidth': 0.0}],
+      ],
+    },
+  };
+
+
+
+  static Map<String, Map<String, dynamic>> mapBoxClassColorStyles = {
 
     "default": {
       'include': true,
@@ -57,68 +394,68 @@ class Styles {
                         [16,22, { 'color': Colors.orange, 'strokeWidth' : 2.0 }     ],
       ],
       'service':      [ [12, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
       ],
       'street':       [ [15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
       ],
       'pedestrian':   [ [15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
       ],
       'street_limited':[[15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
       ],
-      'motorway':     [ [9, 22, { 'color': Colors.orange,           'strokeWidth' : 0.0  }     ],
-                        [15,22, { 'color': Colors.orange.shade200, 'strokeWidth' : 3.0 }     ],
-                        [14,22, { 'color': Colors.orange.shade100, 'strokeWidth' : 10.0 }     ],
+      'motorway':     [ [0, 11, { 'color': Colors.orange,           'strokeWidth' : 0.0  }     ],
+                        [12,5, { 'color': Colors.orange.shade200, 'strokeWidth' : 3.0 }     ],
+                        [14,22, { 'color': Colors.orange.shade100, 'strokeWidth' : 8.0 }     ],
       ],
-      'motorway_link':  [ [9, 22, { 'color': Colors.orange,        'strokeWidth' : 0.0  }     ],
-                        [15,22, { 'color': Colors.orange.shade200, 'strokeWidth' : 3.0 }     ],
-                        [14,22, { 'color': Colors.orange.shade100, 'strokeWidth' : 10.0 }     ],
+      'motorway_link':  [ [0, 11, { 'color': Colors.orange,        'strokeWidth' : 0.0  }     ],
+                        [12,15, { 'color': Colors.orange.shade200, 'strokeWidth' : 3.0 }     ],
+                        [14,22, { 'color': Colors.orange.shade100, 'strokeWidth' : 8.0 }     ],
       ],
-      'trunk':        [ [9, 22, { 'color': Colors.orangeAccent,    'strokeWidth' : 0.0  }     ],
-                        [15,22, { 'color': Colors.orange.shade200, 'strokeWidth' : 3.0 }     ],
-                        [17,22, { 'color': Colors.orange.shade100, 'strokeWidth' : 10.0 }     ],
+      'trunk':        [ [0, 11, { 'color': Colors.orangeAccent,    'strokeWidth' : 0.0  }     ],
+                        [12,15, { 'color': Colors.orange.shade200, 'strokeWidth' : 3.0 }     ],
+                        [17,22, { 'color': Colors.orange.shade100, 'strokeWidth' : 8.0 }     ],
       ],
-      'trunk_link':    [[9, 22, { 'color': Colors.orangeAccent,     'strokeWidth' : 0.0  }     ],
-                        [15,22, { 'color': Colors.orange.shade100, 'strokeWidth' : 3.0 }     ],
-                        [17,22, { 'color': Colors.orange.shade100, 'strokeWidth' : 10.0 }     ],
+      'trunk_link':    [[0, 11, { 'color': Colors.orangeAccent,     'strokeWidth' : 0.0  }     ],
+                        [12,16, { 'color': Colors.orange.shade100, 'strokeWidth' : 3.0 }     ],
+                        [17,22, { 'color': Colors.orange.shade100, 'strokeWidth' : 8.0 }     ],
       ],
-      'primary':     [  [12, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+      'primary':     [  [11, 16, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 0.0  }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
       ],
-      'primary_link': [ [12, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 10.0 }     ],
+      'primary_link': [ [11, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
       ],
-      'secondary':   [  [14, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 9.0 }     ],
+      'secondary':   [  [11, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
       ],
-      'secondary_link':[[14, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 9.0 }     ],
+      'secondary_link':[[11, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
       ],
-      'tertiary':     [ [14, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 9.0 }     ],
+      'tertiary':     [ [14, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
       ],
       'tertiary_link': [[14, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }   ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 9.0 }     ],
-      ],
-      'residential':  [ [0, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
-                        [16,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 6.0 }     ],
                         [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
+      ],
+      'residential':  [ [14, 15, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
+                        [16,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 5.0 }     ],
+                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 7.0 }     ],
       ],
       'path':         [ [0, 22, { 'color': Colors.brown.shade400,    'strokeWidth' : 2.0  }     ],
       ],
       'track':        [ [0, 22, { 'color': Colors.brown.shade300,    'strokeWidth' : 2.0  }     ],
       ],
-      'major_rail':   [ [0, 22, { 'color': Colors.blueGrey.shade900, 'strokeWidth' : 1.0  }     ],
+      'major_rail':   [ [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth' : 1.0  }     ],
       ],
-      'minor_rail':   [ [0, 22, { 'color': Colors.blueGrey.shade900, 'strokeWidth' : 1.0  }     ],
+      'minor_rail':   [ [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth' : 1.0  }     ],
       ],
-      'service_rail': [ [0, 22, { 'color': Colors.blueGrey.shade900, 'strokeWidth' : 1.0  }     ],
+      'service_rail': [ [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth' : 1.0  }     ],
       ],
-      'construction': [ [0, 22, { 'color': Colors.brown,              'strokeWidth' : 0.0  }     ],
+      'construction': [ [14, 22, { 'color': Colors.brown,              'strokeWidth' : 0.0  }     ],
       ],
-      'ferry':        [ [0, 22, { 'color': Colors.blue.shade900,      'strokeWidth' : 0.0  }     ],
+      'ferry':        [ [0, 22, { 'color': Colors.blue.shade800,      'strokeWidth' : 0.0  }     ],
       ],
       'golf':         [ [15, 22, { 'color': Colors.brown.shade400,    'strokeWidth' : 2.0  }     ],
       ],
@@ -310,6 +647,10 @@ class Styles {
       ],
       'canal':  [ [15, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
       ],
+      'river':  [ [15, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+      ],
+      'dock':  [ [15, 22, { 'color': Colors.blueGrey, 'strokeWidth': 0.0}],
+      ],
     },
 
     "place_label": {
@@ -427,26 +768,43 @@ class Styles {
 
   };
 
-  static bool includeFeature(layerString, type, thisClass, zoom) { //reduce code...
-    var includeFeature = classColorStyles['default']!['include'];
+  /// We want to give the option of any var being a func to call..
+  static dynamic funcCheck( dynamic checkVar, Map paramMap ) {
+    if(checkVar is Function) return checkVar( paramMap );
+    return checkVar;
+  }
 
-    if(classColorStyles.containsKey(layerString)) {
-      includeFeature = classColorStyles[layerString]!['include'];
+  static bool includeFeature(vectorStyle, layerString, type, featureInfo, zoom, debugOptions) { //reduce code...
 
-      var classOptions = classColorStyles[layerString]!['default'];
+    var thisClass = featureInfo['class'] ?? 'default';
+    var paramsMap = { 'layer': layerString, 'type': type, 'class': thisClass, 'zoom': zoom, 'featureInfo': featureInfo };
 
-      if( classColorStyles[layerString]!.containsKey('types') && classColorStyles[layerString]!['types'].containsKey(type)) { // types match in styling
-        classOptions = classColorStyles[layerString]!['types'][type];
+    var style = funcCheck( vectorStyle, paramsMap);
+    var includeFeature = funcCheck( style['default'], paramsMap )['include'];
 
-      } else if( classColorStyles[layerString]!.containsKey(thisClass) ) { // normal class match in styling
-        classOptions = classColorStyles[layerString]![thisClass];
+    if(!vectorStyle.containsKey(layerString)) layerString = 'default';
+
+    if(vectorStyle.containsKey(layerString)) {
+      var layerStyle = funcCheck( vectorStyle[layerString], paramsMap );
+
+      includeFeature = funcCheck( layerStyle!['include'], paramsMap );
+      var classOptions = funcCheck( layerStyle!['default'], paramsMap );
+
+      if( layerStyle!.containsKey('types') && layerStyle!['types'].containsKey(type)) { // types match in styling
+        classOptions = funcCheck( layerStyle!['types'][type], paramsMap );
+
+      } else if( layerStyle!.containsKey(thisClass) ) { // normal class match in styling
+        classOptions = funcCheck( layerStyle![thisClass], paramsMap );
       }
 
       if( includeFeature && classOptions is List ) {
         var listIncludes = false;
-        //print("Checking $layerString $type $thisClass ");
+
         for( var entry in classOptions ) {
-          if( zoom >= entry[0] && zoom <= entry[1]) {
+          var minZoom = funcCheck( entry[0], paramsMap );
+          var maxZoom = funcCheck( entry[1], paramsMap );
+
+          if( zoom >= minZoom && zoom <= maxZoom ) {
             listIncludes = true; // we have at least one entry for this zoom
             break;
           }
@@ -457,10 +815,13 @@ class Styles {
       }
     }
 
-    return includeFeature;
+  return funcCheck( includeFeature, paramsMap );
   }
 
-  static Paint getStyle(layerString, type, className, tileZoom, scale, diffRatio) {
+  static Paint getStyle(style, featureInfo, layerString, type, tileZoom, scale, diffRatio, debugOptions) {
+    var paramsMap = { 'layer': layerString, 'type': type, 'zoom': tileZoom, 'diffRatio': diffRatio, 'featureInfo': featureInfo };
+
+    var className = featureInfo['class'] ?? 'default';
 
     var paint = Paint()
       ..style = PaintingStyle.stroke
@@ -468,46 +829,52 @@ class Styles {
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round
       ..isAntiAlias = false;
-    var styleInfo = classColorStyles;
 
     if(type == 'LINESTRING' || type == 'line') paint.style = PaintingStyle.stroke; // are roads filled ?
     if(type == 'POLYGON'    || type == 'fill') paint.style = PaintingStyle.fill;
 
     bool matchedFeature = false;
+    Map vectorStyle = funcCheck(style, paramsMap);
 
-    if(styleInfo.containsKey(layerString)) {
-      Map<String, dynamic>? layerClass = styleInfo[layerString] ?? styleInfo['default'];
-      List<List<dynamic>>? featureClass = styleInfo['default']?['default'];
+    if(!vectorStyle.containsKey(layerString)) layerString = 'default';
+
+    if(vectorStyle.containsKey(layerString)) {
+      Map<String, dynamic>? layerClass = funcCheck(vectorStyle[layerString],paramsMap) ?? funcCheck(vectorStyle['default'], paramsMap);
+      List<List<dynamic>>? featureClass = funcCheck(vectorStyle['default'],paramsMap)?['default'];
 
       if (layerClass != null) {
         if (layerClass.containsKey('types') &&
             layerClass['types'].containsKey(className)) {
-          featureClass = layerClass['types'][className];
+          featureClass = funcCheck(layerClass['types'][className], paramsMap);
           matchedFeature = true;
         }
       }
 
       if (layerClass != null && layerClass.containsKey(className)) {
-        featureClass = layerClass[className];
+        featureClass = funcCheck(layerClass[className], paramsMap);
         matchedFeature = true;
       }
 
       if (featureClass is List) {
         if( featureClass != null) {
-          for (var list in featureClass) {
-            if (tileZoom >= list[0] && tileZoom <= list[1] && list[2] is Map) {
-              Map options = list[2];
-              if (options.containsKey('color'))
-                paint.color = options['color'];
-              if (list[2].containsKey('strokeWidth'))
-                paint.strokeWidth = options['strokeWidth'];
+          for (var entry in featureClass) {
+            var minZoom = funcCheck(entry[0], paramsMap);
+            var maxZoom = funcCheck(entry[1], paramsMap);
+            var styleOptions = funcCheck(entry[2], paramsMap);
+
+            if (tileZoom >= minZoom && tileZoom <= maxZoom && styleOptions is Map) {
+
+              if (styleOptions.containsKey('color'))
+                paint.color = funcCheck(styleOptions['color'], paramsMap);
+              if (styleOptions.containsKey('strokeWidth'))
+                paint.strokeWidth = funcCheck(styleOptions['strokeWidth'], paramsMap);
             }
           }
         }
       }
     }
 
-    if(!matchedFeature) print ("$layerString $type $className $tileZoom not found");
+    if(!matchedFeature && debugOptions.missingFeatures) print ("$layerString $type $className $tileZoom not found");
 
     paint.strokeWidth =  (paint.strokeWidth / scale); ///.ceilToDouble();
 

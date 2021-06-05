@@ -41,13 +41,14 @@ class GeomStore {
 
 class PathInfo {
   dartui.Path path;
-  String pclass;
-  String type;
-  String layerString;
-  int count;
+  String pclass = "default";
+  String type = "default";
+  String layerString = "default";
+  int count = 0;
   Paint? style;
+  Map featureInfo;
 
-  PathInfo(this.path, this.pclass, this.type, this.layerString, this.count);
+  PathInfo(this.path, this.pclass, this.type, this.layerString, this.featureInfo, this.count);
 }
 
 class PositionInfo {
@@ -113,7 +114,7 @@ class MapboxTile {
     map[ key ] = map.containsKey(key) ? map[ key ]++ : 1;
   }
 
-  static void decode( coordsKey, VTCache cachedInfo, options, vectorStyles, tileZoom, DebugOptions debugOptions ) {
+  static void decode( coordsKey, VTCache cachedInfo, options, vectorStyle, tileZoom, DebugOptions debugOptions ) {
 
     Map<GeomType,List> fullGeomMap = { GeomType.linestring: [], GeomType.polygon: [], GeomType.point:  []}; /// I don't know if we will want this..may be better to separate into roads, labels, paths etc...?
     Map<String, int> includeSummary = {};
@@ -137,8 +138,6 @@ class MapboxTile {
         return (layerOrderMap[ a.name ] ?? 15).compareTo(
             layerOrderMap[ b.name ] ?? 15);
       });
-
-
     }
 
     Map layerSummary = {};
@@ -158,16 +157,13 @@ class MapboxTile {
         layerSummary[layerString] = 0;
       }
 
-      var command = '';
-
-      dartui.Path? path;
-      List<Offset> pointList = [];
-
       for (var feature in layer.features) {
-
         var featureInfo = {};
         var item; // path or point
         var point;
+        dartui.Path? path;
+        List<Offset> pointList = [];
+        var command = '';
 
         for (var tagIndex = 0; tagIndex < feature.tags.length; tagIndex += 2) {
           var valIndex = feature.tags[tagIndex + 1];
@@ -184,7 +180,6 @@ class MapboxTile {
 
           featureInfo[layer.keys[feature.tags[tagIndex]]] = val;
         }
-
 
         List<Offset> polyPoints = [];
 
@@ -219,7 +214,9 @@ class MapboxTile {
 
               if (feature.type.toString() == 'POLYGON') {
                 if (path == null) path = dartui.Path();
+
                 path.addPolygon(polyPoints, true);
+
                 tileStats.polys++;
                 polyPoints = [];
                 geomType = GeomType.polygon;
@@ -288,7 +285,6 @@ class MapboxTile {
                 tileStats.polyPoints++;
                 geomType = GeomType.polygon;
               } else if (type == 'LINESTRING') {
-
                 path?.lineTo(ncx, ncy);
                 tileStats.linePoints++;
                 geomType = GeomType.linestring;
@@ -305,7 +301,7 @@ class MapboxTile {
         /// Note "type" is a bit confusing, as there seems to be a feature type eg "track",
         /// and a shape type eg "LINESTRING" when decoding
 
-        var includeFeature = Styles.includeFeature(layerString, type, featureInfo['class'], tileZoom);
+        var includeFeature = Styles.includeFeature(vectorStyle, layerString, type, featureInfo, tileZoom, debugOptions);
         var thisClass = featureInfo['class'] ?? 'default';
 
         var key = "L:$layerString>T:$type>C:$thisClass";
@@ -336,7 +332,7 @@ class MapboxTile {
             /// otherwise water can end up on top of a road for example
 
             if(!pathMap.containsKey(key)) {
-              pathMap[key] = PathInfo(dartui.Path(), thisClass, type, layerString, 1 );
+              pathMap[key] = PathInfo(dartui.Path(), thisClass, type, layerString, featureInfo, 1 );
             }
 
             pathMap[key]?.path.addPath(path, Offset(0, 0));
@@ -346,8 +342,9 @@ class MapboxTile {
           } else {
             if( debugOptions.featureSummary ) summaryAdd(summaryKey, excludeSummary);
           }
-          path = null;
         }
+
+        path = null;
       }
 
       cachedInfo.geomInfo?.pathStore.add(pathMap);
@@ -359,9 +356,10 @@ class MapboxTile {
 
       for(var pointInfo in labelPointlist) {
         var layerString = pointInfo[1];
+        var featureInfo = pointInfo[2]; // redo this to a class ?
 
         var thisClass = pointInfo[2]['class'] ?? 'default';
-        var includeFeature = Styles.includeFeature(layerString, pointInfo[2]['type'], thisClass, tileZoom);
+        var includeFeature = Styles.includeFeature(vectorStyle, layerString, pointInfo[2]['type'], featureInfo, tileZoom, debugOptions);
         var summaryKey = "L:" + layerString + "_C:" + thisClass +"_Z:" + tileZoom.toString();
 
         if( includeFeature ) {
@@ -435,6 +433,7 @@ class VectorPainter extends CustomPainter {
   final rotation;
   final Optimisations optimisations;
   final useImages;
+  final vectorStyle;
 
   static Map<String, Map<String, Label>> cachedLabelsPerTile = {};
   static DateTime timeSinceLastClean = DateTime.now();
@@ -451,7 +450,7 @@ class VectorPainter extends CustomPainter {
   VectorPainter(Offset this.dimensions, double this.rotation,
       List<VTile> this.tilesToRender, this.tileZoom,
       this.cachedVectorDataMap, this.underZoom, this.usePerspective,
-      this.debugOptions, this.optimisations, this.useImages);
+      this.debugOptions, this.optimisations, this.useImages, this.vectorStyle);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -460,6 +459,8 @@ class VectorPainter extends CustomPainter {
     var isRotated = false;
     if (widgetRotation != 0.0) isRotated = true;
     widgetRotation = widgetRotation % 360;
+
+    print("$tileZoom");
 
     var devicePerspectiveAngle = DartMath.atan2(size.width / 2, size.height) *
         57.2958;
@@ -503,12 +504,16 @@ class VectorPainter extends CustomPainter {
       canvas.save();
       canvas.transform(matrix.storage);
 
-      // May need to clip off the tile if there are overlapping problems with joining
-      // paths. This may help, but it makes any perspective clipping difficult as its not a rect
-      // unless we clip/draw on a transformed canvas or something fiddly
-      // leaving this code here, just to think about, it doesn't really work
+      /// clip prevents the odd clashing artifact with overlapping tiles features
+      Rect myRect = Offset(0,0) & Size(256.0,256.0);
+      canvas.clipRect(myRect);
 
-      // var clipOffset = Offset(pos['pos'].x, pos['pos'].y);
+      //if we need a clip that isn't already transformed, we can use below..
+      //if( pos != null) {
+      //  var adjustedSize = Offset(256.0, 256.0).scale(pos.scale, pos.scale);
+      //  Rect myRect = Offset(pos.point.x.toDouble(), pos.point.y.toDouble()) & Size(adjustedSize.dx, adjustedSize.dy);
+      //  canvas.clipRect(myRect);
+      //}
       // var adjustedSize = Offset(256.0, 256.0).scale(pos['scale'], pos['scale']);
 
       // Rect myRect = Offset(pos['pos'].x, pos['pos'].y) & Size(adjustedSize.dx, adjustedSize.dy);
@@ -524,26 +529,22 @@ class VectorPainter extends CustomPainter {
           if (pathMap?.path != null) {
             // cache style if we can to save lookups, we may want to add
             // a method to reload new styles in though
-            var style = pathMap?.style ?? Styles.getStyle(
-                pathMap?.layerString, pathMap?.type, pathMap?.pclass, tileZoom,
-                pos?.scale, 2);
-
-
-
-
-            ///canvas.drawPath( pathMap.path.transform(matrix.storage), style );
+            var style = pathMap?.style ?? Styles.getStyle(vectorStyle, pathMap?.featureInfo,
+                pathMap?.layerString, pathMap?.type, tileZoom,
+                pos?.scale, 2, debugOptions);
 
             /// if we've pinchzooming, use thin lines for speed
             var oldStrokeWidth = style.strokeWidth;
             if (optimisations.pinchZoom) style.strokeWidth = 0.0;
-            if( pathMap != null)
+
+            if( pathMap != null) {
               canvas.drawPath(pathMap.path, style);
-            style.strokeWidth = oldStrokeWidth;
+              style.strokeWidth = oldStrokeWidth;
+            }
           }
         }
       }
       if (debugOptions.tiles) {
-        /// display tile square and coords
         _debugTiles(canvas, tile);
       }
 
@@ -733,7 +734,7 @@ class VectorPainter extends CustomPainter {
         fit: BoxFit.fitWidth,
         alignment: Alignment.topLeft,
         filterQuality: FilterQuality.medium,
-        isAntiAlias: true,
+        isAntiAlias: false, // true will give unwanted visible tile edges
         image: image);
   }
 
@@ -761,7 +762,7 @@ class VectorPainter extends CustomPainter {
   void _updateLabelBounding(Label label) {
     var widthFactor = 9.0; // how big as a ratio of text to size up
     var labelLength = label.text.length;
-    var padding = 5.0;
+    var padding = 10.0;
 
     var tp = label.transformedPoint;
     if( tp != null ) {
