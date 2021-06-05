@@ -37,6 +37,7 @@ dependencies:
   #latlong2: any
   http: ^0.13.2
   flutter_cache_manager: any
+  simplify_dart: any
 
 dev_dependencies:
   flutter_test:

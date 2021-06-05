@@ -13,6 +13,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:vector_math/vector_math_64.dart' as VectorMath hide Colors;
 import 'dart:math' as DartMath;
 import 'package:flutter/painting.dart';
+import 'package:flutter_map_vector_tile/custom_path.dart';
 
 const RADTODEG = 57.2958;
 const DEGTORAD = 0.0174533;
@@ -162,6 +163,7 @@ class MapboxTile {
         var item; // path or point
         var point;
         dartui.Path? path;
+        SuperPath? superPath;
         List<Offset> pointList = [];
         var command = '';
 
@@ -250,8 +252,12 @@ class MapboxTile {
                 geomType = GeomType.polygon;
 
               } else if (type == 'LINESTRING') {
-                if (path == null) path = dartui.Path();
-                path.moveTo(ncx, ncy);
+                if (path == null) {
+                  path = dartui.Path();
+                  superPath = SuperPath();
+                }
+                ///path.moveTo(ncx, ncy);
+                superPath?.moveTo(ncx,ncy);
                 geomType = GeomType.linestring;
 
               } else if (type == 'POINT') {
@@ -285,7 +291,8 @@ class MapboxTile {
                 tileStats.polyPoints++;
                 geomType = GeomType.polygon;
               } else if (type == 'LINESTRING') {
-                path?.lineTo(ncx, ncy);
+                ///path?.lineTo(ncx, ncy);
+                superPath?.lineTo(ncx,ncy);
                 tileStats.linePoints++;
                 geomType = GeomType.linestring;
               }
@@ -335,7 +342,12 @@ class MapboxTile {
               pathMap[key] = PathInfo(dartui.Path(), thisClass, type, layerString, featureInfo, 1 );
             }
 
+            ///pathMap[key]?.path.addPath(path, Offset(0, 0));
+            if(superPath != null)
+              pathMap[key]?.path.addPath(superPath.getPath(tolerance: 3.0), Offset(0, 0));
+
             pathMap[key]?.path.addPath(path, Offset(0, 0));
+
             pathMap[key]?.count++;
             tileStats.paths++;
             if( debugOptions.featureSummary ) summaryAdd(summaryKey, includeSummary);
@@ -345,6 +357,7 @@ class MapboxTile {
         }
 
         path = null;
+        superPath = null;
       }
 
       cachedInfo.geomInfo?.pathStore.add(pathMap);
