@@ -158,7 +158,6 @@ class MapboxTile {
       }
 
       for (var feature in layer.features) {
-
         var featureInfo = {};
         var item; // path or point
         var point;
@@ -181,7 +180,6 @@ class MapboxTile {
 
           featureInfo[layer.keys[feature.tags[tagIndex]]] = val;
         }
-
 
         List<Offset> polyPoints = [];
 
@@ -287,7 +285,6 @@ class MapboxTile {
                 tileStats.polyPoints++;
                 geomType = GeomType.polygon;
               } else if (type == 'LINESTRING') {
-
                 path?.lineTo(ncx, ncy);
                 tileStats.linePoints++;
                 geomType = GeomType.linestring;
