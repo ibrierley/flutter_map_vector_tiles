@@ -13,6 +13,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:vector_math/vector_math_64.dart' as VectorMath hide Colors;
 import 'dart:math' as DartMath;
 import 'package:flutter/painting.dart';
+//import 'package:geojson/geojson.dart';
+import 'package:geojson_vi/geojson_vi.dart';
 
 const RADTODEG = 57.2958;
 const DEGTORAD = 0.0174533;
@@ -69,8 +71,9 @@ class VTCache {
   PositionInfo? positionInfo;
   GeomStore? geomInfo;
   dartui.Image? image;
+  DateTime lastUsed;
 
-  VTCache( this.units, this.state, this.coordsKey, this.tileZoom, this.geomInfo);
+  VTCache( this.units, this.state, this.coordsKey, this.tileZoom, this.geomInfo, this.lastUsed);
 }
 
 class Road {
@@ -107,6 +110,8 @@ class TileStats {
   TileStats();
   void dump() { print("labels: ${this.labels}, paths: ${this.paths}, polys: ${this.polys}, labelPoints: ${this.labelPoints}, polyPoints ${this.polyPoints}, linePoints: ${this.linePoints}"); }
 }
+
+
 
 class MapboxTile {
 
@@ -398,7 +403,7 @@ class MapboxTile {
           }
         }
 
-        if(road.text != null && halfway != null)
+        if(halfway != null)
           cachedInfo.geomInfo?.labels.add(
               Label( text: road.text, point: halfway.position, textPainter: getNewPainter(road.text),
                   dedupeKey: road.text + '|' + coordsKey, priority: 3,
@@ -434,6 +439,7 @@ class VectorPainter extends CustomPainter {
   final Optimisations optimisations;
   final useImages;
   final vectorStyle;
+  final geoJson;
 
   static Map<String, Map<String, Label>> cachedLabelsPerTile = {};
   static DateTime timeSinceLastClean = DateTime.now();
@@ -450,7 +456,7 @@ class VectorPainter extends CustomPainter {
   VectorPainter(Offset this.dimensions, double this.rotation,
       List<VTile> this.tilesToRender, this.tileZoom,
       this.cachedVectorDataMap, this.underZoom, this.usePerspective,
-      this.debugOptions, this.optimisations, this.useImages, this.vectorStyle);
+      this.debugOptions, this.optimisations, this.useImages, this.vectorStyle, this.geoJson);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -459,8 +465,6 @@ class VectorPainter extends CustomPainter {
     var isRotated = false;
     if (widgetRotation != 0.0) isRotated = true;
     widgetRotation = widgetRotation % 360;
-
-    print("$tileZoom");
 
     var devicePerspectiveAngle = DartMath.atan2(size.width / 2, size.height) *
         57.2958;
@@ -601,6 +605,24 @@ class VectorPainter extends CustomPainter {
         _updateLabelBounding(label);
       }
     }
+    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    if(geoJson != null) {
+      print("herexxxx $geoJson");
+      var paths = geoJson['paths'];
+      var paint = Paint();
+      paint.color = Colors.green;
+      paint.style = PaintingStyle.stroke;
+      paint.strokeWidth = 3.0;
+      if( paths != null) {
+        print("Paths is $paths");
+        for (var feature in paths) {
+          print("Drawing feature");
+          canvas.drawPath(feature, paint);
+        }
+      }
+    }
+
+
 
     _orderLabelsAndDraw(
         wantedLabels, hiPriQueue, canvas, pointPaint, widgetRotation,
@@ -882,3 +904,4 @@ TextPainter getNewPainter(String text) {
     ..layout(minWidth: 0, maxWidth: double.infinity)
     ..text = textSpan;
 }
+

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as dartui;
+import 'dart:ui';
 import 'package:flutter/foundation.dart';
 
 import 'package:flutter/material.dart';
@@ -20,6 +21,97 @@ import 'package:transparent_image/transparent_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_map_vector_tile/styles.dart';
 
+class Geo {
+  Geo();
+
+  Map process() {
+    var json = {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [102.0, 0.5]
+          },
+          "properties": {
+            "prop0": "value0"
+          }
+        },
+        {
+          "type": "Feature",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0]
+            ]
+          },
+          "properties": {
+            "prop0": "value0",
+            "prop1": 0.0
+          }
+        },
+        {
+          "type": "Feature",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
+                [100.0, 1.0], [100.0, 0.0]
+              ]
+            ]
+          },
+          "properties": {
+            "prop0": "value0",
+            "prop1": { "this": "that" }
+          }
+        }
+      ]
+    };
+
+    var features;
+    if( json.containsKey('type') && json['type'] == 'FeatureCollection') {
+      features = json['features'];
+    } else {
+      features = [ json['feature'] ];
+    }
+    dartui.Path superPath = dartui.Path();
+    List<dartui.Path> pathList = [];
+
+    print("$json");
+    print("$features");
+
+    for( var feature in features) {
+      print("have feature $feature");
+      if( feature.containsKey('geometry') ) {
+        print("Have geom");
+        var geom = feature['geometry'];
+        if( geom['type'] == "Polygon") {
+          for (var ring in geom["coordinates"]) {
+            print("Have ring $ring");
+            List<Offset> pointsList = [];
+            for (List coord in ring) { // need to handle multi rings
+              pointsList.add(Offset(coord[0], coord[1]));
+            }
+            print("Here $pointsList");
+            superPath.addPolygon(pointsList, true);
+            pathList.add(dartui.Path()..addPolygon(pointsList, true));
+          }
+        }
+      }
+    }
+    print("pathList $pathList");
+
+    var geoList = {
+      'paths': pathList,
+      'superPath': superPath,
+    };
+    return geoList;
+
+  }
+}
+
 class VectorWidget extends StatefulWidget {
   final rotation;
   final cachedVectorDataMap;
@@ -31,6 +123,7 @@ class VectorWidget extends StatefulWidget {
   final optimisations;
   final useImages;
   Map vectorStyle;
+  Map geoJson;
 
   VectorWidget(
       this.rotation,
@@ -43,6 +136,7 @@ class VectorWidget extends StatefulWidget {
       this.optimisations,
       this.useImages,
       this.vectorStyle,
+      this.geoJson,
       );
 
   @override
@@ -69,7 +163,7 @@ class _VectorWidgetState extends State<VectorWidget> {
             isComplex: true, //Tells flutter to cache the painter.
             painter: VectorPainter( dimensions, widget.rotation, widget.tilesToRender, widget.tileZoom,
                 widget.cachedVectorDataMap, widget.underZoom, widget.usePerspective,
-                widget.debugOptions, widget.optimisations, widget.useImages, widget.vectorStyle ) )
+                widget.debugOptions, widget.optimisations, widget.useImages, widget.vectorStyle, widget.geoJson ) )
        )
     );
 
@@ -129,7 +223,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
   final Map<double, VectorLevel> _levels = {};
 
-  Map<String, VTCache>_cachedVectorData = {};
+  Map<String, VTCache> _cachedVectorData = {};
   Timer? _housekeepingTimer;
 
   Map<String, DateTime> _outstandingTileLoads = {};
@@ -144,8 +238,14 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   late Optimisations optimisations;
   late DebugOptions debugOptions;
 
+  late Map geoJson;
+
   @override
   void initState() {
+
+
+    geoJson = Geo().process();
+
     vectorOptions = widget.vectorTileLayerOptions;
     optimisations = vectorOptions.optimisations ?? Optimisations();
     debugOptions = vectorOptions.debugOptions ?? DebugOptions();
@@ -219,6 +319,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     var _tiles = {};
     var _haveBackupTileMap = {};
     Map levelupCoordsMap = {};
+
+    _tidyOldTileListEntries();
 
     /// Just a little bit of housekeeping we don't need to run too much
     /// to keep an eye on old tiles in a completed tile check
@@ -378,7 +480,9 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     var allTilesToRender = backupTilesToRender + tilesToRender;
 
     for (var tile in allTilesToRender) {
-      _cachedVectorData[_tileCoordsToKey(tile.coords)]?.positionInfo = _createTilePositionInfo(tile); /// need to recreate backup tile info on diff zoom...
+      var coordsKey = _tileCoordsToKey(tile.coords);
+      _cachedVectorData[coordsKey]?.positionInfo = _createTilePositionInfo(tile); /// need to recreate backup tile info on diff zoom...
+      _cachedVectorData[coordsKey]?.lastUsed = DateTime.now();
     }
 
     var vectorStyle = vectorOptions.vectorStyle ?? Styles.mapBoxClassColorStyles;
@@ -387,7 +491,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
            color: Colors.blueGrey,
          child: VectorWidget(widget.mapState.rotation, _cachedVectorData, allTilesToRender, _tileZoom, underZoom,
              vectorOptions.usePerspective, vectorOptions.debugOptions ?? DebugOptions(),
-             optimisations, vectorOptions.useImages, vectorStyle  )
+             optimisations, vectorOptions.useImages, vectorStyle, geoJson  )
      );
   }
 
@@ -428,7 +532,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       List<Label> labelList = [];
       if(!_cachedVectorData.containsKey(coordsKey)) {
         _cachedVectorData[coordsKey] = VTCache( /// hmm this is a bit of a mess, needs some refactoring
-          null, 'gettingHttp', coordsKey, _tileZoom, GeomStore([], labelList, [], [])
+          null, 'gettingHttp', coordsKey, _tileZoom, GeomStore([], labelList, [], []), DateTime.now()
         );
 
       }
@@ -632,18 +736,51 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
   void _tidyOldTileListEntries() {
 
+
+    print("Tidying...${_recentTilesCompleted.keys.length}");
+    print("VectorCache ${_cachedVectorData.keys.length}");
+    ///_recentTilesCompleted.removeWhere((key, timeCompleted) => DateTime.now().difference(timeCompleted).inSeconds >= 2);
+
+    var expiryTimeIfFullSeconds = 5;
+    var keepTileCount = 500;
+    var keepTileCountIfOld = 50;
+    var keepTileCountMinutesIfOld = 60;
+    Map markedForRemoval = {};
+
+    List<String> sortedTileKeys = _cachedVectorData.keys.toList();
+    sortedTileKeys.sort((a,b){
+      var aLastUsed = _cachedVectorData[a]?.lastUsed ?? DateTime.now();
+      var bLastUsed = _cachedVectorData[b]?.lastUsed ?? DateTime.now();
+      return aLastUsed.compareTo(bLastUsed);
+    });
+
+    sortedTileKeys.forEach((tileKey) {
+      var lastUsed = _cachedVectorData[tileKey]?.lastUsed ?? DateTime.now();
+      if(((DateTime.now().difference(lastUsed).inSeconds >= expiryTimeIfFullSeconds) && (
+          _cachedVectorData.length - markedForRemoval.length > keepTileCount
+      )) || ((DateTime.now().difference(lastUsed).inMinutes >= keepTileCountMinutesIfOld) && (
+          _cachedVectorData.length - markedForRemoval.length > keepTileCountIfOld
+      ))) {
+        markedForRemoval[tileKey] = true;
+      }
+    });
+
+    _cachedVectorData.removeWhere((key,_) => markedForRemoval[key] == true);
+    _recentTilesCompleted.removeWhere((key,_) => markedForRemoval[key] == true);
+
+
     /// We don't want to consider a tile outstanding forever, but it may vary
     /// We could tie it into some tileretry/timeout setting somewhere, but that
     /// may be quite tricky, so currently we'll suggest 1 day. It will get removed
     /// if the tile is tried another time and completed.
     _outstandingTileLoads.removeWhere((key, timeCompleted) =>
-    DateTime.now().difference(timeCompleted).inMinutes >= 1440);
+    DateTime.now().difference(timeCompleted).inMinutes >= 5);
 
     /// We only want to try and use our retries within a reasonable session
     /// So we'll assume people will be fine with a reset of our retries every
     /// day
-    _recentTilesCompleted.removeWhere((key, timeCompleted) =>
-    DateTime.now().difference(timeCompleted).inMinutes >= 1440);
+    //_recentTilesCompleted.removeWhere((key, timeCompleted) =>
+    //DateTime.now().difference(timeCompleted).inMinutes >= 1440);
   }
 
   Coords _wrapCoords(Coords coords) {
