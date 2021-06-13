@@ -774,9 +774,16 @@ class Styles {
     return checkVar;
   }
 
-  static bool includeFeature(vectorStyle, layerString, type, featureInfo, zoom, debugOptions) { //reduce code...
 
-    var thisClass = featureInfo['class'] ?? 'default';
+  static bool includeFeature(vectorStyle, layerString, type, featureInfo, zoom) { //reduce code...
+
+    var thisClass;
+    if(featureInfo?.containsKey('properties')) {
+      thisClass = featureInfo['properties']['class'] ?? 'default';
+    } else {
+      thisClass = featureInfo['class'] ?? 'default';
+    }
+
     var paramsMap = { 'layer': layerString, 'type': type, 'class': thisClass, 'zoom': zoom, 'featureInfo': featureInfo };
 
     var style = funcCheck( vectorStyle, paramsMap);
@@ -815,10 +822,10 @@ class Styles {
       }
     }
 
-  return funcCheck( includeFeature, paramsMap );
+    return funcCheck( includeFeature, paramsMap );
   }
 
-  static Paint getStyle(style, featureInfo, layerString, type, tileZoom, scale, diffRatio, debugOptions) {
+  static Paint getStyle(style, featureInfo, layerString, type, tileZoom, scale, diffRatio) {
     var paramsMap = { 'layer': layerString, 'type': type, 'zoom': tileZoom, 'diffRatio': diffRatio, 'featureInfo': featureInfo };
 
     var className = featureInfo['class'] ?? 'default';
@@ -874,7 +881,7 @@ class Styles {
       }
     }
 
-    if(!matchedFeature && debugOptions.missingFeatures) print ("$layerString $type $className $tileZoom not found");
+    ///if(!matchedFeature && debugOptions.missingFeatures) print ("$layerString $type $className $tileZoom not found");
 
     paint.strokeWidth =  (paint.strokeWidth / scale); ///.ceilToDouble();
 

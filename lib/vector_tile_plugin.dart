@@ -99,7 +99,7 @@ class Label {
   bool isRoad;
   bool keepUpright = true;
   double angle;
-  int priority = 3;
+  int priority = 1; // 0-2 atm
   TextPainter textPainter;
   Label( {required this.text, required this.point, required this.textPainter,
     required this.dedupeKey, required this.priority, required this.coordsKey,  this.isRoad = false, this.angle = 0.0 } );
@@ -266,13 +266,13 @@ class MapboxTile {
 
                 var dedupeKey = featureInfo['name'] ?? point.toString();
                 dedupeKey += '_' + coordsKey;
-                var priority = 1; // 1 is best priority
+                var priority = 0; // 0 is best priority
 
                 /// We want a poi or a shop label to appear rather than a housenum if poss
                 if(layer.name == "housenum_label") {
                   featureInfo['name'] = featureInfo['house_num'];
                   dedupeKey = "${featureInfo['name']}|$point";
-                  priority = 9;
+                  priority = 2;
                 }
 
                 labelPointlist.add([ point, layer.name, featureInfo, dedupeKey, priority ]);  /// May want to add a style here, to draw last thing..., move into a class
@@ -306,7 +306,7 @@ class MapboxTile {
         /// Note "type" is a bit confusing, as there seems to be a feature type eg "track",
         /// and a shape type eg "LINESTRING" when decoding
 
-        var includeFeature = Styles.includeFeature(vectorStyle, layerString, type, featureInfo, tileZoom, debugOptions);
+        var includeFeature = Styles.includeFeature(vectorStyle, layerString, type, featureInfo, tileZoom);
         var thisClass = featureInfo['class'] ?? 'default';
 
         var key = "L:$layerString>T:$type>C:$thisClass";
@@ -357,14 +357,14 @@ class MapboxTile {
     } // layer
 
 
-    if(!options.containsKey('noLabels') && labelPointlist.length != null) {
+    if(!options.containsKey('noLabels')) {
 
       for(var pointInfo in labelPointlist) {
         var layerString = pointInfo[1];
         var featureInfo = pointInfo[2]; // redo this to a class ?
 
         var thisClass = pointInfo[2]['class'] ?? 'default';
-        var includeFeature = Styles.includeFeature(vectorStyle, layerString, pointInfo[2]['type'], featureInfo, tileZoom, debugOptions);
+        var includeFeature = Styles.includeFeature(vectorStyle, layerString, pointInfo[2]['type'], featureInfo, tileZoom);
         var summaryKey = "L:" + layerString + "_C:" + thisClass +"_Z:" + tileZoom.toString();
 
         if( includeFeature ) {
@@ -406,7 +406,7 @@ class MapboxTile {
         if(halfway != null)
           cachedInfo.geomInfo?.labels.add(
               Label( text: road.text, point: halfway.position, textPainter: getNewPainter(road.text),
-                  dedupeKey: road.text + '|' + coordsKey, priority: 3,
+                  dedupeKey: road.text + '|' + coordsKey, priority: 2,
                   coordsKey: coordsKey, angle: halfway.angle, isRoad: true ) ); /// use named params and a class for pointInfo
 
       }
@@ -500,6 +500,8 @@ class VectorPainter extends CustomPainter {
         continue;
       }
 
+
+
       Matrix4 matrix = Matrix4.identity();
       if(pos != null)
         matrix..translate(pos.point.x.toDouble(), pos.point.y.toDouble())
@@ -535,13 +537,14 @@ class VectorPainter extends CustomPainter {
             // a method to reload new styles in though
             var style = pathMap?.style ?? Styles.getStyle(vectorStyle, pathMap?.featureInfo,
                 pathMap?.layerString, pathMap?.type, tileZoom,
-                pos?.scale, 2, debugOptions);
+                pos?.scale, 2);
 
             /// if we've pinchzooming, use thin lines for speed
             var oldStrokeWidth = style.strokeWidth;
             if (optimisations.pinchZoom) style.strokeWidth = 0.0;
 
             if( pathMap != null) {
+              ///canvas.drawPath(pathMap.path.transform(matrix.storage), style);
               canvas.drawPath(pathMap.path, style);
               style.strokeWidth = oldStrokeWidth;
             }
@@ -622,8 +625,6 @@ class VectorPainter extends CustomPainter {
       }
     }
 
-
-
     _orderLabelsAndDraw(
         wantedLabels, hiPriQueue, canvas, pointPaint, widgetRotation,
         isRotated);
@@ -639,6 +640,9 @@ class VectorPainter extends CustomPainter {
   void _orderLabelsAndDraw(wantedLabels, hiPriQueue, canvas, pointPaint,
       widgetRotation, isRotated) {
 
+    ///print("Wanted ${wantedLabels.length}, Prev ${prevLabels.length}");
+    var start = DateTime.now();
+
     Map qMap = {};
     for (var label in prevLabels) {
       if (wantedLabels.containsKey(label.dedupeKey)) {
@@ -649,13 +653,18 @@ class VectorPainter extends CustomPainter {
       }
     }
 
-    List<Label> nextQ = [];
+    List<List<Label>> priorityQ = [[],[],[]];
     for (var dedupeKey in wantedLabels.keys) {
       if (qMap.containsKey(dedupeKey)) {
         continue;
       }
-      nextQ.add(wantedLabels[dedupeKey]);
+      priorityQ[wantedLabels[dedupeKey].priority].add(wantedLabels[dedupeKey]);
     }
+
+    var nextQ = [...priorityQ[0], ...priorityQ[1], ...priorityQ[2]];
+
+    /*
+    var p2 = DateTime.now().difference(start).inMicroseconds;
 
     nextQ.sort((a, b) {
       int cmp = a.priority.compareTo(b.priority);
@@ -665,16 +674,21 @@ class VectorPainter extends CustomPainter {
 
       /// keep order consistent..
     });
+    */
+;
 
+    var count = hiPriQueue.length;
     for (Label label in nextQ) {
-      if (checkLabelOverlaps(hiPriQueue, label)) {
+      if ((count > 25 && tileZoom < 16) || checkLabelOverlaps(hiPriQueue, label)) {
         continue;
       }
       hiPriQueue.add(label);
+      count++;
     }
 
     prevLabels = []; // reset our list of labels to carry over as hipri q
     Map<String, Label> justSeenLabels = {};
+
 
     for (Label label in hiPriQueue) {
       if (justSeenLabels.containsKey(label.dedupeKey)) continue;
@@ -694,6 +708,8 @@ class VectorPainter extends CustomPainter {
       if (debugOptions.labels)
         print("Already seen ${label.text} ${label.dedupeKey} so skipping");
     }
+
+    var end = DateTime.now().difference(start).inMilliseconds;;
 
     if (debugOptions.labels) {
       justSeenLabels.forEach((key, label) {
@@ -883,7 +899,7 @@ class VectorPainter extends CustomPainter {
   @override
   bool shouldRepaint(VectorPainter oldDelegate) =>
       tilesToRender != oldDelegate.tilesToRender ||
-          tileZoom != oldDelegate.tileZoom ||
+          ///tileZoom != oldDelegate.tileZoom ||
           cachedVectorDataMap != oldDelegate.cachedVectorDataMap;
 }
 

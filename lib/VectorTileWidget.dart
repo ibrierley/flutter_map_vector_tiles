@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:isolate';
 import 'dart:math' as math;
 import 'dart:ui' as dartui;
 import 'dart:ui';
@@ -20,6 +21,233 @@ import 'vector_tile_plugin.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_map_vector_tile/styles.dart';
+
+import 'package:iso/iso.dart';
+//import 'package:flutter_startup/flutter_startup.dart';
+import 'package:flutter_isolate/flutter_isolate.dart';
+
+Map decode( vectorStyle, coordsKey, bytes, options, tileZoom ) {
+
+  Map<GeomType,List> fullGeomMap = { GeomType.linestring: [], GeomType.polygon: [], GeomType.point:  []}; /// I don't know if we will want this..may be better to separate into roads, labels, paths etc...?
+  Map<String, int> includeSummary = {};
+  Map<String, int> excludeSummary = {};
+  TileStats tileStats = new TileStats();
+
+  final Map decoded = {};
+
+  print("Decoding");
+
+  late vector_tile.Tile vt;
+
+  if(bytes != null)
+    vt = vector_tile.Tile.fromBuffer(bytes);
+
+  print ("bytes $bytes");
+
+  int reps = 0;
+
+  Map<String, int> layerOrderMap = Styles.defaultLayerOrder();
+
+  if(layerOrderMap.keys.length > 0) {
+
+  vt.layers.sort((a, b) {
+    return (layerOrderMap[ a.name ] ?? 15).compareTo(
+      layerOrderMap[ b.name ] ?? 15);
+    });
+  }
+
+  Map layerSummary = {};
+  
+  for(var layer in vt.layers) {
+
+    var layerString = layer.name.toString();
+    print("Doing $layerString");
+    decoded[layerString] = [];
+
+    if (layerSummary.containsKey(layerString)) {
+      layerSummary[layerString]++;
+    } else {
+      layerSummary[layerString] = 0;
+    }
+
+    for (var feature in layer.features) {
+
+      Map<String, dynamic> fullFeature = { 'type': "Feature" };
+      var properties = {};
+      var geometryInfo = {};
+
+      var command = '';
+
+      for (var tagIndex = 0; tagIndex < feature.tags.length; tagIndex += 2) {
+        var valIndex = feature.tags[tagIndex + 1];
+        var layerObj = layer.values[valIndex];
+        var val;
+
+        if (layerObj.hasIntValue()) {
+          val = layerObj.intValue.toString();
+        } else if (layerObj.hasStringValue()) {
+          val = layerObj.stringValue;
+        } else {
+          val = layerObj.boolValue.toString();
+        }
+
+        properties[layer.keys[feature.tags[tagIndex]]] = val;
+      }
+
+      fullFeature['properties'] = properties;
+
+      List coordinatesList = [];
+      List coords = [];
+
+      var type = feature.type.toString();
+      geometryInfo['type'] = type;
+
+      if (layerSummary.containsKey(type)) {
+        layerSummary[type]++;
+      } else {
+        layerSummary[type] = 1;
+      }
+
+      var geometry = feature.geometry;
+
+      var gIndex = 0;
+      int cx = 0;
+      int cy = 0;
+
+      while (gIndex < geometry.length) {
+        var commandByte = geometry[ gIndex ];
+
+        if (reps == 0) {
+          command = 'M';
+          var checkCom = commandByte & 0x7;
+          reps = commandByte >> 3;
+
+          if (checkCom == 1) {
+            command = 'M';
+          } else if (checkCom == 2) {
+            command = 'L';
+          } else if (checkCom == 7) {
+            command = 'C';
+            reps = 0;
+          } else {
+            print("Shouldn't have got here, some command unknown");
+          }
+
+          gIndex++;
+        } else {
+          cx += decodeZigZag(geometry[ gIndex ]);
+          cy += decodeZigZag(geometry[ gIndex + 1]);
+
+          var ncx, ncy;
+          if (command == 'M' || (command == 'L')) {
+            ncx = (cx.toDouble() / 16); // Change /16 to a tileRatio passed in..
+            ncy = (cy.toDouble() / 16);
+          }
+
+          var type = feature.type.toString();
+          if (command == 'C') { // CLOSE
+            if(coords.length != 0) {
+              coordinatesList.add(coords);
+            }
+            coords = [];
+          } else if (command == 'M') { // MOVETO
+            if(coords.length != 0) coordinatesList.add(coords);
+            coords = [[ncx,ncy]];
+          } else if (command == 'L') { // LINETO
+            coords.add([ncx,ncy]);
+          } else {
+            print("Incorrect command string");
+          }
+
+          gIndex += 2;
+          reps--;
+        }
+      }
+
+      if(coords.length != 0) coordinatesList.add(coords);
+      coords = [];
+      geometryInfo['coordinates'] = coordinatesList;
+      fullFeature['geometry'] = geometryInfo;
+
+      ///print(fullFeature);
+
+      var subType = fullFeature['class']?['type'] ?? '';
+      var includeFeature = Styles.includeFeature(vectorStyle, layerString, subType, fullFeature, tileZoom);
+
+      if(includeFeature)
+        decoded[layerString].add(fullFeature);
+    }
+  } // layer
+  return decoded;
+}
+
+
+isoRun (SendPort sendPort) async {
+  // Open the ReceivePort for incoming messages.
+  var port = new ReceivePort();
+  var count = 0;
+  // Notify any other isolates what port this isolate listens to.
+  sendPort.send(port.sendPort);
+
+  await for (var msg in port) {
+    print("New mssage $count $msg in port...");
+
+    var data = msg[0];
+    SendPort replyTo = msg[1];
+    print("YYYYYYYYYYYYYYYYY $data");
+
+    if( data is Map ) {
+      if(data.containsKey('bytes')) {
+        print("Will decode");
+        Map decodedTile = decode(Styles.mapBoxClassColorStyles, "somekey", data['bytes'], {}, 4.0);
+        replyTo.send({ "DECODED": decodedTile });
+      }
+    }
+
+    replyTo.send({ "wibble": "wobble", "dataxxx": data });
+    if (data == "bar") port.close();
+    count++;
+  }
+}
+
+Future sendReceive(SendPort port, msg) {
+  ReceivePort response = new ReceivePort();
+  port.send([msg, response.sendPort]);
+  return response.first;
+}
+/// https://www.jpryan.me/dartbyexample/examples/isolates/
+void isoTest() async {
+  var receivePort = new ReceivePort();
+  ///await Isolate.spawn(isoRun, receivePort.sendPort);
+  await FlutterIsolate.spawn(isoRun, receivePort.sendPort);
+  var sendPort = await receivePort.first;
+  var msg = await sendReceive(sendPort, "foo");
+  print('XXXXXXXXXXXXXXXXXXXXXXXXXXXxx received $msg');
+
+  ///msg = await sendReceive(sendPort, "blahb;ah");
+  ///print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXxx  received $msg');
+
+  await DefaultCacheManager().getSingleFile(Uri.parse('https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/16/32734/21987.mvt?mapbox://styles/gibble/ckoe1dv003l7s17pb219opzj0&access_token=pk.eyJ1IjoiZ2liYmxlIiwiYSI6ImNqbjBlZDB6ejFrODcza3Fsa3o3eXR1MzkifQ.pC89zLnuSWrRdCkDrsmynQ').toString()).then((value) async {
+    print(" got from cache............................................");
+    var bytes = value.readAsBytesSync();
+
+    msg = await sendReceive(sendPort, { 'bytes': bytes });
+    ///debugPrint('ZZZZZZZZZZZZZZZZZZ  received $msg');
+    debugPrint("YOOOOOOO $msg");
+    msg['DECODED'].forEach((key, features){
+      debugPrint("FEATURES... $key $features", wrapWidth: 1024);
+    });
+
+
+  }).catchError((error) {print("2OnErrorHere $error "); }).onError((error, stackTrace) {
+    print("3On error here  $error $stackTrace");
+  });
+
+
+  ///msg = await sendReceive(sendPort, "bar");
+  ///print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXxx  received $msg');
+
+}
 
 class Geo {
   Geo();
@@ -243,6 +471,11 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   @override
   void initState() {
 
+    super.initState();
+    /// Experimental // ///////////////////////////////////////////////////////////////////
+    print("RUNNING ISOTEST¬!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    isoTest();
+
 
     geoJson = Geo().process();
 
@@ -271,7 +504,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       });
     }
 
-    super.initState();
     _tileSize = CustomPoint(vectorOptions.tileSize, vectorOptions.tileSize);
     _resetView();
     _moveSub = widget.stream.listen((_) => _handleMove());
@@ -313,7 +545,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     var pixelBounds = _getTiledPixelBounds(map.center);
     var tileRange = _pxBoundsToTileRange(pixelBounds);
-    var tileCenter = tileRange.getCenter();
+    var tileCenter = tileRange.center;
     var queue = <Coords>[];
     var _backupTiles = {};
     var _tiles = {};
@@ -324,7 +556,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     /// Just a little bit of housekeeping we don't need to run too much
     /// to keep an eye on old tiles in a completed tile check
-    if (DateTime.now().difference(_lastTileListCleanupTime) >
+    if (DateTime.now().difference(_lastTileListCleanupTime) > /// prob dont need this now as we check every build
         Duration(seconds: _secondsBetweenListCleanups)) {
       _lastTileListCleanupTime = DateTime.now();
     }
@@ -456,7 +688,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     for (var tile in _tiles.values) {
       if ((tile.coords.z - _level.zoom).abs() <= 1 + math.pow(2, underZoom)) {
         if (!_cachedVectorData.containsKey(_tileCoordsToKey(tile.coords))) {
-          fetchData(tile.coords, 1);
+          fetchData(tile.coords);
         } else {
           tilesToRender.add(tile);
         }
@@ -513,7 +745,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   }
 
 
-  void fetchData(coords, method) async {
+  void fetchData(coords) async {
 
     if( coords.z <= 0 || coords.z > vectorOptions.maxZoom) {
       print("Level ${coords.z} too low/high, not grabbing tile");
