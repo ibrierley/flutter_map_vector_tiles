@@ -35,14 +35,14 @@ Map decode( vectorStyle, coordsKey, bytes, options, tileZoom ) {
 
   final Map decoded = {};
 
-  print("Decoding");
+  ///print("Decoding");
 
   late vector_tile.Tile vt;
 
   if(bytes != null)
     vt = vector_tile.Tile.fromBuffer(bytes);
 
-  print ("bytes $bytes");
+  ///print ("bytes $bytes");
 
   int reps = 0;
 
@@ -57,11 +57,11 @@ Map decode( vectorStyle, coordsKey, bytes, options, tileZoom ) {
   }
 
   Map layerSummary = {};
-  
+
   for(var layer in vt.layers) {
 
     var layerString = layer.name.toString();
-    print("Doing $layerString");
+   /// print("Doing $layerString");
     decoded[layerString] = [];
 
     if (layerSummary.containsKey(layerString)) {
@@ -166,7 +166,11 @@ Map decode( vectorStyle, coordsKey, bytes, options, tileZoom ) {
 
       if(coords.length != 0) coordinatesList.add(coords);
       coords = [];
-      geometryInfo['coordinates'] = coordinatesList;
+      if(geometryInfo['type'] == "POINT") {
+        geometryInfo['coordinates'] = coordinatesList[0][0];
+      } else {
+        geometryInfo['coordinates'] = coordinatesList;
+      }
       fullFeature['geometry'] = geometryInfo;
 
       ///print(fullFeature);
@@ -181,7 +185,7 @@ Map decode( vectorStyle, coordsKey, bytes, options, tileZoom ) {
   return decoded;
 }
 
-
+/*
 isoRun (SendPort sendPort) async {
   // Open the ReceivePort for incoming messages.
   var port = new ReceivePort();
@@ -199,7 +203,7 @@ isoRun (SendPort sendPort) async {
     if( data is Map ) {
       if(data.containsKey('bytes')) {
         print("Will decode");
-        Map decodedTile = decode(Styles.mapBoxClassColorStyles, "somekey", data['bytes'], {}, 4.0);
+        Map decodedTile = decode(Styles.mapBoxClassColorStyles, "somekey", data['bytes'], {}, data['tileZoom']);
         replyTo.send({ "DECODED": decodedTile });
       }
     }
@@ -216,38 +220,27 @@ Future sendReceive(SendPort port, msg) {
   return response.first;
 }
 /// https://www.jpryan.me/dartbyexample/examples/isolates/
-void isoTest() async {
+///
+
+void isoTest( tileMap ) async {
+
+
+
   var receivePort = new ReceivePort();
-  ///await Isolate.spawn(isoRun, receivePort.sendPort);
+
   await FlutterIsolate.spawn(isoRun, receivePort.sendPort);
   var sendPort = await receivePort.first;
   var msg = await sendReceive(sendPort, "foo");
-  print('XXXXXXXXXXXXXXXXXXXXXXXXXXXxx received $msg');
 
-  ///msg = await sendReceive(sendPort, "blahb;ah");
-  ///print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXxx  received $msg');
-
-  await DefaultCacheManager().getSingleFile(Uri.parse('https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/16/32734/21987.mvt?mapbox://styles/gibble/ckoe1dv003l7s17pb219opzj0&access_token=pk.eyJ1IjoiZ2liYmxlIiwiYSI6ImNqbjBlZDB6ejFrODcza3Fsa3o3eXR1MzkifQ.pC89zLnuSWrRdCkDrsmynQ').toString()).then((value) async {
-    print(" got from cache............................................");
-    var bytes = value.readAsBytesSync();
-
-    msg = await sendReceive(sendPort, { 'bytes': bytes });
-    ///debugPrint('ZZZZZZZZZZZZZZZZZZ  received $msg');
-    debugPrint("YOOOOOOO $msg");
-    msg['DECODED'].forEach((key, features){
-      debugPrint("FEATURES... $key $features", wrapWidth: 1024);
-    });
-
-
-  }).catchError((error) {print("2OnErrorHere $error "); }).onError((error, stackTrace) {
-    print("3On error here  $error $stackTrace");
+  msg = await sendReceive(sendPort, tileMap);
+  debugPrint("YOOOOOOO $msg");
+  msg['DECODED'].forEach((key, features){
+    debugPrint("FEATURES... $key $features", wrapWidth: 1024);
   });
 
 
-  ///msg = await sendReceive(sendPort, "bar");
-  ///print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXxx  received $msg');
-
 }
+*/
 
 class Geo {
   Geo();
@@ -451,7 +444,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
   final Map<double, VectorLevel> _levels = {};
 
-  Map<String, VTCache> _cachedVectorData = {};
+  static Map<String, VTCache> _cachedVectorData = {};
   Timer? _housekeepingTimer;
 
   Map<String, DateTime> _outstandingTileLoads = {};
@@ -468,13 +461,78 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
   late Map geoJson;
 
+  /// ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+  static isoRun (SendPort sendPort) async {
+    // Open the ReceivePort for incoming messages.
+    var port = new ReceivePort();
+    var count = 0;
+    // Notify any other isolates what port this isolate listens to.
+    sendPort.send(port.sendPort);
+
+    await for (var msg in port) {
+      ///print("New mssage $count $msg in port...");
+
+      var data = msg[0];
+      SendPort replyTo = msg[1];
+      ///print("YYYYYYYYYYYYYYYYY $data");
+
+      if( data is Map ) {
+        if(data.containsKey('bytes')) {
+          ///print("Will decode");
+          Map decodedTile = decode(Styles.mapBoxClassColorStyles, "somekey", data['bytes'], {}, data['tileZoom']);
+          replyTo.send({ "DECODED": decodedTile });
+        }
+      }
+
+      replyTo.send({ "wibble": "wobble", "dataxxx": data });
+      if (data == "bar") port.close();
+      count++;
+    }
+  }
+
+  static Future sendReceive(SendPort port, msg) {
+    ReceivePort response = new ReceivePort();
+    port.send([msg, response.sendPort]);
+    return response.first;
+  }
+  /// https://www.jpryan.me/dartbyexample/examples/isolates/
+  ///
+
+  /// /////////////////////////////////////////////////////////////////////////////////
+  static bool isoRunning = false;
+  static late ReceivePort receivePort;
+  static late SendPort sendPort;
+
+  static Future<String> isoTest( tileMap ) async {
+
+    var msg;
+    if(!isoRunning) {
+      isoRunning = true;
+      receivePort = new ReceivePort();
+      await FlutterIsolate.spawn(isoRun, receivePort.sendPort);
+      sendPort = await receivePort.first;
+      msg = await sendReceive(sendPort, "foo");
+    }
+
+    msg = await sendReceive(sendPort, tileMap);
+    ///debugPrint("YOOOOOOO $msg");
+    msg['DECODED'].forEach((key, features){
+      //debugPrint("FEATURES... $key $features", wrapWidth: 1024);
+
+    });
+    _cachedVectorData[tileMap['coordsKey']]?.geoJson = msg['DECODED'];
+    return tileMap['coordsKey'];
+  }
+
+
   @override
   void initState() {
 
     super.initState();
     /// Experimental // ///////////////////////////////////////////////////////////////////
-    print("RUNNING ISOTEST¬!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    isoTest();
+    ///print("RUNNING ISOTEST¬!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    ///isoTest();
 
 
     geoJson = Geo().process();
@@ -779,6 +837,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
             _cachedVectorData[coordsKey]?.state = 'got';
 
             var bytes = value.readAsBytesSync();
+            /// /////////////////////////////////////////////////////
+            await isoTest( { 'bytes': bytes, 'coordsKey' : coordsKey, 'tileZoom': _tileZoom} );
 
             if( !vectorOptions.useImages ) {
               if( cachedVectorData != null )
@@ -969,8 +1029,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   void _tidyOldTileListEntries() {
 
 
-    print("Tidying...${_recentTilesCompleted.keys.length}");
-    print("VectorCache ${_cachedVectorData.keys.length}");
+    ///print("Tidying...${_recentTilesCompleted.keys.length}");
+    ///print("VectorCache ${_cachedVectorData.keys.length}");
     ///_recentTilesCompleted.removeWhere((key, timeCompleted) => DateTime.now().difference(timeCompleted).inSeconds >= 2);
 
     var expiryTimeIfFullSeconds = 5;

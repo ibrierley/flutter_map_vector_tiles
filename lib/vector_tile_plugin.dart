@@ -72,6 +72,7 @@ class VTCache {
   GeomStore? geomInfo;
   dartui.Image? image;
   DateTime lastUsed;
+  Map? geoJson;
 
   VTCache( this.units, this.state, this.coordsKey, this.tileZoom, this.geomInfo, this.lastUsed);
 }
@@ -121,6 +122,8 @@ class MapboxTile {
 
   static void decode( coordsKey, VTCache cachedInfo, options, vectorStyle, tileZoom, DebugOptions debugOptions ) {
 
+    print("DECODING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! $coordsKey");
+
     Map<GeomType,List> fullGeomMap = { GeomType.linestring: [], GeomType.polygon: [], GeomType.point:  []}; /// I don't know if we will want this..may be better to separate into roads, labels, paths etc...?
     Map<String, int> includeSummary = {};
     Map<String, int> excludeSummary = {};
@@ -150,11 +153,18 @@ class MapboxTile {
     List labelPointlist = [];
     List<Road> roadLabelList = [];
 
-    for(var layer in vt.layers) {
+    ///print("HERE");
 
-      Map<String, PathInfo> pathMap = {};  //path => path, class => class, type => type, layer => layer
+    var layers = cachedInfo.geoJson ?? {};
+    layers.forEach((layerString, features) {
+    ///for(var layer in vt.layers) {
+      ///
+      ///print("POSTCODING $layerString");
+      Map<String, PathInfo> pathMap = {};
 
-      var layerString = layer.name.toString();
+      //Map<String, PathInfo> pathMap = {};  //path => path, class => class, type => type, layer => layer
+
+      ///var layerString = layer.name.toString();
 
       if(layerSummary.containsKey(layerString)) {
         layerSummary[layerString]++;
@@ -162,156 +172,83 @@ class MapboxTile {
         layerSummary[layerString] = 0;
       }
 
-      for (var feature in layer.features) {
-        var featureInfo = {};
-        var item; // path or point
-        var point;
-        dartui.Path? path;
-        List<Offset> pointList = [];
-        var command = '';
+      for (var feature in features) {
+        ///print("FT $feature");
+        var thisClass = feature['properties'].containsKey('class') ?
+        feature['properties']['class'] : 'default';
 
-        for (var tagIndex = 0; tagIndex < feature.tags.length; tagIndex += 2) {
-          var valIndex = feature.tags[tagIndex + 1];
-          var layerObj = layer.values[valIndex];
-          var val;
+        ///print("THIS CLASS IS $thisClass");
+        ///var key = "L:$layerString>T:${}>C:$thisClass";
+        var geom = feature['geometry'];
+        var geomType = geom['type'];
+        var coords = geom['coordinates'];
 
-          if (layerObj.hasIntValue()) {
-            val = layerObj.intValue.toString();
-          } else if (layerObj.hasStringValue()) {
-            val = layerObj.stringValue;
-          } else {
-            val = layerObj.boolValue.toString();
+        var key = "L:$layerString>C:$thisClass";
+        if(geomType == 'POINT') {
+          ///print("pointhere");
+          List<Offset> pointsList = [];
+          //for(var coords in geom['coordinates']) {
+            ///print("coords $coords");
+            pointsList.add(Offset(coords[0],coords[1]));
+         // }
+        } else if( geomType == "LINESTRING") {
+          var path = dartui.Path();
+          for(var coordsSet in geom['coordinates']) {
+            var subPath = dartui.Path();
+            if(coordsSet.length > 0) {
+              subPath.moveTo(coordsSet[0][0],coordsSet[0][1]);
+              for(var index = 1; index < coordsSet.length; index++) {
+                subPath.lineTo(coordsSet[index][0],coordsSet[index][1]);
+              }
+            }
+            path.addPath(subPath,Offset(0,0));
           }
-
-          featureInfo[layer.keys[feature.tags[tagIndex]]] = val;
-        }
-
-        List<Offset> polyPoints = [];
-
-        var type = feature.type.toString();
-        GeomType geomType = GeomType.linestring;
-
-        if(layerSummary.containsKey(type)) {
-          layerSummary[type]++;
-        } else {
-          layerSummary[type] = 1;
-        }
-
-        var geometry = feature.geometry;
-
-        var gIndex = 0;
-        int cx = 0; int cy = 0;
-
-        while(gIndex < geometry.length) {
-          var commandByte = geometry[ gIndex ];
-
-          if(reps == 0) {
-            command = 'M';
-            var checkCom = commandByte & 0x7;
-            reps = commandByte >> 3;
-            if(checkCom == 1) {
-              command = 'M';
-            } else if (checkCom == 2) {
-              command = 'L';
-            } else if (checkCom == 7) {
-              command = 'C';
-              reps = 0;
-
-              if (feature.type.toString() == 'POLYGON') {
-                if (path == null) path = dartui.Path();
-
-                path.addPolygon(polyPoints, true);
-
-                tileStats.polys++;
-                polyPoints = [];
-                geomType = GeomType.polygon;
-              } else {
-                path?.close();
-              }
-
-            } else {
-              print("Shouldn't have got here, some command unknown");
-            }
-
-            gIndex++;
-          } else {
-            cx += decodeZigZag(geometry[ gIndex ]);
-            cy += decodeZigZag(geometry[ gIndex + 1]);
-
-            var ncx, ncy;
-            if (command == 'M' || (command == 'L')) {
-              ncx = (cx.toDouble() / 16); // Change /16 to a tileRatio passed in..
-              ncy = (cy.toDouble() / 16);
-            }
-
-            var type = feature.type.toString();
-            if (command == 'C') { // CLOSE
-
-            } else if (command == 'M') { // MOVETO
-              if (type == 'POLYGON') {
-                polyPoints = [];
-                polyPoints.add(Offset(ncx, ncy));
-                tileStats.polyPoints++;
-                geomType = GeomType.polygon;
-
-              } else if (type == 'LINESTRING') {
-                if (path == null) path = dartui.Path();
-                path.moveTo(ncx, ncy);
-                geomType = GeomType.linestring;
-
-              } else if (type == 'POINT') {
-
-                point = Offset(ncx, ncy);
-                pointList.add(point);
-
-                var dedupeKey = featureInfo['name'] ?? point.toString();
-                dedupeKey += '_' + coordsKey;
-                var priority = 0; // 0 is best priority
-
-                /// We want a poi or a shop label to appear rather than a housenum if poss
-                if(layer.name == "housenum_label") {
-                  featureInfo['name'] = featureInfo['house_num'];
-                  dedupeKey = "${featureInfo['name']}|$point";
-                  priority = 2;
-                }
-
-                labelPointlist.add([ point, layer.name, featureInfo, dedupeKey, priority ]);  /// May want to add a style here, to draw last thing..., move into a class
-
-                tileStats.points++;
-                tileStats.labelPoints++;
-                geomType = GeomType.point;
-
-              }
-
-            } else if (command == 'L') { // LINETO
-
-              if (type == 'POLYGON') {
-                polyPoints.add(Offset(ncx, ncy));
-                tileStats.polyPoints++;
-                geomType = GeomType.polygon;
-              } else if (type == 'LINESTRING') {
-                path?.lineTo(ncx, ncy);
-                tileStats.linePoints++;
-                geomType = GeomType.linestring;
-              }
-            } else {
-              print("Incorrect command string");
-            }
-
-            gIndex += 2;
-            reps--;
+          //pathMap[key]?.path = path;
+          ///print("POLY $path");
+          //var key = "L:$layerString>C:$thisClass";
+          //print("$key");
+          if(!pathMap.containsKey(key)) {
+            pathMap[key] = PathInfo(dartui.Path(), thisClass, geomType, layerString, feature, 1 );
           }
+          pathMap[key]?.path.addPath(path, Offset(0, 0));
+          cachedInfo.geomInfo?.pathStore.add(pathMap);
+        } else if( geomType == "POLYGON") {
+          var path = dartui.Path();
+          for(var coordsSet in geom['coordinates']) {
+            List<Offset> pointsList = [];
+            //if(coordsSet.length > 0) {
+              //var subPath = dartui.Path();
+              for(var index = 0; index < coordsSet.length; index++) {
+                pointsList.add(Offset(coordsSet[index][0],coordsSet[index][1]));
+              }
+            path.addPolygon(pointsList, true);
+            //}
+
+          }
+          //pathMap[key]?.path = path;
+          ///print("POLY $path");
+          //var key = "L:$layerString>C:$thisClass";
+          //print("$key");
+          if(!pathMap.containsKey(key)) {
+            pathMap[key] = PathInfo(dartui.Path(), thisClass, geomType, layerString, feature, 1 );
+          }
+          pathMap[key]?.path.addPath(path, Offset(0, 0));
+          cachedInfo.geomInfo?.pathStore.add(pathMap);
         }
+
+
+
 
         /// Note "type" is a bit confusing, as there seems to be a feature type eg "track",
         /// and a shape type eg "LINESTRING" when decoding
 
-        var includeFeature = Styles.includeFeature(vectorStyle, layerString, type, featureInfo, tileZoom);
-        var thisClass = featureInfo['class'] ?? 'default';
+        //var includeFeature = Styles.includeFeature(vectorStyle, layerString, type, featureInfo, tileZoom);
+        //var thisClass = featureInfo['class'] ?? 'default';
 
-        var key = "L:$layerString>T:$type>C:$thisClass";
-        var summaryKey = key + "|" + tileZoom.toString();
+        //var key = "L:$layerString>T:$type>C:$thisClass";
+        //var summaryKey = key + "|" + tileZoom.toString();
 
+        /*
         if(includeFeature) {
           if(geomType == GeomType.point) item = point;
           if(geomType == GeomType.linestring || geomType == GeomType.polygon) item = path;
@@ -331,6 +268,9 @@ class MapboxTile {
             fullGeomMap[geomType]?.add([type, layer.name, featureInfo, item]); /// not sure if we need this fully yet....
         }
 
+         */
+
+        /*
         if (!options.containsKey('labelsOnly') && path != null) {
           if(includeFeature) {
             /// we're keeping layers separate, as we need to know which layers are "on top" of which others,
@@ -348,13 +288,15 @@ class MapboxTile {
             if( debugOptions.featureSummary ) summaryAdd(summaryKey, excludeSummary);
           }
         }
+        */
 
-        path = null;
+
+        //path = null;
       }
 
-      cachedInfo.geomInfo?.pathStore.add(pathMap);
+      //cachedInfo.geomInfo?.pathStore.add(pathMap);
 
-    } // layer
+    }); // layer
 
 
     if(!options.containsKey('noLabels')) {
@@ -609,8 +551,8 @@ class VectorPainter extends CustomPainter {
       }
     }
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    if(geoJson != null) {
-      print("herexxxx $geoJson");
+    if(false && geoJson != null) {
+      ///print("herexxxx $geoJson");
       var paths = geoJson['paths'];
       var paint = Paint();
       paint.color = Colors.green;
