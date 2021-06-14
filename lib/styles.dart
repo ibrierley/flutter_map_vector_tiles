@@ -777,12 +777,16 @@ class Styles {
 
   static bool includeFeature(vectorStyle, layerString, type, featureInfo, zoom) { //reduce code...
 
+    print("includebits: $layerString, $type, $featureInfo, $zoom");
+
     var thisClass;
     if(featureInfo?.containsKey('properties')) {
       thisClass = featureInfo['properties']['class'] ?? 'default';
     } else {
       thisClass = featureInfo['class'] ?? 'default';
     }
+
+    print("Class is $thisClass");
 
     var paramsMap = { 'layer': layerString, 'type': type, 'class': thisClass, 'zoom': zoom, 'featureInfo': featureInfo };
 

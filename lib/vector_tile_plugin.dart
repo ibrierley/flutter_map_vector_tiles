@@ -430,6 +430,7 @@ class VectorPainter extends CustomPainter {
       canvas.transform(m.storage);
     }
 
+    Rect myRect = Offset(0,0) & Size(256.0,256.0);
     /// Normal paths
     for (var tile in tilesToRender) {
       String tileCoordsKey = tileCoordsToKey(tile.coords);
@@ -453,7 +454,7 @@ class VectorPainter extends CustomPainter {
       canvas.transform(matrix.storage);
 
       /// clip prevents the odd clashing artifact with overlapping tiles features
-      Rect myRect = Offset(0,0) & Size(256.0,256.0);
+
       canvas.clipRect(myRect);
 
       //if we need a clip that isn't already transformed, we can use below..
