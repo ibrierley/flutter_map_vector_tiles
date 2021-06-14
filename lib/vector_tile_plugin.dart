@@ -184,6 +184,7 @@ class MapboxTile {
         var coords = geom['coordinates'];
 
         var key = "L:$layerString>C:$thisClass";
+        ///print("$key");
         if(geomType == 'POINT') {
           ///print("pointhere");
           List<Offset> pointsList = [];
@@ -208,8 +209,10 @@ class MapboxTile {
           //var key = "L:$layerString>C:$thisClass";
           //print("$key");
           if(!pathMap.containsKey(key)) {
+            ///print("Creating new $key as not exists");
             pathMap[key] = PathInfo(dartui.Path(), thisClass, geomType, layerString, feature, 1 );
           }
+          ///print("Adding path $key");
           pathMap[key]?.path.addPath(path, Offset(0, 0));
           cachedInfo.geomInfo?.pathStore.add(pathMap);
         } else if( geomType == "POLYGON") {
@@ -218,9 +221,11 @@ class MapboxTile {
             List<Offset> pointsList = [];
             //if(coordsSet.length > 0) {
               //var subPath = dartui.Path();
+              ///print("Adding new points...");
               for(var index = 0; index < coordsSet.length; index++) {
                 pointsList.add(Offset(coordsSet[index][0],coordsSet[index][1]));
               }
+              ///print("addin poly $key $pointsList");
             path.addPolygon(pointsList, true);
             //}
 
@@ -230,8 +235,10 @@ class MapboxTile {
           //var key = "L:$layerString>C:$thisClass";
           //print("$key");
           if(!pathMap.containsKey(key)) {
+            ///print("Creating new $key as not exists");
             pathMap[key] = PathInfo(dartui.Path(), thisClass, geomType, layerString, feature, 1 );
           }
+          ///print("Adding poly path $key");
           pathMap[key]?.path.addPath(path, Offset(0, 0));
           cachedInfo.geomInfo?.pathStore.add(pathMap);
         }

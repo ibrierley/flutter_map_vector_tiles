@@ -390,8 +390,8 @@ class Styles {
 
     "road": {
       'include': true,
-      'default':      [ [0, 22, { 'color': Colors.orange, 'strokeWidth' : 0.0  }     ],
-                        [16,22, { 'color': Colors.orange, 'strokeWidth' : 2.0 }     ],
+      'default':      [ [0, 22, { 'color': Colors.green, 'strokeWidth' : 0.0  }     ],
+                        [16,22, { 'color': Colors.greenAccent, 'strokeWidth' : 2.0 }     ],
       ],
       'service':      [ [12, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
                         [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
@@ -777,16 +777,12 @@ class Styles {
 
   static bool includeFeature(vectorStyle, layerString, type, featureInfo, zoom) { //reduce code...
 
-    print("includebits: $layerString, $type, $featureInfo, $zoom");
-
     var thisClass;
     if(featureInfo?.containsKey('properties')) {
       thisClass = featureInfo['properties']['class'] ?? 'default';
     } else {
       thisClass = featureInfo['class'] ?? 'default';
     }
-
-    print("Class is $thisClass");
 
     var paramsMap = { 'layer': layerString, 'type': type, 'class': thisClass, 'zoom': zoom, 'featureInfo': featureInfo };
 
@@ -832,7 +828,12 @@ class Styles {
   static Paint getStyle(style, featureInfo, layerString, type, tileZoom, scale, diffRatio) {
     var paramsMap = { 'layer': layerString, 'type': type, 'zoom': tileZoom, 'diffRatio': diffRatio, 'featureInfo': featureInfo };
 
-    var className = featureInfo['class'] ?? 'default';
+    var className;
+    if(featureInfo?.containsKey('properties')) {
+      className = featureInfo['properties']['class'] ?? 'default';
+    } else {
+      className = featureInfo['class'] ?? 'default';
+    }
 
     var paint = Paint()
       ..style = PaintingStyle.stroke
@@ -850,6 +851,7 @@ class Styles {
     if(!vectorStyle.containsKey(layerString)) layerString = 'default';
 
     if(vectorStyle.containsKey(layerString)) {
+
       Map<String, dynamic>? layerClass = funcCheck(vectorStyle[layerString],paramsMap) ?? funcCheck(vectorStyle['default'], paramsMap);
       List<List<dynamic>>? featureClass = funcCheck(vectorStyle['default'],paramsMap)?['default'];
 

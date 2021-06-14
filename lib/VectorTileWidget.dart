@@ -535,7 +535,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     ///isoTest();
 
 
-    geoJson = Geo().process();
+    ///geoJson = Geo().process();
+    geoJson = {};
 
     vectorOptions = widget.vectorTileLayerOptions;
     optimisations = vectorOptions.optimisations ?? Optimisations();
@@ -804,6 +805,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
 
   void fetchData(coords) async {
+
+    print("Fetching $coords");
 
     if( coords.z <= 0 || coords.z > vectorOptions.maxZoom) {
       print("Level ${coords.z} too low/high, not grabbing tile");
