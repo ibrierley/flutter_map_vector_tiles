@@ -211,6 +211,10 @@ class MapboxTile {
           if(!pathMap.containsKey(key)) {
             ///print("Creating new $key as not exists");
             pathMap[key] = PathInfo(path, thisClass, geomType, layerString, feature, 1 );
+            var style = Styles.getStyle(vectorStyle, feature,
+                layerString, geomType, tileZoom,
+                2, 2);
+            pathMap[key]?.style = style;
           } else {
             ///print("Adding path $key");
             pathMap[key]?.path.addPath(path, Offset(0, 0));
@@ -236,14 +240,20 @@ class MapboxTile {
           //var key = "L:$layerString>C:$thisClass";
           //print("$key");
           if(!pathMap.containsKey(key)) {
-            print("Creating new $key as not exists");
+            ///print("Creating new $key as not exists");
             pathMap[key] = PathInfo(path, thisClass, geomType, layerString, feature, 1 );
+            var style = Styles.getStyle(vectorStyle, feature,
+                layerString, geomType, tileZoom,
+                2, 2);
+            pathMap[key]?.style = style;
           } else {
-            print("Adding poly path $key");
+            ///print("Adding poly path $key");
             pathMap[key]?.path.addPath(path, Offset(0, 0));
           }
           /// ////////////////////////////////////////////cachedInfo.geomInfo?.pathStore.add(pathMap);
         }
+
+
 
 
 
@@ -493,6 +503,7 @@ class VectorPainter extends CustomPainter {
           if (pathMap?.path != null) {
             // cache style if we can to save lookups, we may want to add
             // a method to reload new styles in though
+
             var style = pathMap?.style ?? Styles.getStyle(vectorStyle, pathMap?.featureInfo,
                 pathMap?.layerString, pathMap?.type, tileZoom,
                 pos?.scale, 2);
