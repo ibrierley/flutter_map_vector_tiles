@@ -25,18 +25,23 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flutter_map: #any
-    git:
+  flutter_map: any
+    #git:
       #url: https://github.com/maRci002/flutter_map.git
       #url: https://github.com/fleaflet/flutter_map.git
-      url: https://github.com/fleaflet/flutter_map.git
-      ref: 1882f32298082a72ca62f8e54d479334a055a55a
+      #url: https://github.com/fleaflet/flutter_map.git
+      #ref: 1882f32298082a72ca62f8e54d479334a055a55a
 
   fixnum: any
   protobuf: any
   #latlong2: any
   http: ^0.13.2
   flutter_cache_manager: any
+  #geojson: any
+  geojson_vi: any
+  iso: ^1.0.0
+  flutter_isolate: any
+  #flutter_startup: any
 
 dev_dependencies:
   flutter_test:
