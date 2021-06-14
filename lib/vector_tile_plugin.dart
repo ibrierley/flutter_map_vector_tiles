@@ -195,14 +195,14 @@ class MapboxTile {
         } else if( geomType == "LINESTRING") {
           var path = dartui.Path();
           for(var coordsSet in geom['coordinates']) {
-            var subPath = dartui.Path();
+            //var subPath = dartui.Path();
             if(coordsSet.length > 0) {
-              subPath.moveTo(coordsSet[0][0],coordsSet[0][1]);
+              path.moveTo(coordsSet[0][0],coordsSet[0][1]);
               for(var index = 1; index < coordsSet.length; index++) {
-                subPath.lineTo(coordsSet[index][0],coordsSet[index][1]);
+                path.lineTo(coordsSet[index][0],coordsSet[index][1]);
               }
             }
-            path.addPath(subPath,Offset(0,0));
+            ///path.addPath(subPath,Offset(0,0));
           }
           //pathMap[key]?.path = path;
           ///print("POLY $path");
@@ -210,11 +210,12 @@ class MapboxTile {
           //print("$key");
           if(!pathMap.containsKey(key)) {
             ///print("Creating new $key as not exists");
-            pathMap[key] = PathInfo(dartui.Path(), thisClass, geomType, layerString, feature, 1 );
+            pathMap[key] = PathInfo(path, thisClass, geomType, layerString, feature, 1 );
+          } else {
+            ///print("Adding path $key");
+            pathMap[key]?.path.addPath(path, Offset(0, 0));
           }
-          ///print("Adding path $key");
-          pathMap[key]?.path.addPath(path, Offset(0, 0));
-          cachedInfo.geomInfo?.pathStore.add(pathMap);
+          /// /////////////////////////cachedInfo.geomInfo?.pathStore.add(pathMap);
         } else if( geomType == "POLYGON") {
           var path = dartui.Path();
           for(var coordsSet in geom['coordinates']) {
@@ -225,7 +226,7 @@ class MapboxTile {
               for(var index = 0; index < coordsSet.length; index++) {
                 pointsList.add(Offset(coordsSet[index][0],coordsSet[index][1]));
               }
-              ///print("addin poly $key $pointsList");
+              //print("addin poly $key $pointsList");
             path.addPolygon(pointsList, true);
             //}
 
@@ -235,12 +236,13 @@ class MapboxTile {
           //var key = "L:$layerString>C:$thisClass";
           //print("$key");
           if(!pathMap.containsKey(key)) {
-            ///print("Creating new $key as not exists");
-            pathMap[key] = PathInfo(dartui.Path(), thisClass, geomType, layerString, feature, 1 );
+            print("Creating new $key as not exists");
+            pathMap[key] = PathInfo(path, thisClass, geomType, layerString, feature, 1 );
+          } else {
+            print("Adding poly path $key");
+            pathMap[key]?.path.addPath(path, Offset(0, 0));
           }
-          ///print("Adding poly path $key");
-          pathMap[key]?.path.addPath(path, Offset(0, 0));
-          cachedInfo.geomInfo?.pathStore.add(pathMap);
+          /// ////////////////////////////////////////////cachedInfo.geomInfo?.pathStore.add(pathMap);
         }
 
 
@@ -300,6 +302,12 @@ class MapboxTile {
 
         //path = null;
       }
+
+      pathMap.forEach((pathKey, pathInfo) {
+        ///print("Final keys..$pathKey $pathInfo");
+        cachedInfo.geomInfo?.pathStore.add(pathMap); ///need to explain the logic a bit more here...
+      });
+
 
       //cachedInfo.geomInfo?.pathStore.add(pathMap);
 
