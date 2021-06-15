@@ -354,25 +354,25 @@ class VectorPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    var rotatePerspective = -1.25; //-1.25; // only used if we're using perspective enabled
-    var widgetRotation = this.rotation;
-    var isRotated = false;
+    final double rotatePerspective = -1.25; //-1.25; // only used if we're using perspective enabled
+    double widgetRotation = this.rotation;
+    bool isRotated = false;
     if (widgetRotation != 0.0) isRotated = true;
     widgetRotation = widgetRotation % 360;
 
-    var devicePerspectiveAngle = DartMath.atan2(size.width / 2, size.height) *
+    final devicePerspectiveAngle = DartMath.atan2(size.width / 2, size.height) *
         57.2958;
 
     Map<String, Label> wantedLabels = {};
     List<Label> hiPriQueue = [];
 
-    var pointPaint = Paint()
+    final pointPaint = Paint()
       ..color = Colors.grey
       ..strokeWidth = 5
       ..strokeCap = StrokeCap.round;
 
     if (usePerspective) {
-      var m = Matrix4.identity()
+      final m = Matrix4.identity()
         ..rotateY(
             devicePerspectiveAngle * 0.0174) // device vanishing point offset
         ..setEntry(3, 2, 0.0015) // general distance perspective
@@ -382,11 +382,11 @@ class VectorPainter extends CustomPainter {
       canvas.transform(m.storage);
     }
 
-    Rect myRect = Offset(0,0) & Size(256.0,256.0);
+    final Rect myRect = Offset(0,0) & Size(256.0,256.0);
     /// Normal paths
     for (var tile in tilesToRender) {
-      String tileCoordsKey = tileCoordsToKey(tile.coords);
-      PositionInfo? pos = cachedVectorDataMap[tileCoordsKey]?.positionInfo;
+      final String tileCoordsKey = tileCoordsToKey(tile.coords);
+      final PositionInfo? pos = cachedVectorDataMap[tileCoordsKey]?.positionInfo;
 
       if(useImages) {
         if ((pos != null) && (cachedVectorDataMap[tileCoordsKey]?.image != null)) {
@@ -397,7 +397,7 @@ class VectorPainter extends CustomPainter {
 
 
 
-      Matrix4 matrix = Matrix4.identity();
+      final Matrix4 matrix = Matrix4.identity();
       if(pos != null)
         matrix..translate(pos.point.x.toDouble(), pos.point.y.toDouble())
         ..scale(pos.scale);
@@ -420,7 +420,7 @@ class VectorPainter extends CustomPainter {
       // Rect myRect = Offset(pos['pos'].x, pos['pos'].y) & Size(adjustedSize.dx, adjustedSize.dy);
       // canvas.clipRect(myRect);
 
-      List<Map<String, PathInfo>> dataMap = cachedVectorDataMap[tileCoordsKey]?.geomInfo?.pathStore ?? [];
+      final List<Map<String, PathInfo>> dataMap = cachedVectorDataMap[tileCoordsKey]?.geomInfo?.pathStore ?? [];
 
       for (Map<String, PathInfo> layer in dataMap) {
         for (var layerKey in layer.keys) {
@@ -431,12 +431,12 @@ class VectorPainter extends CustomPainter {
             // cache style if we can to save lookups, we may want to add
             // a method to reload new styles in though
 
-            var style = pathMap?.style ?? Styles.getStyle(vectorStyle, pathMap?.featureInfo,
+            final style = pathMap?.style ?? Styles.getStyle(vectorStyle, pathMap?.featureInfo,
                 pathMap?.layerString, pathMap?.type, tileZoom,
                 pos?.scale, 2);
 
             /// if we've pinchzooming, use thin lines for speed
-            var oldStrokeWidth = style.strokeWidth;
+            double oldStrokeWidth = style.strokeWidth;
             if (optimisations.pinchZoom) style.strokeWidth = 0.0;
 
             if( pathMap != null) {
@@ -467,8 +467,8 @@ class VectorPainter extends CustomPainter {
     /// All labels should come on top of paths etc, so moved loop out here
     ///
     for (var tile in tilesToRender) {
-      String tileCoordsKey = tileCoordsToKey(tile.coords);
-      PositionInfo? pos = cachedVectorDataMap[tileCoordsKey]?.positionInfo;
+      final String tileCoordsKey = tileCoordsToKey(tile.coords);
+      final PositionInfo? pos = cachedVectorDataMap[tileCoordsKey]?.positionInfo;
 
       if (cachedVectorDataMap[tileCoordsKey]?.state != 'Decoded') continue;
 
@@ -494,7 +494,7 @@ class VectorPainter extends CustomPainter {
       /// There's a slight issue as labels aren't reverse transformed to account for
       /// widget rotations. Gets fiddly, but we could probably sort if we care enough
 
-      var labels =  cachedVectorDataMap[tileCoordsKey]?.geomInfo?.labels ?? [];
+      final List labels =  cachedVectorDataMap[tileCoordsKey]?.geomInfo?.labels ?? [];
 
       for (Label label in labels) {
         label.transformedPoint =
@@ -528,7 +528,7 @@ class VectorPainter extends CustomPainter {
   }
 
   void _drawTextAt(Offset position, Canvas canvas, scale, textPainter) {
-    Offset drawPosition =
+    final Offset drawPosition =
     Offset(position.dx - textPainter.width / 2,
         position.dy + (textPainter.height / 2));
     textPainter.paint(canvas, drawPosition);
@@ -538,7 +538,7 @@ class VectorPainter extends CustomPainter {
       widgetRotation, isRotated) {
 
 
-    Map qMap = {};
+    final Map qMap = {};
     for (var label in prevLabels) {
       if (wantedLabels.containsKey(label.dedupeKey)) {
         if (!checkLabelOverlaps(hiPriQueue, label)) {
@@ -548,7 +548,7 @@ class VectorPainter extends CustomPainter {
       }
     }
 
-    List<List<Label>> priorityQ = [[],[],[]];
+    final List<List<Label>> priorityQ = [[],[],[]];
     for (var dedupeKey in wantedLabels.keys) {
       if (qMap.containsKey(dedupeKey)) {
         continue;
@@ -556,9 +556,9 @@ class VectorPainter extends CustomPainter {
       priorityQ[wantedLabels[dedupeKey].priority].add(wantedLabels[dedupeKey]);
     }
 
-    var nextQ = [...priorityQ[0], ...priorityQ[1], ...priorityQ[2]];
+    final nextQ = [...priorityQ[0], ...priorityQ[1], ...priorityQ[2]];
 
-    var count = hiPriQueue.length;
+    int count = hiPriQueue.length;
     for (Label label in nextQ) {
       if (((count > 25 && tileZoom < 16) || checkLabelOverlaps(hiPriQueue, label))) {
         continue;
@@ -568,13 +568,13 @@ class VectorPainter extends CustomPainter {
     }
 
     prevLabels = []; // reset our list of labels to carry over as hipri
-    Map<String, Label> justSeenLabels = {};
+    final Map<String, Label> justSeenLabels = {};
 
 
     for (Label label in hiPriQueue) {
       if (justSeenLabels.containsKey(label.dedupeKey)) continue;
 
-      var tp = label.transformedPoint;
+      final tp = label.transformedPoint;
 
       if (!label.isRoad)
         if( tp != null )
@@ -614,7 +614,7 @@ class VectorPainter extends CustomPainter {
         canvas.translate(transformedPoint.dx, transformedPoint.dy); // text height offset back to center
 
       /// text can be upside down, try and prevent it
-      double angleDeg = getNoneUpsideDownTextAngle(label, widgetRotation);
+      final double angleDeg = getNoneUpsideDownTextAngle(label, widgetRotation);
 
       canvas.rotate((angleDeg) * DEGTORAD);
 
@@ -660,7 +660,7 @@ class VectorPainter extends CustomPainter {
 
   bool checkLabelOverlaps( List labelsToCheck, Label label  ) { // add fontsize (14) to the check...
 
-    var collides = false;
+    bool collides = false;
 
     for( var compareLabel in labelsToCheck) {
       if( compareLabel != label) {
@@ -679,11 +679,11 @@ class VectorPainter extends CustomPainter {
   }
 
   void _updateLabelBounding(Label label) {
-    var widthFactor = 9.0; // how big as a ratio of text to size up
-    var labelLength = label.text.length;
-    var padding = 10.0;
+    final widthFactor = 9.0; // how big as a ratio of text to size up
+    final labelLength = label.text.length;
+    final padding = 10.0;
 
-    var tp = label.transformedPoint;
+    final tp = label.transformedPoint;
     if( tp != null ) {
       label.boundNWx =
           (tp.dx - (labelLength * widthFactor / 2) -
@@ -703,7 +703,7 @@ class VectorPainter extends CustomPainter {
   }
 
   double getNoneUpsideDownTextAngle(Label label, double widgetRotation) {
-    var angleDeg = -label.angle * RADTODEG;
+    double angleDeg = -label.angle * RADTODEG;
     angleDeg += 90;
 
     if(angleDeg > 180) angleDeg -= 180;
@@ -720,13 +720,13 @@ class VectorPainter extends CustomPainter {
 
   void _debugTiles(Canvas canvas, VTile tile) {
 
-    var paint = Paint()
+    final paint = Paint()
       ..color = Colors.yellowAccent
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    Path path = Path();
+    final Path path = Path();
     path.moveTo(0, 0);
     path.lineTo(256.0, 0);
     path.lineTo(256.0, 256.0);
@@ -735,16 +735,16 @@ class VectorPainter extends CustomPainter {
 
     canvas.drawPath(path, paint);
 
-    TextStyle textStyle = TextStyle(
+    final TextStyle textStyle = TextStyle(
         color: Colors.yellow,
         fontSize: 14 //scale == 1 ? scale : 16 / scale, // diffratio, ?
     );
-    TextSpan textSpan = TextSpan(
+    final TextSpan textSpan = TextSpan(
       text: tile.coords.toString(),
       style: textStyle,
     );
 
-    var textPainter = TextPainter(
+    final textPainter = TextPainter(
         text: textSpan,
         textDirection: TextDirection.ltr,
         textAlign: TextAlign.center)
@@ -755,7 +755,7 @@ class VectorPainter extends CustomPainter {
   }
 
   void debugRect(canvas, Label label) {
-    Path path = Path();
+    final Path path = Path();
 
     var nwx = label.boundNWx.toDouble();
     var nwy = label.boundNWy.toDouble();
@@ -769,7 +769,7 @@ class VectorPainter extends CustomPainter {
 
     path.close();
 
-    var paint = Paint();
+    final paint = Paint();
     paint.color = Colors.green;
     paint.style = PaintingStyle.stroke;
     paint.strokeWidth = 3.0;
@@ -785,11 +785,11 @@ class VectorPainter extends CustomPainter {
 }
 
 TextPainter getNewPainter(String text) {
-  TextStyle textStyle = TextStyle(
+  final TextStyle textStyle = TextStyle(
       color: Colors.black,
       fontSize: 14 //scale == 1 ? scale : 16 / scale, // diffratio, ?
   );
-  TextSpan textSpan = TextSpan(
+  final TextSpan textSpan = TextSpan(
     text: text,
     style: textStyle,
   );

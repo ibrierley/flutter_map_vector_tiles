@@ -185,62 +185,6 @@ Map decode( vectorStyle, coordsKey, bytes, options, tileZoom ) {
   return decoded;
 }
 
-/*
-isoRun (SendPort sendPort) async {
-  // Open the ReceivePort for incoming messages.
-  var port = new ReceivePort();
-  var count = 0;
-  // Notify any other isolates what port this isolate listens to.
-  sendPort.send(port.sendPort);
-
-  await for (var msg in port) {
-    print("New mssage $count $msg in port...");
-
-    var data = msg[0];
-    SendPort replyTo = msg[1];
-    print("YYYYYYYYYYYYYYYYY $data");
-
-    if( data is Map ) {
-      if(data.containsKey('bytes')) {
-        print("Will decode");
-        Map decodedTile = decode(Styles.mapBoxClassColorStyles, "somekey", data['bytes'], {}, data['tileZoom']);
-        replyTo.send({ "DECODED": decodedTile });
-      }
-    }
-
-    replyTo.send({ "wibble": "wobble", "dataxxx": data });
-    if (data == "bar") port.close();
-    count++;
-  }
-}
-
-Future sendReceive(SendPort port, msg) {
-  ReceivePort response = new ReceivePort();
-  port.send([msg, response.sendPort]);
-  return response.first;
-}
-/// https://www.jpryan.me/dartbyexample/examples/isolates/
-///
-
-void isoTest( tileMap ) async {
-
-
-
-  var receivePort = new ReceivePort();
-
-  await FlutterIsolate.spawn(isoRun, receivePort.sendPort);
-  var sendPort = await receivePort.first;
-  var msg = await sendReceive(sendPort, "foo");
-
-  msg = await sendReceive(sendPort, tileMap);
-  debugPrint("YOOOOOOO $msg");
-  msg['DECODED'].forEach((key, features){
-    debugPrint("FEATURES... $key $features", wrapWidth: 1024);
-  });
-
-
-}
-*/
 
 class Geo {
   Geo();
@@ -362,7 +306,7 @@ class VectorWidget extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    if( vectorStyle == null ) vectorStyle = Styles.mapBoxClassColorStyles;
+    vectorStyle = Styles.mapBoxClassColorStyles;
     return _VectorWidgetState();
   }
 }
@@ -372,11 +316,11 @@ class _VectorWidgetState extends State<VectorWidget> {
   @override
   Widget build(BuildContext context) {
 
-    var width = MediaQuery.of(context).size.width * 2.0;
-    var height = MediaQuery.of(context).size.height;
-    var dimensions = Offset(width,height);
+    final width = MediaQuery.of(context).size.width * 2.0;
+    final height = MediaQuery.of(context).size.height;
+    final dimensions = Offset(width,height);
 
-    var box = SizedBox(
+    final box = SizedBox(
         width: width*1.25, /// calculate this properly depending on rotation and mobile orientation
         height: height*1.25,
         child: RepaintBoundary (
@@ -471,15 +415,12 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     sendPort.send(port.sendPort);
 
     await for (var msg in port) {
-      ///print("New mssage $count $msg in port...");
 
       var data = msg[0];
       SendPort replyTo = msg[1];
-      ///print("YYYYYYYYYYYYYYYYY $data");
 
       if( data is Map ) {
         if(data.containsKey('bytes')) {
-          ///print("Will decode");
           Map decodedTile = decode(Styles.mapBoxClassColorStyles, "somekey", data['bytes'], {}, data['tileZoom']);
           replyTo.send({ "DECODED": decodedTile });
         }
@@ -516,10 +457,9 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     }
 
     msg = await sendReceive(sendPort, tileMap);
-    ///debugPrint("YOOOOOOO $msg");
+
     msg['DECODED'].forEach((key, features){
       //debugPrint("FEATURES... $key $features", wrapWidth: 1024);
-
     });
     _cachedVectorData[tileMap['coordsKey']]?.geoJson = msg['DECODED'];
     return tileMap['coordsKey'];
@@ -531,10 +471,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     super.initState();
     /// Experimental // ///////////////////////////////////////////////////////////////////
-    ///print("RUNNING ISOTEST¬!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    ///isoTest();
-
-
     ///geoJson = Geo().process();
     geoJson = {};
 
@@ -805,8 +741,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
 
   void fetchData(coords) async {
-
-    print("Fetching $coords");
 
     if( coords.z <= 0 || coords.z > vectorOptions.maxZoom) {
       print("Level ${coords.z} too low/high, not grabbing tile");
