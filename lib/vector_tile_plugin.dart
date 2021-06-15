@@ -122,8 +122,6 @@ class MapboxTile {
 
   static void decode( coordsKey, VTCache cachedInfo, options, vectorStyle, tileZoom, DebugOptions debugOptions ) {
 
-    print("DECODING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! $coordsKey");
-
     Map<GeomType,List> fullGeomMap = { GeomType.linestring: [], GeomType.polygon: [], GeomType.point:  []}; /// I don't know if we will want this..may be better to separate into roads, labels, paths etc...?
     Map<String, int> includeSummary = {};
     Map<String, int> excludeSummary = {};
@@ -135,8 +133,6 @@ class MapboxTile {
 
     if(units != null)
       vt = vector_tile.Tile.fromBuffer(units);
-
-    int reps = 0;
 
     Map<String, int> layerOrderMap = Styles.defaultLayerOrder();
 
@@ -153,18 +149,10 @@ class MapboxTile {
     List labelPointlist = [];
     List<Road> roadLabelList = [];
 
-    ///print("HERE");
-
     var layers = cachedInfo.geoJson ?? {};
     layers.forEach((layerString, features) {
-    ///for(var layer in vt.layers) {
-      ///
-      ///print("POSTCODING $layerString");
+
       Map<String, PathInfo> pathMap = {};
-
-      //Map<String, PathInfo> pathMap = {};  //path => path, class => class, type => type, layer => layer
-
-      ///var layerString = layer.name.toString();
 
       if(layerSummary.containsKey(layerString)) {
         layerSummary[layerString]++;
@@ -173,153 +161,93 @@ class MapboxTile {
       }
 
       for (var feature in features) {
-        ///print("FT $feature");
+
         var thisClass = feature['properties'].containsKey('class') ?
         feature['properties']['class'] : 'default';
 
-        ///print("THIS CLASS IS $thisClass");
-        ///var key = "L:$layerString>T:${}>C:$thisClass";
         var geom = feature['geometry'];
         var geomType = geom['type'];
         var coords = geom['coordinates'];
 
         var key = "L:$layerString>C:$thisClass";
-        ///print("$key");
+
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
         if(geomType == 'POINT') {
-          ///print("pointhere");
+
           List<Offset> pointsList = [];
-          //for(var coords in geom['coordinates']) {
-            ///print("coords $coords");
-            pointsList.add(Offset(coords[0],coords[1]));
-         // }
+          var priority = 1;
+
+          var point = Offset(coords[0],coords[1]);
+          pointsList.add(point);
+          var dedupeKey = feature['properties']['name'] ?? point.toString();
+          dedupeKey = "${coordsKey}|" + dedupeKey;
+
+          if(layerString == "housenum_label" && !feature['properties'].containsKey('name')) {
+            feature['properties']['name'] = feature['properties']['house_num'];
+            dedupeKey = "${feature['properties']['name']}|$point";
+            priority = 2;
+          }
+
+            labelPointlist.add([ point, layerString, feature, dedupeKey, priority ]);
+
         } else if( geomType == "LINESTRING") {
           var path = dartui.Path();
           for(var coordsSet in geom['coordinates']) {
-            //var subPath = dartui.Path();
             if(coordsSet.length > 0) {
               path.moveTo(coordsSet[0][0],coordsSet[0][1]);
               for(var index = 1; index < coordsSet.length; index++) {
                 path.lineTo(coordsSet[index][0],coordsSet[index][1]);
               }
             }
-            ///path.addPath(subPath,Offset(0,0));
           }
-          //pathMap[key]?.path = path;
-          ///print("POLY $path");
-          //var key = "L:$layerString>C:$thisClass";
-          //print("$key");
+
           if(!pathMap.containsKey(key)) {
-            ///print("Creating new $key as not exists");
+
             pathMap[key] = PathInfo(path, thisClass, geomType, layerString, feature, 1 );
             var style = Styles.getStyle(vectorStyle, feature,
                 layerString, geomType, tileZoom,
                 2, 2);
             pathMap[key]?.style = style;
+
           } else {
-            ///print("Adding path $key");
             pathMap[key]?.path.addPath(path, Offset(0, 0));
           }
-          /// /////////////////////////cachedInfo.geomInfo?.pathStore.add(pathMap);
+          if(layerString == 'road') {
+            var name = feature['properties']['ref'] ?? feature['properties']['name'];
+            if( name != null )
+              roadLabelList.add( Road( name, feature['properties']['class'], path ) );
+          }
+
         } else if( geomType == "POLYGON") {
           var path = dartui.Path();
           for(var coordsSet in geom['coordinates']) {
             List<Offset> pointsList = [];
-            //if(coordsSet.length > 0) {
-              //var subPath = dartui.Path();
-              ///print("Adding new points...");
               for(var index = 0; index < coordsSet.length; index++) {
                 pointsList.add(Offset(coordsSet[index][0],coordsSet[index][1]));
               }
-              //print("addin poly $key $pointsList");
             path.addPolygon(pointsList, true);
-            //}
+
 
           }
-          //pathMap[key]?.path = path;
-          ///print("POLY $path");
-          //var key = "L:$layerString>C:$thisClass";
-          //print("$key");
+
           if(!pathMap.containsKey(key)) {
-            ///print("Creating new $key as not exists");
             pathMap[key] = PathInfo(path, thisClass, geomType, layerString, feature, 1 );
             var style = Styles.getStyle(vectorStyle, feature,
                 layerString, geomType, tileZoom,
                 2, 2);
             pathMap[key]?.style = style;
           } else {
-            ///print("Adding poly path $key");
             pathMap[key]?.path.addPath(path, Offset(0, 0));
           }
-          /// ////////////////////////////////////////////cachedInfo.geomInfo?.pathStore.add(pathMap);
+;
         }
 
-
-
-
-
-
-        /// Note "type" is a bit confusing, as there seems to be a feature type eg "track",
-        /// and a shape type eg "LINESTRING" when decoding
-
-        //var includeFeature = Styles.includeFeature(vectorStyle, layerString, type, featureInfo, tileZoom);
-        //var thisClass = featureInfo['class'] ?? 'default';
-
-        //var key = "L:$layerString>T:$type>C:$thisClass";
-        //var summaryKey = key + "|" + tileZoom.toString();
-
-        /*
-        if(includeFeature) {
-          if(geomType == GeomType.point) item = point;
-          if(geomType == GeomType.linestring || geomType == GeomType.polygon) item = path;
-
-          if( debugOptions.features ) print("$geomType ${layer.name} $featureInfo $item");
-
-          if(layer.name == 'road') {
-
-            var name = featureInfo['ref'] ?? featureInfo['name'];
-            if( name == null) name = "";
-
-            if( path != null )
-              roadLabelList.add( Road( name, featureInfo['class'], path ) );
-          }
-
-          if(fullGeomMap[geomType] != null)
-            fullGeomMap[geomType]?.add([type, layer.name, featureInfo, item]); /// not sure if we need this fully yet....
-        }
-
-         */
-
-        /*
-        if (!options.containsKey('labelsOnly') && path != null) {
-          if(includeFeature) {
-            /// we're keeping layers separate, as we need to know which layers are "on top" of which others,
-            /// otherwise water can end up on top of a road for example
-
-            if(!pathMap.containsKey(key)) {
-              pathMap[key] = PathInfo(dartui.Path(), thisClass, type, layerString, featureInfo, 1 );
-            }
-
-            pathMap[key]?.path.addPath(path, Offset(0, 0));
-            pathMap[key]?.count++;
-            tileStats.paths++;
-            if( debugOptions.featureSummary ) summaryAdd(summaryKey, includeSummary);
-          } else {
-            if( debugOptions.featureSummary ) summaryAdd(summaryKey, excludeSummary);
-          }
-        }
-        */
-
-
-        //path = null;
       }
 
       pathMap.forEach((pathKey, pathInfo) {
         ///print("Final keys..$pathKey $pathInfo");
         cachedInfo.geomInfo?.pathStore.add(pathMap); ///need to explain the logic a bit more here...
       });
-
-
-      //cachedInfo.geomInfo?.pathStore.add(pathMap);
 
     }); // layer
 
@@ -330,12 +258,12 @@ class MapboxTile {
         var layerString = pointInfo[1];
         var featureInfo = pointInfo[2]; // redo this to a class ?
 
-        var thisClass = pointInfo[2]['class'] ?? 'default';
-        var includeFeature = Styles.includeFeature(vectorStyle, layerString, pointInfo[2]['type'], featureInfo, tileZoom);
+        var thisClass = pointInfo[2]['properties']['class'] ?? 'default';
+        var includeFeature = Styles.includeFeature(vectorStyle, layerString, pointInfo[2]['properties']['type'], featureInfo, tileZoom);
         var summaryKey = "L:" + layerString + "_C:" + thisClass +"_Z:" + tileZoom.toString();
 
         if( includeFeature ) {
-          var info = pointInfo[2]['name'];
+          var info = pointInfo[2]['properties']['name'];
 
           if (info != null) {
 
@@ -370,7 +298,7 @@ class MapboxTile {
           }
         }
 
-        if(halfway != null)
+        if(halfway != null && road.text != "")
           cachedInfo.geomInfo?.labels.add(
               Label( text: road.text, point: halfway.position, textPainter: getNewPainter(road.text),
                   dedupeKey: road.text + '|' + coordsKey, priority: 2,
@@ -385,7 +313,6 @@ class MapboxTile {
       print("EXCLUDES $excludeSummary");
     }
 
-    ///print("$fullGeomMap");
     cachedInfo.state = 'Decoded';
   }
 }
@@ -568,6 +495,7 @@ class VectorPainter extends CustomPainter {
       /// widget rotations. Gets fiddly, but we could probably sort if we care enough
 
       var labels =  cachedVectorDataMap[tileCoordsKey]?.geomInfo?.labels ?? [];
+
       for (Label label in labels) {
         label.transformedPoint =
             MatrixUtils.transformPoint(matrix, label.point);
@@ -609,8 +537,6 @@ class VectorPainter extends CustomPainter {
   void _orderLabelsAndDraw(wantedLabels, hiPriQueue, canvas, pointPaint,
       widgetRotation, isRotated) {
 
-    ///print("Wanted ${wantedLabels.length}, Prev ${prevLabels.length}");
-    var start = DateTime.now();
 
     Map qMap = {};
     for (var label in prevLabels) {
@@ -632,30 +558,16 @@ class VectorPainter extends CustomPainter {
 
     var nextQ = [...priorityQ[0], ...priorityQ[1], ...priorityQ[2]];
 
-    /*
-    var p2 = DateTime.now().difference(start).inMicroseconds;
-
-    nextQ.sort((a, b) {
-      int cmp = a.priority.compareTo(b.priority);
-      if (cmp != 0) return cmp;
-
-      return a.dedupeKey.compareTo(b.dedupeKey);
-
-      /// keep order consistent..
-    });
-    */
-;
-
     var count = hiPriQueue.length;
     for (Label label in nextQ) {
-      if ((count > 25 && tileZoom < 16) || checkLabelOverlaps(hiPriQueue, label)) {
+      if (((count > 25 && tileZoom < 16) || checkLabelOverlaps(hiPriQueue, label))) {
         continue;
       }
       hiPriQueue.add(label);
       count++;
     }
 
-    prevLabels = []; // reset our list of labels to carry over as hipri q
+    prevLabels = []; // reset our list of labels to carry over as hipri
     Map<String, Label> justSeenLabels = {};
 
 
@@ -677,8 +589,6 @@ class VectorPainter extends CustomPainter {
       if (debugOptions.labels)
         print("Already seen ${label.text} ${label.dedupeKey} so skipping");
     }
-
-    var end = DateTime.now().difference(start).inMilliseconds;;
 
     if (debugOptions.labels) {
       justSeenLabels.forEach((key, label) {
@@ -713,6 +623,8 @@ class VectorPainter extends CustomPainter {
       canvas.restore();
 
     } else {
+
+      /// /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
       if (isRotated) { // we need to realign the text so its upright
         drawPoint = Offset(0.0, 0.0);
