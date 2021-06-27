@@ -1,9 +1,10 @@
 import 'dart:ui';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
-
 import 'package:flutter/services.dart' show rootBundle;
+import 'parse_expressions.dart';
 
 class Styles {
 
@@ -34,681 +35,829 @@ class Styles {
   }
 
   static Map<String, Map<String, dynamic>> stadiaClassColorStyles = {
+    'layers' : {
 
-    "default": {
-      'include': true,
-      'default': [ [0, 22, { 'color': Colors.purple, 'strokeWidth': 0.0}],
-      ],
-    },
+      "default": {
+        'include': true,
+        'default': [ [0, 22, { 'color': Colors.purple, 'strokeWidth': 0.0}],
+        ],
+      },
 
-    "transportation": {
-      'include': true,
-      'default': [ [0, 22, { 'color': Colors.orange, 'strokeWidth': 0.0}],
-        [16, 22, { 'color': Colors.orange, 'strokeWidth': 2.0}],
-      ],
-      'service': [
-        [12, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
-        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
-      ],
-      'street': [
-        [15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
-        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
-      ],
-      'pedestrian': [
-        [15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
-        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
-      ],
-      'street_limited': [
-        [15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
-        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
-      ],
-      'motorway': [ [(optionsMap) {return 0;}, (optionsMap){return 11;}, { 'color': Colors.orange, 'strokeWidth': 0.0}],
-        [12, 5, { 'color': Colors.orange.shade200, 'strokeWidth': 3.0}],
-        [14, 22, { 'color': Colors.orange.shade100, 'strokeWidth': 8.0}],
-      ],
-      'motorway_link': [ [0, 11, { 'color': Colors.orange, 'strokeWidth': 0.0}],
-        [12, 15, { 'color': Colors.orange.shade200, 'strokeWidth': 3.0}],
-        [14, 22, { 'color': Colors.orange.shade100, 'strokeWidth': 8.0}],
-      ],
-      'trunk': [ [0, 11, { 'color': Colors.orangeAccent, 'strokeWidth': 0.0}],
-        [12, 15, { 'color': Colors.orange.shade200, 'strokeWidth': 3.0}],
-        [17, 22, { 'color': Colors.orange.shade100, 'strokeWidth': 8.0}],
-      ],
-      'trunk_link': [
-        [0, 11, { 'color': Colors.orangeAccent, 'strokeWidth': 0.0}],
-        [12, 16, { 'color': Colors.orange.shade100, 'strokeWidth': 3.0}],
-        [17, 22, { 'color': Colors.orange.shade100, 'strokeWidth': 8.0}],
-      ],
-      'primary': [
-        [11, 16, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 0.0}],
-        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
-      ],
-      'primary_link': [
-        [11, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
-        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
-      ],
-      'secondary': [
-        [11, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
-        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
-      ],
-      'secondary_link': [
-        [11, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
-        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
-      ],
-      'tertiary': [
-        [14, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
-        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
-      ],
-      'tertiary_link': [
-        [14, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
-        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
-      ],
-      'residential': [
-        [14, 15, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
-        [16, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 5.0}],
-        [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 7.0}],
-      ],
-      'path': [ [0, 22, { 'color': Colors.brown.shade400, 'strokeWidth': 2.0}],
-      ],
-      'footway': [ [0, 22, { 'color': Colors.brown.shade400, 'strokeWidth': 2.0}],
-      ],
-      'track': [ [0, 22, { 'color': Colors.brown.shade300, 'strokeWidth': 2.0}],
-      ],
-      'major_rail': [
-        [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
-      ],
-      'minor': [
-        [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
-      ],
-      'rail': [
-        [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
-      ],
-      'minor_rail': [
-        [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
-      ],
-      'service_rail': [
-        [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
-      ],
-      'bridge': [
-        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
-      ],
-      'motorway_construction': [
-        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
-      ],
-      'minor_construction': [
-        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
-      ],
-      'path_construction': [
-        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
-      ],
-      'primary_construction': [
-        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
-      ],
-      'trunk_construction': [
-        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
-      ],
-      'construction_construction': [
-        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
-      ],
-      'tertiary_construction': [
-        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
-      ],
-      'raceway': [
-        [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
-      ],
-      'construction': [ [14, 22, { 'color': Colors.brown, 'strokeWidth': 0.0}],
-      ],
-      'ferry': [ [0, 22, { 'color': Colors.blue.shade800, 'strokeWidth': 0.0}],
-      ],
-      'golf': [ [15, 22, { 'color': Colors.brown.shade400, 'strokeWidth': 2.0}],
-      ],
-      'aerialway': [
-        [14, 22, { 'color': Colors.brown.shade400, 'strokeWidth': 2.0}],
-      ],
-      'pier': [ [0, 22, { 'color': Colors.blue.shade800, 'strokeWidth': 0.0}],
-      ],
-      'path_construction': [
-        [14, 22, { 'color': Colors.brown.shade400, 'strokeWidth': 2.0}],
-      ],
-    },
+      "transportation": {
+        'include': true,
+        'default': [ [0, 22, { 'color': Colors.orange, 'strokeWidth': 0.0}],
+          [16, 22, { 'color': Colors.orange, 'strokeWidth': 2.0}],
+        ],
+        'service': [
+          [12, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
+          [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+        ],
+        'street': [
+          [15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
+          [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+        ],
+        'pedestrian': [
+          [15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
+          [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+        ],
+        'street_limited': [
+          [15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
+          [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+        ],
+        'motorway': [ [(optionsMap) {
+          return 0;
+        }, (optionsMap) {
+          return 11;
+        }, { 'color': Colors.orange, 'strokeWidth': 0.0}],
+          [12, 5, { 'color': Colors.orange.shade200, 'strokeWidth': 3.0}],
+          [14, 22, { 'color': Colors.orange.shade100, 'strokeWidth': 8.0}],
+        ],
+        'motorway_link': [
+          [0, 11, { 'color': Colors.orange, 'strokeWidth': 0.0}],
+          [12, 15, { 'color': Colors.orange.shade200, 'strokeWidth': 3.0}],
+          [14, 22, { 'color': Colors.orange.shade100, 'strokeWidth': 8.0}],
+        ],
+        'trunk': [ [0, 11, { 'color': Colors.orangeAccent, 'strokeWidth': 0.0}],
+          [12, 15, { 'color': Colors.orange.shade200, 'strokeWidth': 3.0}],
+          [17, 22, { 'color': Colors.orange.shade100, 'strokeWidth': 8.0}],
+        ],
+        'trunk_link': [
+          [0, 11, { 'color': Colors.orangeAccent, 'strokeWidth': 0.0}],
+          [12, 16, { 'color': Colors.orange.shade100, 'strokeWidth': 3.0}],
+          [17, 22, { 'color': Colors.orange.shade100, 'strokeWidth': 8.0}],
+        ],
+        'primary': [
+          [11, 16, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 0.0}],
+          [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+        ],
+        'primary_link': [
+          [11, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
+          [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+        ],
+        'secondary': [
+          [11, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
+          [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+        ],
+        'secondary_link': [
+          [11, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
+          [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+        ],
+        'tertiary': [
+          [14, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
+          [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+        ],
+        'tertiary_link': [
+          [14, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
+          [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+        ],
+        'residential': [
+          [14, 15, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
+          [16, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 5.0}],
+          [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 7.0}],
+        ],
+        'path': [
+          [0, 22, { 'color': Colors.brown.shade400, 'strokeWidth': 2.0}],
+        ],
+        'footway': [
+          [0, 22, { 'color': Colors.brown.shade400, 'strokeWidth': 2.0}],
+        ],
+        'track': [
+          [0, 22, { 'color': Colors.brown.shade300, 'strokeWidth': 2.0}],
+        ],
+        'major_rail': [
+          [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+        ],
+        'minor': [
+          [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+        ],
+        'rail': [
+          [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+        ],
+        'minor_rail': [
+          [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+        ],
+        'service_rail': [
+          [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+        ],
+        'bridge': [
+          [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+        ],
+        'motorway_construction': [
+          [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+        ],
+        'minor_construction': [
+          [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+        ],
+        'path_construction': [
+          [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+        ],
+        'primary_construction': [
+          [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+        ],
+        'trunk_construction': [
+          [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+        ],
+        'construction_construction': [
+          [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+        ],
+        'tertiary_construction': [
+          [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+        ],
+        'raceway': [
+          [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+        ],
+        'construction': [
+          [14, 22, { 'color': Colors.brown, 'strokeWidth': 0.0}],
+        ],
+        'ferry': [
+          [0, 22, { 'color': Colors.blue.shade800, 'strokeWidth': 0.0}],
+        ],
+        'golf': [
+          [15, 22, { 'color': Colors.brown.shade400, 'strokeWidth': 2.0}],
+        ],
+        'aerialway': [
+          [14, 22, { 'color': Colors.brown.shade400, 'strokeWidth': 2.0}],
+        ],
+        'pier': [ [0, 22, { 'color': Colors.blue.shade800, 'strokeWidth': 0.0}],
+        ],
+        'path_construction': [
+          [14, 22, { 'color': Colors.brown.shade400, 'strokeWidth': 2.0}],
+        ],
+      },
 
-    "landuse": {
-      'include': true,
-      'default':  [ [14, 22, { 'color': Colors.lightGreen,   'strokeWidth': 0.0 } ],
-      ],
-      'airport':  [ [13, 21, { 'color': Colors.grey,        'strokeWidth': 0.0 } ],
-      ],
-      'hospital':  [ [15, 21, { 'color': Colors.grey,        'strokeWidth': 0.0 } ],
-      ],
-      'sand':     [ [12, 21, { 'color': Colors.amber,       'strokeWidth': 0.0 } ],
-      ],
-      'playground':[[14, 22, { 'color': Colors.green.shade400, 'strokeWidth': 0.0 } ],
-      ],
-      'grass':    [ [13, 22, { 'color': Colors.lightGreen, 'strokeWidth': 0.0 } ],
-      ],
-      'park':     [ [13, 22,  { 'color': Colors.lightGreen, 'strokeWidth': 0.0 } ],
-      ],
-      'pitch':     [ [13, 22,  { 'color': Colors.green,     'strokeWidth': 0.0 } ],
-      ],
-      'parking':     [ [14, 22,  { 'color': Colors.green.shade100, 'strokeWidth': 0.0 } ],
-      ],
-      'wood':       [ [10, 22,  { 'color': Colors.green.shade800,   'strokeWidth': 0.0 } ],
-      ],
-      'agriculture':  [ [13, 22,  { 'color': Colors.green.shade700,   'strokeWidth': 0.0 } ],
-      ],
-      'school':     [ [14, 22,  { 'color': Colors.grey,             'strokeWidth': 0.0 } ],
-      ],
-      'scrub':     [ [10, 22,  { 'color': Colors.green.shade600,   'strokeWidth': 0.0 } ],
-      ],
-      'cemetery':   [ [15, 22,  { 'color': Colors.green.shade700,   'strokeWidth': 0.0 } ],
-      ],
-      'rock':       [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
-      ],
-      'glacier':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
-      ],
-      'residential':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
-      ],
-      'industrial':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
-      ],
-      'retail':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
-      ],
-      'commercial':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
-      ],
-      'library':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
-      ],
-      'track':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
-      ],
-      'stadium':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
-      ],
-      'university':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
-      ],
-      'college':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
-      ],
-      'bus_station':   [ [12, 22,  { 'color': Colors.grey.shade700,   'strokeWidth': 0.0 } ],
-      ],
-      'railway':   [ [12, 22,  { 'color': Colors.grey.shade700,   'strokeWidth': 0.0 } ],
-      ],
-    },
+      "landuse": {
+        'include': true,
+        'default': [
+          [14, 22, { 'color': Colors.lightGreen, 'strokeWidth': 0.0}],
+        ],
+        'airport': [ [13, 21, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'hospital': [ [15, 21, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'sand': [ [12, 21, { 'color': Colors.amber, 'strokeWidth': 0.0}],
+        ],
+        'playground': [
+          [14, 22, { 'color': Colors.green.shade400, 'strokeWidth': 0.0}],
+        ],
+        'grass': [ [13, 22, { 'color': Colors.lightGreen, 'strokeWidth': 0.0}],
+        ],
+        'park': [ [13, 22, { 'color': Colors.lightGreen, 'strokeWidth': 0.0}],
+        ],
+        'pitch': [ [13, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
+        ],
+        'parking': [
+          [14, 22, { 'color': Colors.green.shade100, 'strokeWidth': 0.0}],
+        ],
+        'wood': [
+          [10, 22, { 'color': Colors.green.shade800, 'strokeWidth': 0.0}],
+        ],
+        'agriculture': [
+          [13, 22, { 'color': Colors.green.shade700, 'strokeWidth': 0.0}],
+        ],
+        'school': [ [14, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'scrub': [
+          [10, 22, { 'color': Colors.green.shade600, 'strokeWidth': 0.0}],
+        ],
+        'cemetery': [
+          [15, 22, { 'color': Colors.green.shade700, 'strokeWidth': 0.0}],
+        ],
+        'rock': [ [12, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'glacier': [ [12, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'residential': [ [12, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'industrial': [ [12, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'retail': [ [12, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'commercial': [ [12, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'library': [ [12, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'track': [ [12, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'stadium': [ [12, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'university': [ [12, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'college': [ [12, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'bus_station': [
+          [12, 22, { 'color': Colors.grey.shade700, 'strokeWidth': 0.0}],
+        ],
+        'railway': [
+          [12, 22, { 'color': Colors.grey.shade700, 'strokeWidth': 0.0}],
+        ],
+      },
 
-    "landcover": {
-      'include': true,
-      'default':  [ [14, 22, { 'color': Colors.lightGreen,   'strokeWidth': 0.0 } ],
-      ],
-      'airport':  [ [13, 21, { 'color': Colors.grey,        'strokeWidth': 0.0 } ],
-      ],
-      'hospital':  [ [15, 21, { 'color': Colors.grey,        'strokeWidth': 0.0 } ],
-      ],
-      'sand':     [ [12, 21, { 'color': Colors.amber,       'strokeWidth': 0.0 } ],
-      ],
-      'playground':[[14, 22, { 'color': Colors.green.shade400, 'strokeWidth': 0.0 } ],
-      ],
-      'grass':    [ [13, 22, { 'color': Colors.lightGreen, 'strokeWidth': 0.0 } ],
-      ],
-      'park':     [ [13, 22,  { 'color': Colors.lightGreen, 'strokeWidth': 0.0 } ],
-      ],
-      'pitch':     [ [13, 22,  { 'color': Colors.green,     'strokeWidth': 0.0 } ],
-      ],
-      'parking':     [ [14, 22,  { 'color': Colors.green.shade100, 'strokeWidth': 0.0 } ],
-      ],
-      'wood':       [ [10, 22,  { 'color': Colors.green.shade800,   'strokeWidth': 0.0 } ],
-      ],
-      'agriculture':  [ [13, 22,  { 'color': Colors.green.shade700,   'strokeWidth': 0.0 } ],
-      ],
-      'school':     [ [14, 22,  { 'color': Colors.grey,             'strokeWidth': 0.0 } ],
-      ],
-      'scrub':     [ [10, 22,  { 'color': Colors.green.shade600,   'strokeWidth': 0.0 } ],
-      ],
-      'cemetery':   [ [15, 22,  { 'color': Colors.green.shade700,   'strokeWidth': 0.0 } ],
-      ],
-      'rock':       [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
-      ],
-      'glacier':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
-      ],
-      'residential':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
-      ],
-      'industrial':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
-      ],
-      'farmland':    [ [13, 22, { 'color': Colors.lightGreen, 'strokeWidth': 0.0 } ],
-      ],
-    },
+      "landcover": {
+        'include': true,
+        'default': [
+          [14, 22, { 'color': Colors.lightGreen, 'strokeWidth': 0.0}],
+        ],
+        'airport': [ [13, 21, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'hospital': [ [15, 21, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'sand': [ [12, 21, { 'color': Colors.amber, 'strokeWidth': 0.0}],
+        ],
+        'playground': [
+          [14, 22, { 'color': Colors.green.shade400, 'strokeWidth': 0.0}],
+        ],
+        'grass': [ [13, 22, { 'color': Colors.lightGreen, 'strokeWidth': 0.0}],
+        ],
+        'park': [ [13, 22, { 'color': Colors.lightGreen, 'strokeWidth': 0.0}],
+        ],
+        'pitch': [ [13, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
+        ],
+        'parking': [
+          [14, 22, { 'color': Colors.green.shade100, 'strokeWidth': 0.0}],
+        ],
+        'wood': [
+          [10, 22, { 'color': Colors.green.shade800, 'strokeWidth': 0.0}],
+        ],
+        'agriculture': [
+          [13, 22, { 'color': Colors.green.shade700, 'strokeWidth': 0.0}],
+        ],
+        'school': [ [14, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'scrub': [
+          [10, 22, { 'color': Colors.green.shade600, 'strokeWidth': 0.0}],
+        ],
+        'cemetery': [
+          [15, 22, { 'color': Colors.green.shade700, 'strokeWidth': 0.0}],
+        ],
+        'rock': [ [12, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'glacier': [ [12, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'residential': [ [12, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'industrial': [ [12, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+        ],
+        'farmland': [
+          [13, 22, { 'color': Colors.lightGreen, 'strokeWidth': 0.0}],
+        ],
+      },
 
-    "water": {
-      'include': true,
-      'default': [ [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
-      ],
-      'lake': [ [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
-      ],
-      'river': [ [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
-      ],
-      'ocean': [ [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
-      ],
-      'dock': [ [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
-      ],
-    },
+      "water": {
+        'include': true,
+        'default': [
+          [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
+        ],
+        'lake': [ [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
+        ],
+        'river': [
+          [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
+        ],
+        'ocean': [
+          [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
+        ],
+        'dock': [ [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
+        ],
+      },
 
-    "building": {
-      'include': true,
-      'default': [ [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 0.0}],
-      ],
-    },
+      "building": {
+        'include': true,
+        'default': [
+          [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 0.0}],
+        ],
+      },
 
-    "boundary": {
-      'include': true,
-      'default': [ [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 0.0}],
-      ],
-    },
+      "boundary": {
+        'include': true,
+        'default': [
+          [13, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 0.0}],
+        ],
+      },
 
-    "park": {
-      'include': true,
-      'default': [ [13, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
-      ],
-      'protected_area': [ [13, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
-      ],
-      'nature_reserve': [ [13, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
-      ],
-    },
+      "park": {
+        'include': true,
+        'default': [ [13, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
+        ],
+        'protected_area': [
+          [13, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
+        ],
+        'nature_reserve': [
+          [13, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
+        ],
+      },
 
-    "transportation_name": {
-      'include': true,
-      'default': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'trunk': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'motorway': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'service': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'path': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'footway': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'minor': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'tertiary': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'primary': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'secondary': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'track': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-    },
+      "transportation_name": {
+        'include': true,
+        'default': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+        ],
+        'trunk': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+        ],
+        'motorway': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+        ],
+        'service': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+        ],
+        'path': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+        ],
+        'footway': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+        ],
+        'minor': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+        ],
+        'tertiary': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+        ],
+        'primary': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+        ],
+        'secondary': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+        ],
+        'track': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+        ],
+      },
 
-    "waterway": {
-      'include': true,
-      'default': [ [13, 22, { 'color': Colors.blue.shade700, 'strokeWidth': 0.0}],
-      ],
-      'river': [ [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
-      ],
-      'canal': [ [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
-      ],
-      'stream': [ [14, 22, { 'color': Colors.blue.shade900, 'strokeWidth': 0.0}],
-      ],
-      'stream_intermittent': [ [13, 22, { 'color': Colors.blue.shade900, 'strokeWidth': 0.0}],
-      ],
-      'ditch': [ [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
-      ],
-      'drain': [ [13, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
-      ],
-    },
+      "waterway": {
+        'include': true,
+        'default': [
+          [13, 22, { 'color': Colors.blue.shade700, 'strokeWidth': 0.0}],
+        ],
+        'river': [
+          [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
+        ],
+        'canal': [
+          [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
+        ],
+        'stream': [
+          [14, 22, { 'color': Colors.blue.shade900, 'strokeWidth': 0.0}],
+        ],
+        'stream_intermittent': [
+          [13, 22, { 'color': Colors.blue.shade900, 'strokeWidth': 0.0}],
+        ],
+        'ditch': [
+          [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
+        ],
+        'drain': [
+          [13, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
+        ],
+      },
 
-    "aeroway": {
-      'include': true,
-      'default': [ [12, 22, { 'color': Colors.orange, 'strokeWidth': 0.0}],
-      ],
-      'runway': [ [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 0.0}],
-      ],
-      'taxiway': [ [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 0.0}],
-      ],
-      'helipad': [ [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 0.0}],
-      ],
-      'aerodrome': [ [12, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
-      ],
-      'apron': [ [12, 22, { 'color': Colors.blueGrey.shade700, 'strokeWidth': 0.0}],
-      ],
+      "aeroway": {
+        'include': true,
+        'default': [ [12, 22, { 'color': Colors.orange, 'strokeWidth': 0.0}],
+        ],
+        'runway': [
+          [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 0.0}],
+        ],
+        'taxiway': [
+          [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 0.0}],
+        ],
+        'helipad': [
+          [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 0.0}],
+        ],
+        'aerodrome': [
+          [12, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
+        ],
+        'apron': [
+          [12, 22, { 'color': Colors.blueGrey.shade700, 'strokeWidth': 0.0}],
+        ],
+      },
     },
   };
 
 
 
-  static Map<String, Map<String, dynamic>> mapBoxClassColorStyles = {
+  static Map mapBoxClassColorStyles = {
 
-    "default": {
-      'include': true,
-      'default':  [ [0, 22, { 'color': Colors.purple, 'strokeWidth': 0.0}],
-      ],
-    },
+    'layers' : [
+      {
+        "default": {
+          'include': true,
+          'default': [ [0, 22, { 'color': Colors.purple, 'strokeWidth': 0.0}],
+          ],
+        },
+      },
+      {
+        "admin": {
+          'include': true,
+          'default': [
+            [0, 22, { 'color': Colors.deepPurple, 'strokeWidth': 0.0}],
+          ],
+        },
+      },
+      ///mapbox streets
+      ///hairline = switch to a hairline width of 0 for optimisation at low zoom levels where we dont care
+      {
+        "road": {
+          'include': true,
+          'default': [ [0, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
+            [16, 22, { 'color': Colors.greenAccent, 'strokeWidth': 2.0}],
+          ],
+          'service': [
+            [12, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
+            [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+          ],
+          'street': [
+            [15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
+            [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+          ],
+          'pedestrian': [
+            [15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
+            [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+          ],
+          'street_limited': [
+            [15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
+            [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+          ],
+          'motorway': [ [0, 11, { 'color': Colors.orange, 'strokeWidth': 0.0}],
+            [12, 5, { 'color': Colors.orange.shade200, 'strokeWidth': 3.0}],
+            [14, 22, { 'color': Colors.orange.shade100, 'strokeWidth': 8.0}],
+          ],
+          'motorway_link': [
+            [0, 11, { 'color': Colors.orange, 'strokeWidth': 0.0}],
+            [12, 15, { 'color': Colors.orange.shade200, 'strokeWidth': 3.0}],
+            [14, 22, { 'color': Colors.orange.shade100, 'strokeWidth': 8.0}],
+          ],
+          'trunk': [
+            [0, 11, { 'color': Colors.orangeAccent, 'strokeWidth': 0.0}],
+            [12, 15, { 'color': Colors.orange.shade200, 'strokeWidth': 3.0}],
+            [17, 22, { 'color': Colors.orange.shade100, 'strokeWidth': 8.0}],
+          ],
+          'trunk_link': [
+            [0, 11, { 'color': Colors.orangeAccent, 'strokeWidth': 0.0}],
+            [12, 16, { 'color': Colors.orange.shade100, 'strokeWidth': 3.0}],
+            [17, 22, { 'color': Colors.orange.shade100, 'strokeWidth': 8.0}],
+          ],
+          'primary': [
+            [11, 16, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 0.0}],
+            [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+          ],
+          'primary_link': [
+            [11, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
+            [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+          ],
+          'secondary': [
+            [11, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
+            [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+          ],
+          'secondary_link': [
+            [11, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
+            [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+          ],
+          'tertiary': [
+            [14, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
+            [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+          ],
+          'tertiary_link': [
+            [14, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth': 0.0}],
+            [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 8.0}],
+          ],
+          'residential': [
+            [14, 15, { 'color': Colors.blueGrey.shade600, 'strokeWidth': 0.0}],
+            [16, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 5.0}],
+            [17, 22, { 'color': Colors.blueGrey.shade300, 'strokeWidth': 7.0}],
+          ],
+          'path': [
+            [0, 22, { 'color': Colors.brown.shade400, 'strokeWidth': 2.0}],
+          ],
+          'track': [
+            [0, 22, { 'color': Colors.brown.shade300, 'strokeWidth': 2.0}],
+          ],
+          'major_rail': [
+            [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+          ],
+          'minor_rail': [
+            [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+          ],
+          'service_rail': [
+            [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth': 1.0}],
+          ],
+          'construction': [
+            [14, 22, { 'color': Colors.brown, 'strokeWidth': 0.0}],
+          ],
+          'ferry': [
+            [0, 22, { 'color': Colors.blue.shade800, 'strokeWidth': 0.0}],
+          ],
+          'golf': [
+            [15, 22, { 'color': Colors.brown.shade400, 'strokeWidth': 2.0}],
+          ],
+          'aerialway': [
+            [14, 22, { 'color': Colors.brown.shade400, 'strokeWidth': 2.0}],
+          ],
+        },
+      },
+      {
+        "motorway_junction": {
+          'include': true,
+          'default': [
+            [0, 22, { 'color': Colors.deepPurple, 'strokeWidth': 5.0}],
+          ],
+        },
+      },
+      {
+        "landuse": {
+          'include': true,
+          'default': [
+            [14, 22, { 'color': Colors.lightGreen, 'strokeWidth': 0.0}],
+          ],
+          'airport': [ [13, 21, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+          ],
+          'hospital': [ [15, 21, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+          ],
+          'sand': [ [12, 21, { 'color': Colors.amber, 'strokeWidth': 0.0}],
+          ],
+          'playground': [
+            [14, 22, { 'color': Colors.green.shade400, 'strokeWidth': 0.0}],
+          ],
+          'grass': [
+            [13, 22, { 'color': Colors.lightGreen, 'strokeWidth': 0.0}],
+          ],
+          'park': [ [13, 22, { 'color': Colors.lightGreen, 'strokeWidth': 0.0}],
+          ],
+          'pitch': [ [13, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
+          ],
+          'parking': [
+            [14, 22, { 'color': Colors.green.shade100, 'strokeWidth': 0.0}],
+          ],
+          'wood': [
+            [10, 22, { 'color': Colors.green.shade800, 'strokeWidth': 0.0}],
+          ],
+          'agriculture': [
+            [13, 22, { 'color': Colors.green.shade700, 'strokeWidth': 0.0}],
+          ],
+          'school': [ [14, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+          ],
+          'scrub': [
+            [10, 22, { 'color': Colors.green.shade600, 'strokeWidth': 0.0}],
+          ],
+          'cemetery': [
+            [15, 22, { 'color': Colors.green.shade700, 'strokeWidth': 0.0}],
+          ],
+          'rock': [ [12, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+          ],
+          'glacier': [ [12, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+          ],
+        },
+      },
+      {
 
-    "admin": {
-      'include': true,
-      'default':  [ [0, 22, { 'color': Colors.deepPurple, 'strokeWidth': 0.0}],
-      ],
-    },
+        "landuse_overlay": {
+          'include': true,
+          'default': [ [12, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
+          ],
+          'national_park': [
+            [12, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
+          ],
+          'wetland_noveg': [
+            [11, 22, { 'color': Colors.blueGrey, 'strokeWidth': 0.0}],
+          ],
+          'wetland': [
+            [12, 22, { 'color': Colors.blue.shade700, 'strokeWidth': 0.0}],
+          ],
+        },
+      },
+      {
 
-    ///mapbox streets
-    ///hairline = switch to a hairline width of 0 for optimisation at low zoom levels where we dont care
+        "water": {
+          'include': true,
+          'default': [
+            [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
+          ],
+        },
+      },
+      {
 
-    "road": {
-      'include': true,
-      'default':      [ [0, 22, { 'color': Colors.green, 'strokeWidth' : 0.0  }     ],
-                        [16,22, { 'color': Colors.greenAccent, 'strokeWidth' : 2.0 }     ],
-      ],
-      'service':      [ [12, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
-      ],
-      'street':       [ [15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
-      ],
-      'pedestrian':   [ [15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
-      ],
-      'street_limited':[[15, 22, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
-      ],
-      'motorway':     [ [0, 11, { 'color': Colors.orange,           'strokeWidth' : 0.0  }     ],
-                        [12,5, { 'color': Colors.orange.shade200, 'strokeWidth' : 3.0 }     ],
-                        [14,22, { 'color': Colors.orange.shade100, 'strokeWidth' : 8.0 }     ],
-      ],
-      'motorway_link':  [ [0, 11, { 'color': Colors.orange,        'strokeWidth' : 0.0  }     ],
-                        [12,15, { 'color': Colors.orange.shade200, 'strokeWidth' : 3.0 }     ],
-                        [14,22, { 'color': Colors.orange.shade100, 'strokeWidth' : 8.0 }     ],
-      ],
-      'trunk':        [ [0, 11, { 'color': Colors.orangeAccent,    'strokeWidth' : 0.0  }     ],
-                        [12,15, { 'color': Colors.orange.shade200, 'strokeWidth' : 3.0 }     ],
-                        [17,22, { 'color': Colors.orange.shade100, 'strokeWidth' : 8.0 }     ],
-      ],
-      'trunk_link':    [[0, 11, { 'color': Colors.orangeAccent,     'strokeWidth' : 0.0  }     ],
-                        [12,16, { 'color': Colors.orange.shade100, 'strokeWidth' : 3.0 }     ],
-                        [17,22, { 'color': Colors.orange.shade100, 'strokeWidth' : 8.0 }     ],
-      ],
-      'primary':     [  [11, 16, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
-      ],
-      'primary_link': [ [11, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
-      ],
-      'secondary':   [  [11, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
-      ],
-      'secondary_link':[[11, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
-      ],
-      'tertiary':     [ [14, 16, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
-      ],
-      'tertiary_link': [[14, 22, { 'color': Colors.blueGrey.shade400, 'strokeWidth' : 0.0  }   ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 8.0 }     ],
-      ],
-      'residential':  [ [14, 15, { 'color': Colors.blueGrey.shade600, 'strokeWidth' : 0.0  }     ],
-                        [16,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 5.0 }     ],
-                        [17,22, { 'color': Colors.blueGrey.shade300, 'strokeWidth' : 7.0 }     ],
-      ],
-      'path':         [ [0, 22, { 'color': Colors.brown.shade400,    'strokeWidth' : 2.0  }     ],
-      ],
-      'track':        [ [0, 22, { 'color': Colors.brown.shade300,    'strokeWidth' : 2.0  }     ],
-      ],
-      'major_rail':   [ [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth' : 1.0  }     ],
-      ],
-      'minor_rail':   [ [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth' : 1.0  }     ],
-      ],
-      'service_rail': [ [12, 22, { 'color': Colors.blueGrey.shade800, 'strokeWidth' : 1.0  }     ],
-      ],
-      'construction': [ [14, 22, { 'color': Colors.brown,              'strokeWidth' : 0.0  }     ],
-      ],
-      'ferry':        [ [0, 22, { 'color': Colors.blue.shade800,      'strokeWidth' : 0.0  }     ],
-      ],
-      'golf':         [ [15, 22, { 'color': Colors.brown.shade400,    'strokeWidth' : 2.0  }     ],
-      ],
-      'aerialway':    [ [14, 22, { 'color': Colors.brown.shade400,    'strokeWidth' : 2.0  }     ],
-      ],
-    },
+        "waterway": {
+          'include': true,
+          'default': [
+            [13, 22, { 'color': Colors.blue.shade700, 'strokeWidth': 0.0}],
+          ],
+          'river': [
+            [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
+          ],
+          'canal': [
+            [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
+          ],
+          'stream': [
+            [14, 22, { 'color': Colors.blue.shade900, 'strokeWidth': 0.0}],
+          ],
+          'stream_intermittent': [
+            [13, 22, { 'color': Colors.blue.shade900, 'strokeWidth': 0.0}],
+          ],
+          'ditch': [
+            [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
+          ],
+          'drain': [
+            [13, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
+          ],
+        },
+      },
+      {
 
-    "motorway_junction": {
-      'include': true,
-      'default':  [ [0, 22, { 'color': Colors.deepPurple, 'strokeWidth': 5.0}],
-      ],
-    },
+        "transit_stop": {
+          'include': true,
+          'default': [
+            [14, 22, { 'color': Colors.deepOrange, 'strokeWidth': 0.0}],
+          ],
+        },
+      },
+      {
 
-    "landuse": {
-      'include': true,
-      'default':  [ [14, 22, { 'color': Colors.lightGreen,   'strokeWidth': 0.0 } ],
-      ],
-      'airport':  [ [13, 21, { 'color': Colors.grey,        'strokeWidth': 0.0 } ],
-      ],
-      'hospital':  [ [15, 21, { 'color': Colors.grey,        'strokeWidth': 0.0 } ],
-      ],
-      'sand':     [ [12, 21, { 'color': Colors.amber,       'strokeWidth': 0.0 } ],
-      ],
-      'playground':[[14, 22, { 'color': Colors.green.shade400, 'strokeWidth': 0.0 } ],
-      ],
-      'grass':    [ [13, 22, { 'color': Colors.lightGreen, 'strokeWidth': 0.0 } ],
-      ],
-      'park':     [ [13, 22,  { 'color': Colors.lightGreen, 'strokeWidth': 0.0 } ],
-      ],
-      'pitch':     [ [13, 22,  { 'color': Colors.green,     'strokeWidth': 0.0 } ],
-      ],
-      'parking':     [ [14, 22,  { 'color': Colors.green.shade100, 'strokeWidth': 0.0 } ],
-      ],
-      'wood':       [ [10, 22,  { 'color': Colors.green.shade800,   'strokeWidth': 0.0 } ],
-      ],
-      'agriculture':  [ [13, 22,  { 'color': Colors.green.shade700,   'strokeWidth': 0.0 } ],
-      ],
-      'school':     [ [14, 22,  { 'color': Colors.grey,             'strokeWidth': 0.0 } ],
-      ],
-      'scrub':     [ [10, 22,  { 'color': Colors.green.shade600,   'strokeWidth': 0.0 } ],
-      ],
-      'cemetery':   [ [15, 22,  { 'color': Colors.green.shade700,   'strokeWidth': 0.0 } ],
-      ],
-      'rock':       [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
-      ],
-      'glacier':   [ [12, 22,  { 'color': Colors.grey,   'strokeWidth': 0.0 } ],
-      ],
-    },
-
-    "landuse_overlay": {
-      'include': true,
-      'default': [ [12, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
-      ],
-      'national_park': [ [12, 22, { 'color': Colors.green, 'strokeWidth': 0.0}],
-      ],
-      'wetland_noveg': [ [11, 22, { 'color': Colors.blueGrey, 'strokeWidth': 0.0}],
-      ],
-      'wetland': [ [12, 22, { 'color': Colors.blue.shade700, 'strokeWidth': 0.0}],
-      ],
-    },
-
-    "water": {
-      'include': true,
-      'default': [ [0, 22, { 'color': Colors.blue.shade500, 'strokeWidth': 0.0}],
-      ],
-    },
-
-    "waterway": {
-      'include': true,
-      'default': [ [13, 22, { 'color': Colors.blue.shade700, 'strokeWidth': 0.0}],
-      ],
-      'river': [ [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
-      ],
-      'canal': [ [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
-      ],
-      'stream': [ [14, 22, { 'color': Colors.blue.shade900, 'strokeWidth': 0.0}],
-      ],
-      'stream_intermittent': [ [13, 22, { 'color': Colors.blue.shade900, 'strokeWidth': 0.0}],
-      ],
-      'ditch': [ [12, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
-      ],
-      'drain': [ [13, 22, { 'color': Colors.blue.shade600, 'strokeWidth': 0.0}],
-      ],
-    },
-
-    "transit_stop": {
-      'include': true,
-      'default': [ [14, 22, { 'color': Colors.deepOrange, 'strokeWidth': 0.0}],
-      ],
-    },
-
-    "building": {
-      'include': true,
-      'default': [ [15, 22, { 'color': Colors.grey.shade600, 'strokeWidth': 0.0}],
-      ],
-    },
-
-    "structure": {
-      'include': true,
-      'default': [ [15, 22, { 'color': Colors.grey.shade600, 'strokeWidth': 0.0}],
-      ],
-      'fence':  [ [15, 22, { 'color': Colors.brown.shade300, 'strokeWidth': 0.0}],
-      ],
-      'hedge':  [ [15, 22, { 'color': Colors.brown.shade300, 'strokeWidth': 0.0}],
-      ],
-      'gate':  [ [16, 22, { 'color': Colors.brown.shade600, 'strokeWidth': 0.0}],
-      ],
-      'land':  [ [16, 22, { 'color': Colors.brown.shade300, 'strokeWidth': 0.0}], // eg pier
-      ],
-      'cliff':  [ [16, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}], // eg pier
-      ],
-    },
-
-    "barrierline": {
-      'include': true,
-      'default': [ [12, 22, { 'color': Colors.purple, 'strokeWidth': 0.0}],
-      ],
-    },
-
-    "aeroway": {
-      'include': true,
-      'default': [ [12, 22, { 'color': Colors.orange, 'strokeWidth': 0.0}],
-      ],
-    },
-
-    "waterway_label": {
-      'include': true,
-      'default': [ [15, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-    },
-
-    "poi_label": {
-      'include': true,
-      'default':        [ [15, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-      'food_and_drink': [ [16, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-      'religion':      [ [15, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-      'sport_and_leisure':[ [15, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-      'food_and_drink_stores': [ [16, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-      'park_like': [ [16, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-      'education': [ [16, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-      'public_facilities': [ [15, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-      'commercial_services ': [ [16, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-    },
-
-    "transit_stop_label": {
-      'include': true,
-      'default': [ [14, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-    },
-
-    "road_point": {
-      'include': true,
-      'default': [ [14, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-    },
-
-    "road_label": {
-      'include': true,
-      'default': [ [14, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-    },
-
-    "rail_station_label": {
-      'include': true,
-      'default': [ [14, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-    },
-
-    "natural_label": {
-      'include': true,
-      'default': [ [14, 22, { 'color': Colors.brown, 'strokeWidth': 0.0}],
-      ],
-      'landform':  [ [12, 22, { 'color': Colors.brown, 'strokeWidth': 0.0}],
-      ],
-      'sea':  [ [12, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'stream':  [ [12, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'water':  [ [12, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'canal':  [ [15, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'river':  [ [15, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'dock':  [ [15, 22, { 'color': Colors.blueGrey, 'strokeWidth': 0.0}],
-      ],
-    },
-
-    "place_label": {
-      'include': true,
-      'default': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'settlement':  [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'settlement_subdivision':  [ [14, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'park_like':  [ [14, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
-      ],
-      'types' : {
-        'village':  [ [14, 22, { 'color': Colors.black, 'strokeWidth': 0.0}] ], //15
-        'suburb':   [ [14, 22, { 'color': Colors.black, 'strokeWidth': 0.0}] ], //15
-        'hamlet':   [ [14, 22, { 'color': Colors.black, 'strokeWidth': 0.0}] ], //15
-        'city':     [ [6, 22, { 'color': Colors.black, 'strokeWidth': 0.0}] ], //6
-        'town':     [ [10, 22, { 'color': Colors.black, 'strokeWidth': 0.0}] ], //12
-      }
-    },
-
-    "airport_label": {
-      'include': true,
-      'default': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-    },
-
-    "housenum_label": {
-      'include': true,
-      'default': [ [17, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-    },
-
-    "mountain_peak_label": {
-      'include': true,
-      'default': [ [16, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-    },
-
-    "state_label": {
-      'include': true,
-      'default': [ [13, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-    },
-
-    "marine_label": {
-      'include': true,
-      'default': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-    },
-
-    "country_label": {
-      'include': true,
-      'default': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 2}],
-      ],
-    },
-
-    /*
+        "building": {
+          'include': true,
+          'default': [
+            [15, 22, { 'color': Colors.grey.shade600, 'strokeWidth': 0.0}],
+          ],
+        },
+      },
+      {
+        "structure": {
+          'include': true,
+          'default': [
+            [15, 22, { 'color': Colors.grey.shade600, 'strokeWidth': 0.0}],
+          ],
+          'fence': [
+            [15, 22, { 'color': Colors.brown.shade300, 'strokeWidth': 0.0}],
+          ],
+          'hedge': [
+            [15, 22, { 'color': Colors.brown.shade300, 'strokeWidth': 0.0}],
+          ],
+          'gate': [
+            [16, 22, { 'color': Colors.brown.shade600, 'strokeWidth': 0.0}],
+          ],
+          'land': [
+            [16, 22, { 'color': Colors.brown.shade300, 'strokeWidth': 0.0}],
+            // eg pier
+          ],
+          'cliff': [
+            [16, 22, { 'color': Colors.grey, 'strokeWidth': 0.0}],
+            // eg pier
+          ],
+        },
+      },
+      {
+        "barrierline": {
+          'include': true,
+          'default': [ [12, 22, { 'color': Colors.purple, 'strokeWidth': 0.0}],
+          ],
+        },
+      },
+      {
+        "aeroway": {
+          'include': true,
+          'default': [ [12, 22, { 'color': Colors.orange, 'strokeWidth': 0.0}],
+          ],
+        },
+      },
+      {
+        "waterway_label": {
+          'include': true,
+          'default': [ [15, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+        },
+      },
+      {
+        "poi_label": {
+          'include': true,
+          'default': [ [15, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+          'food_and_drink': [
+            [16, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+          'religion': [ [15, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+          'sport_and_leisure': [
+            [15, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+          'food_and_drink_stores': [
+            [16, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+          'park_like': [ [16, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+          'education': [ [16, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+          'public_facilities': [
+            [15, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+          'commercial_services ': [
+            [16, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+        },
+      },
+      {
+        "transit_stop_label": {
+          'include': true,
+          'default': [ [14, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+        },
+      },
+      {
+        "road_point": {
+          'include': true,
+          'default': [ [14, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+        },
+      },
+      {
+        "road_label": {
+          'include': true,
+          'default': [ [14, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+        },
+      },
+      {
+        "rail_station_label": {
+          'include': true,
+          'default': [ [14, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+        },
+      },
+      {
+        "natural_label": {
+          'include': true,
+          'default': [ [14, 22, { 'color': Colors.brown, 'strokeWidth': 0.0}],
+          ],
+          'landform': [ [12, 22, { 'color': Colors.brown, 'strokeWidth': 0.0}],
+          ],
+          'sea': [ [12, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+          ],
+          'stream': [ [12, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+          ],
+          'water': [ [12, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+          ],
+          'canal': [ [15, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+          ],
+          'river': [ [15, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+          ],
+          'dock': [ [15, 22, { 'color': Colors.blueGrey, 'strokeWidth': 0.0}],
+          ],
+        },
+      },
+      {
+        "place_label": {
+          'include': true,
+          'default': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+          ],
+          'settlement': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+          ],
+          'settlement_subdivision': [
+            [14, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+          ],
+          'park_like': [ [14, 22, { 'color': Colors.black, 'strokeWidth': 0.0}],
+          ],
+          'types': {
+            'village': [
+              [14, 22, { 'color': Colors.black, 'strokeWidth': 0.0}]
+            ],
+            //15
+            'suburb': [ [14, 22, { 'color': Colors.black, 'strokeWidth': 0.0}]],
+            //15
+            'hamlet': [ [14, 22, { 'color': Colors.black, 'strokeWidth': 0.0}]],
+            //15
+            'city': [ [6, 22, { 'color': Colors.black, 'strokeWidth': 0.0}]],
+            //6
+            'town': [ [10, 22, { 'color': Colors.black, 'strokeWidth': 0.0}]],
+            //12
+          }
+        },
+      },
+      {
+        "airport_label": {
+          'include': true,
+          'default': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+        },
+      },
+      {
+        "housenum_label": {
+          'include': true,
+          'default': [ [17, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+        },
+      },
+      {
+        "mountain_peak_label": {
+          'include': true,
+          'default': [ [16, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+        },
+      },
+      {
+        "state_label": {
+          'include': true,
+          'default': [ [13, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+        },
+      },
+      {
+        "marine_label": {
+          'include': true,
+          'default': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+        },
+      },
+      {
+        "country_label": {
+          'include': true,
+          'default': [ [0, 22, { 'color': Colors.black, 'strokeWidth': 2}],
+          ],
+        },
+      },
+      /*
 
       ///traffic mapbox
       'traffic': {
@@ -764,7 +913,7 @@ class Styles {
         'default': { 'color': Colors.grey, 'min': 0, 'max': 21},
       },
       */
-
+    ]
 
   };
 
@@ -777,6 +926,8 @@ class Styles {
 
   static bool includeFeature(vectorStyle, layerString, type, featureInfo, zoom) { //reduce code...
 
+    print("includefeature check");
+
     var thisClass;
     if(featureInfo?.containsKey('properties')) {
       thisClass = featureInfo['properties']['class'] ?? 'default';
@@ -786,7 +937,10 @@ class Styles {
 
     var paramsMap = { 'layer': layerString, 'type': type, 'class': thisClass, 'zoom': zoom, 'featureInfo': featureInfo };
 
-    var style = funcCheck( vectorStyle, paramsMap);
+    var style = funcCheck(vectorStyle, paramsMap);
+
+    //print("Style $style ");
+
     var includeFeature = funcCheck( style['default'], paramsMap )['include'];
 
     if(!vectorStyle.containsKey(layerString)) layerString = 'default';
@@ -828,6 +982,8 @@ class Styles {
   static Paint getStyle(style, featureInfo, layerString, type, tileZoom, scale, diffRatio) {
     var paramsMap = { 'layer': layerString, 'type': type, 'zoom': tileZoom, 'diffRatio': diffRatio, 'featureInfo': featureInfo };
 
+    ///print("getStyle check");
+
     var className;
     if(featureInfo?.containsKey('properties')) {
       className = featureInfo['properties']['class'] ?? 'default';
@@ -845,6 +1001,24 @@ class Styles {
     if(type == 'LINESTRING' || type == 'line') paint.style = PaintingStyle.stroke; // are roads filled ?
     if(type == 'POLYGON'    || type == 'fill') paint.style = PaintingStyle.fill;
 
+    if(featureInfo['fill-color'] != null) {
+      ///print("XX HAVE ${featureInfo['fill-color']}");
+      var hslColor  = stringToHslColor(featureInfo['fill-color']);
+      paint.color = hslColor;
+    }
+    /*var featurePaint = featureInfo['paint'];
+    if(featurePaint != null) {
+      print("OK WE HAVE $featurePaint");
+      if(featurePaint['fill-color'] != null) {
+        print("Converting ${featurePaint['fill-color']}");
+        var hslList  = stringToHsl(featurePaint['fill-color']);
+        //var color =
+        print("hslList is $hslList");
+        ///paint.color = HSLColor.fromAHSL()
+
+      }
+    }
+     */
     bool matchedFeature = false;
     Map vectorStyle = funcCheck(style, paramsMap);
 
@@ -903,26 +1077,55 @@ class Styles {
   }
 }
 
-void checkMapboxFilters(Map<dynamic,dynamic> style, String haveLayer,Map featureInfo) {
+bool filterCheck( check ) {
+  return check;
+}
+
+bool parseFilterList(Map feature) {
+  return false;
+}
+
+void checkMapboxFilters(Map<dynamic,dynamic> style, String layerString,String type, Map feature, double tileZoom) {
 
   try {
-    for (var layer in style['layers']) {
+    layers: for (var layer in style['layers']) {
 
-      var matches = false;
+      //var matches = false;
 
       if (layer.containsKey('source-layer')) {
-
-        if (layer['source-layer'] != haveLayer) continue;
-        matches = true;
+        if (layer['source-layer'] != layerString) continue layers;
+        print("Matches source-layer");
+        //matches = true;
       }
       if (layer.containsKey('class')) {
-
-        if (layer['class'] != featureInfo['class']) continue;
-        matches = true;
+        if (layer['class'] != feature['properties']['class']) continue layers;
+        print("matches class");
+        //matches = true;
       }
 
-      if(matches == false) continue;
+      double? minZoom = layer['minZoom'];
+      if(minZoom != null) {
+        if(tileZoom < minZoom) {
+          print("Fails on layers");
+          continue layers;
+        }
+      }
 
+      double? maxZoom = layer['maxZoom'];
+      if(maxZoom != null) {
+        if(tileZoom > maxZoom) {
+          print("Fails on layers");
+          continue layers;
+        }
+      }
+
+      var filterList = layer['filter'];
+      if(filterList != null) {
+        print("Checking filter $filterList");
+        continue;
+      }
+
+      /*
       if(layer.containsKey('type')) {
         if(layer['type'] == 'line') {
           if(layer.containsKey('paint')) {
@@ -937,6 +1140,8 @@ void checkMapboxFilters(Map<dynamic,dynamic> style, String haveLayer,Map feature
           // todo
         }
       }
+      */
+
 
       break;
     }
@@ -945,8 +1150,16 @@ void checkMapboxFilters(Map<dynamic,dynamic> style, String haveLayer,Map feature
   }
 }
 
-List stringToHsl(string) {
-  RegExp exp = new RegExp(r"/hsl\((\d+),\s*([\d.]+)%,\s*([\d.]+)%\)/g");
-  var matches = exp.allMatches(string);
-  return matches.toList();
+Color stringToHslColor(string) {
+  RegExp exp = new RegExp(r"hsl\((\d+),\s*([\d.]+)%,\s*([\d.]+)%\)");
+  var matches = exp.allMatches(string).toList();
+
+
+  var color = HSLColor.fromAHSL(100,double.parse(matches[0][1]!),double.parse(matches[0][2]!),double.parse(matches[0][3]!));
+  return color.toColor();
+}
+
+/// https://pub.dev/packages/color_convert
+Color hexToColor(String hexString, {String alphaChannel = 'FF'}) {
+  return Color(int.parse(hexString.replaceFirst('#', '0x$alphaChannel')));
 }

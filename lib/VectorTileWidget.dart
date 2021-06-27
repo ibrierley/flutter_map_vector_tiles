@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:isolate';
 import 'dart:math' as math;
-import 'dart:ui' as dartui;
-import 'dart:ui';
+import 'dart:math';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+//import 'dart:ui';
 import 'package:flutter/foundation.dart';
 
 import 'package:flutter/material.dart';
@@ -11,6 +14,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map/src/core/bounds.dart';
 import 'package:flutter_map/src/core/point.dart';
 import 'package:flutter_map/src/map/map.dart';
+import 'package:flutter_map_vector_tile/parse_expressions.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:tuple/tuple.dart';
 
@@ -26,23 +30,173 @@ import 'package:iso/iso.dart';
 //import 'package:flutter_startup/flutter_startup.dart';
 import 'package:flutter_isolate/flutter_isolate.dart';
 
-Map decode( vectorStyle, coordsKey, bytes, options, tileZoom ) {
+import 'package:flutter/services.dart';
+import 'package:image/image.dart' as image;
+import 'dart:math' as DartMath;
 
-  Map<GeomType,List> fullGeomMap = { GeomType.linestring: [], GeomType.polygon: [], GeomType.point:  []}; /// I don't know if we will want this..may be better to separate into roads, labels, paths etc...?
-  Map<String, int> includeSummary = {};
-  Map<String, int> excludeSummary = {};
-  TileStats tileStats = new TileStats();
+Map geomToPathLayers(checkedLayers, vectorStyle, coordsKey, options, tileZoom, [ VTCache? cachedInfo ]) {
+  List labelPointlist = [];
+  List<Road> roadLabelList = [];
+
+  List pathLayers = [];
+
+  for(var featureLayer in checkedLayers) {
+
+    // var layerString = featureLayer['layerString'];
+    //print("$layerString");
+
+    Map<String, PathInfo> pathMap = {};
+
+
+    for (var feature in featureLayer) {
+      var layerString = feature['layerString'];
+
+      //print("in feature");
+      var thisClass = feature['properties'].containsKey('class') ?
+      feature['properties']['class'] : 'default';
+
+      var geom = feature['geometry'];
+      var geomType = geom['type'];
+      var coords = geom['coordinates'];
+
+      var key = "L:$layerString>C:$thisClass";
+
+      /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      if (geomType == 'POINT') {
+        List<Offset> pointsList = [];
+        var priority = 1;
+
+        var point = Offset(coords[0], coords[1]);
+        pointsList.add(point);
+
+        var dedupeKey = feature['properties']['name'] ?? point.toString();
+        dedupeKey = "${coordsKey}|" + dedupeKey;
+
+        if (layerString == "housenum_label" &&
+            !feature['properties'].containsKey('name')) {
+          feature['properties']['name'] = feature['properties']['house_num'];
+          dedupeKey = "${feature['properties']['name']}|$point";
+          priority = 2;
+        }
+
+        labelPointlist.add(
+            [ point, layerString, feature, dedupeKey, priority]);
+      } else if (geomType == "LINESTRING") {
+        var path = ui.Path();
+        for (var coordsSet in geom['coordinates']) {
+          if (coordsSet.length > 0) {
+            path.moveTo(coordsSet[0][0], coordsSet[0][1]);
+            for (var index = 1; index < coordsSet.length; index++) {
+              path.lineTo(coordsSet[index][0], coordsSet[index][1]);
+            }
+          }
+        }
+
+        if (!pathMap.containsKey(key)) {
+          pathMap[key] =
+              PathInfo(path, thisClass, geomType, layerString, feature, 1);
+          var style = Styles.getStyle(
+              vectorStyle,
+              feature,
+              layerString,
+              geomType,
+              tileZoom,
+              2,
+              2);
+          pathMap[key]?.style = style;
+        } else {
+          pathMap[key]?.path.addPath(path, Offset(0, 0));
+        }
+        if (layerString == 'road') {
+          var name = feature['properties']['ref'] ??
+              feature['properties']['name'];
+          if (name != null)
+            roadLabelList.add(
+                Road(name, feature['properties']['class'], path));
+        }
+      } else if (geomType == "POLYGON") {
+        var path = ui.Path();
+        for (var coordsSet in geom['coordinates']) {
+          List<Offset> pointsList = [];
+          for (var index = 0; index < coordsSet.length; index++) {
+            pointsList.add(Offset(coordsSet[index][0], coordsSet[index][1]));
+          }
+          path.addPolygon(pointsList, true);
+        }
+
+        if (!pathMap.containsKey(key)) {
+          pathMap[key] =
+              PathInfo(path, thisClass, geomType, layerString, feature, 1);
+          var style = Styles.getStyle(
+              vectorStyle,
+              feature,
+              layerString,
+              geomType,
+              tileZoom,
+              2,
+              2);
+          pathMap[key]?.style = style;
+        } else {
+          pathMap[key]?.path.addPath(path, Offset(0, 0));
+        }
+
+      }
+    }
+
+    if(cachedInfo != null) {
+      pathMap.forEach((pathKey, pathInfo) {
+        cachedInfo.geomInfo?.pathStore.add(pathMap);
+        ///need to explain the logic a bit more here...
+      });
+    }
+
+    pathMap.forEach((key,value){
+      pathLayers.add(value);
+    });
+
+
+  } // layer
+
+  return { 'pathLayers': pathLayers, 'roadLabelList': roadLabelList, 'labelPointList': labelPointlist };
+}
+dynamic pathsToImage( checkedLayers, vectorStyle, coordsKey, options, tileZoom ) async {
+
+  var pathLayers = geomToPathLayers(checkedLayers, vectorStyle, coordsKey, options, tileZoom, null);
+
+  var vtc = VTCache( /// hmm this is a bit of a mess, needs some refactoring
+      null, 'gettingHttp', coordsKey, tileZoom, GeomStore([], [], [], []), DateTime.now()
+  );
+  vtc.geoJson = { 'layers' : checkedLayers };
+
+  MapboxTile.decodeGeoToNative(
+      coordsKey, vtc, {}, vectorStyle, tileZoom,
+      DebugOptions());
+
+  ui.PictureRecorder recorder = ui.PictureRecorder();
+  Canvas canvas = Canvas(recorder);
+  var dpr = ui.window.devicePixelRatio;
+  if(dpr < 2) dpr = 2;
+  canvas.scale(dpr, dpr);
+
+  for(var pathInfo in pathLayers['pathLayers']) {
+    canvas.drawPath(pathInfo.path, pathInfo.style);
+  }
+
+  ui.Image picture = await recorder.endRecording().toImage((256 * dpr).ceil(),(256 * dpr).ceil());
+  var imageByteData = await picture.toByteData(format: ui.ImageByteFormat.png);
+
+  return imageByteData;
+}
+
+
+dynamic decodeBytesToGeom( vectorStyle, coordsKey, bytes, options, tileZoom ) async {
 
   final Map decoded = {};
-
-  ///print("Decoding");
 
   late vector_tile.Tile vt;
 
   if(bytes != null)
     vt = vector_tile.Tile.fromBuffer(bytes);
-
-  ///print ("bytes $bytes");
 
   int reps = 0;
 
@@ -61,7 +215,7 @@ Map decode( vectorStyle, coordsKey, bytes, options, tileZoom ) {
   for(var layer in vt.layers) {
 
     var layerString = layer.name.toString();
-   /// print("Doing $layerString");
+
     decoded[layerString] = [];
 
     if (layerSummary.containsKey(layerString)) {
@@ -84,12 +238,19 @@ Map decode( vectorStyle, coordsKey, bytes, options, tileZoom ) {
         var val;
 
         if (layerObj.hasIntValue()) {
-          val = layerObj.intValue.toString();
+          val = layerObj.intValue.toInt();
+        } else if (layerObj.hasUintValue()) {
+          val = layerObj.uintValue.toInt();
+        } else if (layerObj.hasDoubleValue()) {
+          val = layerObj.doubleValue.toDouble();
         } else if (layerObj.hasStringValue()) {
           val = layerObj.stringValue;
+        } else if (layerObj.hasBoolValue()){
+          val = layerObj.boolValue;
         } else {
-          val = layerObj.boolValue.toString();
+          print("VAL NOT CATERERED FOR $val");
         }
+        ///print("VAL IS $val type is ${val.runtimeType}");
 
         properties[layer.keys[feature.tags[tagIndex]]] = val;
       }
@@ -172,17 +333,81 @@ Map decode( vectorStyle, coordsKey, bytes, options, tileZoom ) {
         geometryInfo['coordinates'] = coordinatesList;
       }
       fullFeature['geometry'] = geometryInfo;
+      fullFeature['layerString'] = layerString;
 
-      ///print(fullFeature);
-
-      var subType = fullFeature['class']?['type'] ?? '';
-      var includeFeature = Styles.includeFeature(vectorStyle, layerString, subType, fullFeature, tileZoom);
-
-      if(includeFeature)
+      if(true)
         decoded[layerString].add(fullFeature);
     }
   } // layer
-  return decoded;
+
+  var checkedLayers = [];
+
+  var keys = '';
+  for(var key in decoded.keys) {
+    keys += key + ", ";
+  }
+
+  for( var styleLayer in vectorStyle['layers']) {
+    var newLayer = [];
+
+    ///print("stylelayer: $styleLayer");
+    var sourceLayer = styleLayer['source-layer'] ?? styleLayer.keys.first; // may be a background layer we want to deal with as well
+
+    if(sourceLayer != null) {
+      var matchingLayer = decoded[sourceLayer] ?? [];
+      if(matchingLayer.length == 0) {
+        ///print("Nothing matching decoded $sourceLayer");
+        ///print("keys was $keys");
+      }
+      for (var featureDetails in matchingLayer) {
+        ///print("$featureDetails");
+        var addedFeature = false;
+        if(styleLayer['filter'] != null) {// || styleLayer[sourceLayer].containsKey('include')) {
+          ///print("${featureDetails['geometry']['type']} ${featureDetails['properties']}");
+          var checkOk = checkFilter(styleLayer['filter'], sourceLayer, featureDetails['geometry']['type'], featureDetails['properties'], tileZoom);
+
+          if(checkOk == null) {
+            ///print("CHECK OK FOR FILTER IS NULL");
+          } else if( checkOk is bool && checkOk ) {
+            ///print("adding... $sourceLayer");
+            ///newLayer.add(featureDetails);
+            addedFeature = true;
+          } else {
+            ///print("NOT SURE HERE!!!!!!! FILTER $sourceLayer $checkOk");
+            //print("Not sure what to do here with $sourceLayer $classx filter was ${styleLayer['filter']}");
+          }
+        } else {
+          ///print("NO FILTER so adding!!!!!!!");
+          ///newLayer.add(featureDetails);
+          addedFeature = true;
+        }
+
+        if(addedFeature && styleLayer['paint'] != null) {
+          var featureStyle = checkFilter(styleLayer['paint'], sourceLayer, featureDetails['geometry']['type'], featureDetails['properties'], tileZoom);
+          ///print("Paint style is for $sourceLayer feature is $featureStyle");
+          if(featureStyle['fill-color'] != null) {
+            featureDetails['fill-color'] = checkFilter(featureStyle['fill-color'], sourceLayer, featureDetails['geometry']['type'], featureDetails['properties'], tileZoom);
+            ///print("fill colour is ${featureDetails['fill-color']}");
+          }
+          featureDetails['paint'] = featureStyle;
+        }
+        if(addedFeature) {
+          newLayer.add(featureDetails);
+        }
+      }
+    } else {
+      ///print("Have no $sourceLayer");
+    }
+
+    if(newLayer.length != 0) {
+      //print("adding newlayer");
+      checkedLayers.add(newLayer);
+    } else {
+      ///print("Nothing to add!!!!!!!!!!!!!!!!!!!!!!!!!! $sourceLayer ${styleLayer['filter']}");
+    }
+  }
+
+  return checkedLayers;
 }
 
 
@@ -241,27 +466,27 @@ class Geo {
     } else {
       features = [ json['feature'] ];
     }
-    dartui.Path superPath = dartui.Path();
-    List<dartui.Path> pathList = [];
+    ui.Path superPath = ui.Path();
+    List<ui.Path> pathList = [];
 
     print("$json");
     print("$features");
 
     for( var feature in features) {
-      print("have feature $feature");
+      //print("have feature $feature");
       if( feature.containsKey('geometry') ) {
-        print("Have geom");
+        //print("Have geom");
         var geom = feature['geometry'];
         if( geom['type'] == "Polygon") {
           for (var ring in geom["coordinates"]) {
-            print("Have ring $ring");
+          //  print("Have ring $ring");
             List<Offset> pointsList = [];
             for (List coord in ring) { // need to handle multi rings
               pointsList.add(Offset(coord[0], coord[1]));
             }
-            print("Here $pointsList");
+            //print("Here $pointsList");
             superPath.addPolygon(pointsList, true);
-            pathList.add(dartui.Path()..addPolygon(pointsList, true));
+            pathList.add(ui.Path()..addPolygon(pointsList, true));
           }
         }
       }
@@ -406,62 +631,104 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   late Map geoJson;
 
   /// ///////////////////////////////////////////////////////////////////////////////////////////////////
+  ///
 
-  static isoRun (SendPort sendPort) async {
-    // Open the ReceivePort for incoming messages.
-    var port = new ReceivePort();
-    var count = 0;
-    // Notify any other isolates what port this isolate listens to.
-    sendPort.send(port.sendPort);
 
-    await for (var msg in port) {
+  static Future isoRun (SendPort isolateToMainStream) async {
 
-      var data = msg[0];
-      SendPort replyTo = msg[1];
+    ReceivePort mainToIsolateStream = new ReceivePort();
+    isolateToMainStream.send(mainToIsolateStream.sendPort);
 
-      if( data is Map ) {
+    mainToIsolateStream.listen((val) async {
+      var data = val[0];
+      if(data is Map) {
         if(data.containsKey('bytes')) {
-          Map decodedTile = decode(Styles.mapBoxClassColorStyles, "somekey", data['bytes'], {}, data['tileZoom']);
-          replyTo.send({ "DECODED": decodedTile });
+          var checkedLayers = await decodeBytesToGeom(testStyle, data['coordsKey'], data['bytes'], {}, data['tileZoom']);
+          isolateToMainStream.send({ "decodedLayers": checkedLayers, 'coordsKey': data['coordsKey'] });
+          var imageByteData = await pathsToImage(checkedLayers, testStyle, data['coordsKey'], {}, data['tileZoom'] );
+          isolateToMainStream.send({ "imageByteData": imageByteData, 'coordsKey': data['coordsKey'] });
         }
       }
+    });
 
-      replyTo.send({ "wibble": "wobble", "dataxxx": data });
-      if (data == "bar") port.close();
-      count++;
-    }
+    isoRunning = 2;
+
   }
 
-  static Future sendReceive(SendPort port, msg) {
-    ReceivePort response = new ReceivePort();
-    port.send([msg, response.sendPort]);
-    return response.first;
-  }
   /// https://www.jpryan.me/dartbyexample/examples/isolates/
   ///
 
   /// /////////////////////////////////////////////////////////////////////////////////
-  static bool isoRunning = false;
+  static int isoRunning = 0;
   static late ReceivePort receivePort;
   static late SendPort sendPort;
+  static int isoRequests = 0;
+  static late ReceivePort isolateToMainStream; // = ReceivePort();
+  static late SendPort mainToIsolateStream;
 
-  static Future<String> isoTest( tileMap ) async {
+  void storeCachedTileInfo( coordsKey, msg, vectorOptions, debugOptions ) async {
 
-    var msg;
-    if(!isoRunning) {
-      isoRunning = true;
-      receivePort = new ReceivePort();
-      await FlutterIsolate.spawn(isoRun, receivePort.sendPort);
-      sendPort = await receivePort.first;
-      msg = await sendReceive(sendPort, "foo");
+    var cache = _cachedVectorData[coordsKey];
+    if(cache != null) {
+      if(msg.containsKey('decodedLayers')) {
+        cache.geoJson = { 'layers': msg['decodedLayers'] };
+
+        if(vectorOptions.useCanvas) {
+          MapboxTile.decodeGeoToNative(
+              coordsKey, _cachedVectorData[coordsKey]!, {}, vectorOptions.vectorStyle, msg['tileZoom'],
+              debugOptions);
+          _recentTilesCompleted[coordsKey] = DateTime.now();
+          _outstandingTileLoads.remove(coordsKey);
+        }
+      }
+      if(msg.containsKey('imageByteData')) {
+        if(vectorOptions.useImages) {
+          if(msg.containsKey('imageByteData')) {
+            ui.Codec codec = await ui.instantiateImageCodec(
+                msg['imageByteData'].buffer.asUint8List());
+            ui.FrameInfo frameInfo = await codec.getNextFrame();
+            cache.image = frameInfo.image;
+            _recentTilesCompleted[coordsKey] = DateTime.now();
+            _outstandingTileLoads.remove(coordsKey);
+          }
+        }
+      }
     }
+  }
 
-    msg = await sendReceive(sendPort, tileMap);
+  Future<String> isoTest( tileMap, vectorOptions, debugOptions ) async {
 
-    msg['DECODED'].forEach((key, features){
-      //debugPrint("FEATURES... $key $features", wrapWidth: 1024);
+    WidgetsFlutterBinding.ensureInitialized();
+    isoRequests++;
+
+    if(isoRunning == 0) {
+      isoRunning = 1;
+      isolateToMainStream = ReceivePort();
+      isolateToMainStream.listen((data){
+        if(data is SendPort) {
+          mainToIsolateStream = data;
+        } else {
+          if(data is Map) {
+            if(data.containsKey('decodedLayers')  || data.containsKey('imageByteData')) {
+              storeCachedTileInfo( data['coordsKey'], data, vectorOptions, debugOptions );
+            }
+          }
+        }
+      });
+
+      FlutterIsolate.spawn(isoRun, isolateToMainStream.sendPort);
+
+      await Future.delayed(Duration(seconds: 2), () async {
+        isoRunning = 2;
+        mainToIsolateStream.send([tileMap, isolateToMainStream.sendPort]);
+      });
+    }
+    var waitTime = isoRunning < 2 ? 3 : 0;
+
+    await Future.delayed(Duration(seconds: waitTime), () async {
+      mainToIsolateStream.send([tileMap, isolateToMainStream.sendPort]);
     });
-    _cachedVectorData[tileMap['coordsKey']]?.geoJson = msg['DECODED'];
+
     return tileMap['coordsKey'];
   }
 
@@ -469,9 +736,9 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   @override
   void initState() {
 
+    print("INIT STATE");
+
     super.initState();
-    /// Experimental // ///////////////////////////////////////////////////////////////////
-    ///geoJson = Geo().process();
     geoJson = {};
 
     vectorOptions = widget.vectorTileLayerOptions;
@@ -481,25 +748,31 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     vectorStyle = vectorOptions.vectorStyle ?? Styles.mapBoxClassColorStyles;
 
     var mapController = vectorOptions.mapController;
-    if( mapController != null ) {
-      mapController.mapEventStream.listen((event) {
 
-        /// hack to see if we can speed up pinchzooms...
-        /// use hairline if middle of pinchzoom
-        if( optimisations.pinchZoomOption) {
-          if (event.source == MapEventSource.onMultiFinger &&
-              (event is MapEventMoveStart)) {
-            optimisations.pinchZoom = true;
+    mapController?.onReady.then((_) {
+        mapController.mapEventStream.listen((event) {
+
+          if (optimisations.pinchZoomOption) {
+            if (event.source == MapEventSource.onMultiFinger &&
+                (event is MapEventMoveStart)) {
+              optimisations.pinchZoom = true;
+            }
+            if (event.source == MapEventSource.onDrag &&
+                (event is MapEventMoveStart)) {
+              optimisations.pinchZoom = true;
+            }
+            if (event.source == MapEventSource.multiFingerEnd ||
+                event.source == MapEventSource.dragEnd) {
+              optimisations.pinchZoom = false;
+            }
           }
-          if (event.source == MapEventSource.multiFingerEnd ||
-              event.source == MapEventSource.dragEnd) {
-            optimisations.pinchZoom = false;
-          }
-        }
-      });
-    }
+        });
+      }
+    );
+
 
     _tileSize = CustomPoint(vectorOptions.tileSize, vectorOptions.tileSize);
+    ///print("calling resetview");
     _resetView();
     _moveSub = widget.stream.listen((_) => _handleMove());
     _housekeepingTimer = Timer.periodic(Duration(hours: 24), (Timer t) => _tidyOldTileListEntries());
@@ -640,6 +913,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
                       (j ~/ (ratio * underZoomRatio) + b).toDouble());
                   backupCoords.z = backupZoom;
 
+
                   /// set backup zoom level to check what was in old completed map
 
                   var backupTileKey = _tileCoordsToKey(backupCoords);
@@ -681,6 +955,9 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     var tilesToRender = <VTile>[];
     for (var tile in _tiles.values) {
+      //print("here");
+      //print("${tile.coords.z}");
+      //print("${_level.zoom}");
       if ((tile.coords.z - _level.zoom).abs() <= 1 + math.pow(2, underZoom)) {
         if (!_cachedVectorData.containsKey(_tileCoordsToKey(tile.coords))) {
           fetchData(tile.coords);
@@ -767,40 +1044,17 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       if (_cachedVectorData[coordsKey]?.state == 'gettingHttp') {
 
         DefaultCacheManager().getSingleFile(url).then( ( value ) async {
-
           var cachedVectorData = _cachedVectorData[coordsKey];
 
           try {
             _cachedVectorData[coordsKey]?.state = 'got';
 
             var bytes = value.readAsBytesSync();
+
             /// /////////////////////////////////////////////////////
-            await isoTest( { 'bytes': bytes, 'coordsKey' : coordsKey, 'tileZoom': _tileZoom} );
-
-            if( !vectorOptions.useImages ) {
-              if( cachedVectorData != null )
-                cachedVectorData.units = bytes;
-
-              if( cachedVectorData != null )
-                MapboxTile.decode(
-                  coordsKey, cachedVectorData, {}, vectorOptions.vectorStyle, _tileZoom,
-                  debugOptions);
-
-            } else {
-
-              await decodeImageFromList(bytes).then(( image ){
-                if( cachedVectorData != null )
-                  cachedVectorData.image = image;
-              });
-            }
-
-            _recentTilesCompleted[coordsKey] = DateTime.now();
-
-            ///backup tiles uses these to know which it can use as a backup
-            _outstandingTileLoads.remove(coordsKey);
-
-            setState(() {});
-
+            cachedVectorData?.units = bytes;
+            isoTest( { 'bytes': bytes, 'coordsKey' : coordsKey,
+              'tileZoom': _tileZoom, 'usePerspective': vectorOptions.usePerspective, }, vectorOptions, debugOptions );
           } catch (e) {
             print("$e");
           }
@@ -848,7 +1102,9 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       }
 
     }
+
     var levelZoom = _levels[zoom];
+    ///print("_updatelevels $zoom $levelZoom ${_levels[zoom]}");
     if(levelZoom != null)
       _level = levelZoom;
 
@@ -1003,7 +1259,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     /// may be quite tricky, so currently we'll suggest 1 day. It will get removed
     /// if the tile is tried another time and completed.
     _outstandingTileLoads.removeWhere((key, timeCompleted) =>
-    DateTime.now().difference(timeCompleted).inMinutes >= 5);
+    DateTime.now().difference(timeCompleted).inMinutes >= 1);
 
     /// We only want to try and use our retries within a reasonable session
     /// So we'll assume people will be fine with a reset of our retries every

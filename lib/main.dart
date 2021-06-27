@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'vector_tile_plugin.dart';
 import 'package:flutter_map_vector_tile/VectorTileWidget.dart';
 import 'package:flutter_map_vector_tile/styles.dart';
+import 'parse_expressions.dart';
 
 
 void main() {
@@ -54,11 +55,16 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     mapController = MapController();
+    ///mapController?.onReady.then((_){print("mapcontroller ready...."); });
+
   }
 
   Widget build(BuildContext context) {
 
-    var testStyle = {
+    var orientation = MediaQuery.of(context).orientation;
+    print("${MediaQuery.of(context).orientation}");
+
+    var testStylexx = {
       'default': ( paramsMap ) {
         return {
           'include': true,
@@ -91,6 +97,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
     var fmap =  FlutterMap(
+      key: ValueKey(MediaQuery.of(context).orientation),
             mapController: mapController,
             options: new MapOptions(
               plugins: [
@@ -119,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ///https://stamen.com/open-source/
 
                 useCanvas: false,
-                useImages: false, //disabled, code currently removed, but could be added, not sure I currently see the benefit
+                useImages: true, //disabled, code currently removed, but could be added, not sure I currently see the benefit
                 useBackupTiles: true, //use a previously loaded tile if current one not available yet
                 usePerspective: false, // experimental, doesn't work with rotate on
                 underZoom: 0, // how many zoom levels above current one to use instead, try 1 or 2 for example
@@ -128,6 +135,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 optimisations: optimisations,
                 ///vectorStyle: Styles.stadiaClassColorStyles,
                 vectorStyle: Styles.mapBoxClassColorStyles,
+               /// vectorStyle: testStyle
                 ///vectorStyle: testStyle,
               ),
             ],
@@ -135,6 +143,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
         return fmap;
 
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
   }
 
 

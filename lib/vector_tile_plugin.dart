@@ -120,172 +120,45 @@ class MapboxTile {
     map[ key ] = map.containsKey(key) ? map[ key ]++ : 1;
   }
 
-  static void decode( coordsKey, VTCache cachedInfo, options, vectorStyle, tileZoom, DebugOptions debugOptions ) {
+  static void decodeGeoToNative( coordsKey, VTCache cachedInfo, options, vectorStyle, tileZoom, DebugOptions debugOptions ) {
 
-    Map<GeomType,List> fullGeomMap = { GeomType.linestring: [], GeomType.polygon: [], GeomType.point:  []}; /// I don't know if we will want this..may be better to separate into roads, labels, paths etc...?
+    var start = DateTime.now();
+
     Map<String, int> includeSummary = {};
     Map<String, int> excludeSummary = {};
     TileStats tileStats = new TileStats();
     cachedInfo.state = 'Decoding';
-    late vector_tile.Tile vt;
 
-    var units = cachedInfo.units;
+    var jsonMap = cachedInfo.geoJson ?? {};
 
-    if(units != null)
-      vt = vector_tile.Tile.fromBuffer(units);
-
-    Map<String, int> layerOrderMap = Styles.defaultLayerOrder();
-
-    if(layerOrderMap.keys.length > 0) {
-
-      vt.layers.sort((a, b) {
-        return (layerOrderMap[ a.name ] ?? 15).compareTo(
-            layerOrderMap[ b.name ] ?? 15);
-      });
-    }
-
-    Map layerSummary = {};
-
-    List labelPointlist = [];
-    List<Road> roadLabelList = [];
-
-    var layers = cachedInfo.geoJson ?? {};
-    layers.forEach((layerString, features) {
-
-      Map<String, PathInfo> pathMap = {};
-
-      if(layerSummary.containsKey(layerString)) {
-        layerSummary[layerString]++;
-      } else {
-        layerSummary[layerString] = 0;
-      }
-
-      for (var feature in features) {
-
-        var thisClass = feature['properties'].containsKey('class') ?
-        feature['properties']['class'] : 'default';
-
-        var geom = feature['geometry'];
-        var geomType = geom['type'];
-        var coords = geom['coordinates'];
-
-        var key = "L:$layerString>C:$thisClass";
-
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        if(geomType == 'POINT') {
-
-          List<Offset> pointsList = [];
-          var priority = 1;
-
-          var point = Offset(coords[0],coords[1]);
-          pointsList.add(point);
-          var dedupeKey = feature['properties']['name'] ?? point.toString();
-          dedupeKey = "${coordsKey}|" + dedupeKey;
-
-          if(layerString == "housenum_label" && !feature['properties'].containsKey('name')) {
-            feature['properties']['name'] = feature['properties']['house_num'];
-            dedupeKey = "${feature['properties']['name']}|$point";
-            priority = 2;
-          }
-
-            labelPointlist.add([ point, layerString, feature, dedupeKey, priority ]);
-
-        } else if( geomType == "LINESTRING") {
-          var path = dartui.Path();
-          for(var coordsSet in geom['coordinates']) {
-            if(coordsSet.length > 0) {
-              path.moveTo(coordsSet[0][0],coordsSet[0][1]);
-              for(var index = 1; index < coordsSet.length; index++) {
-                path.lineTo(coordsSet[index][0],coordsSet[index][1]);
-              }
-            }
-          }
-
-          if(!pathMap.containsKey(key)) {
-
-            pathMap[key] = PathInfo(path, thisClass, geomType, layerString, feature, 1 );
-            var style = Styles.getStyle(vectorStyle, feature,
-                layerString, geomType, tileZoom,
-                2, 2);
-            pathMap[key]?.style = style;
-
-          } else {
-            pathMap[key]?.path.addPath(path, Offset(0, 0));
-          }
-          if(layerString == 'road') {
-            var name = feature['properties']['ref'] ?? feature['properties']['name'];
-            if( name != null )
-              roadLabelList.add( Road( name, feature['properties']['class'], path ) );
-          }
-
-        } else if( geomType == "POLYGON") {
-          var path = dartui.Path();
-          for(var coordsSet in geom['coordinates']) {
-            List<Offset> pointsList = [];
-              for(var index = 0; index < coordsSet.length; index++) {
-                pointsList.add(Offset(coordsSet[index][0],coordsSet[index][1]));
-              }
-            path.addPolygon(pointsList, true);
-
-
-          }
-
-          if(!pathMap.containsKey(key)) {
-            pathMap[key] = PathInfo(path, thisClass, geomType, layerString, feature, 1 );
-            var style = Styles.getStyle(vectorStyle, feature,
-                layerString, geomType, tileZoom,
-                2, 2);
-            pathMap[key]?.style = style;
-          } else {
-            pathMap[key]?.path.addPath(path, Offset(0, 0));
-          }
-;
-        }
-
-      }
-
-      pathMap.forEach((pathKey, pathInfo) {
-        ///print("Final keys..$pathKey $pathInfo");
-        cachedInfo.geomInfo?.pathStore.add(pathMap); ///need to explain the logic a bit more here...
-      });
-
-    }); // layer
-
+    var pathLayers = geomToPathLayers(jsonMap['layers'], vectorStyle, coordsKey, options, tileZoom, cachedInfo);
 
     if(!options.containsKey('noLabels')) {
 
-      for(var pointInfo in labelPointlist) {
+      for(var pointInfo in pathLayers['labelPointList']) {
         var layerString = pointInfo[1];
-        var featureInfo = pointInfo[2]; // redo this to a class ?
 
         var thisClass = pointInfo[2]['properties']['class'] ?? 'default';
-        var includeFeature = Styles.includeFeature(vectorStyle, layerString, pointInfo[2]['properties']['type'], featureInfo, tileZoom);
         var summaryKey = "L:" + layerString + "_C:" + thisClass +"_Z:" + tileZoom.toString();
 
-        if( includeFeature ) {
+        if( true ) {
           var info = pointInfo[2]['properties']['name'];
 
           if (info != null) {
-
-            /// feel like getNewPainter should be cached and set in the painter...
-            /// also use better params for pointInfo and maybe a class..
             cachedInfo.geomInfo?.labels.add(
               Label( text: info.toString(), point: pointInfo[0],
                   textPainter: getNewPainter(info.toString()), dedupeKey: pointInfo[3],
                   priority: pointInfo[4], coordsKey: coordsKey ) );
-
           }
           tileStats.labels++;
 
           summaryAdd(summaryKey, includeSummary);
-        } else {
-          summaryAdd(summaryKey, excludeSummary);
         }
       }
     }
 
     if(!debugOptions.skipRoadLabels) {
-      for (var road in roadLabelList) {
+      for (var road in pathLayers['roadLabelList']) {
 
         var halfway;
         var metrics = road.path.computeMetrics();
@@ -307,16 +180,19 @@ class MapboxTile {
       }
     }
 
-    ///tileStats.dump();
     if( debugOptions.featureSummary ) {
       print("INCLUDES: $includeSummary");
       print("EXCLUDES $excludeSummary");
     }
 
     cachedInfo.state = 'Decoded';
+
+    var end = DateTime.now().difference(start);
+    print("decode to paths took...${end.inMilliseconds} milli");
+    print("dpr here is ${dartui.window.devicePixelRatio}");
+
   }
 }
-
 
 
 
@@ -341,10 +217,6 @@ class VectorPainter extends CustomPainter {
   static double prevTileZoom = 0.0;
   static List<Label> prevLabels = [];
 
-  TextPainter cachedTextPainter = TextPainter(
-      textDirection: TextDirection.ltr,
-      textAlign: TextAlign.center);
-
   List<Map<String, bool>> layerDisplaySegments = Filters.layerDisplaySegments();
 
   VectorPainter(Offset this.dimensions, double this.rotation,
@@ -366,6 +238,8 @@ class VectorPainter extends CustomPainter {
     Map<String, Label> wantedLabels = {};
     List<Label> hiPriQueue = [];
 
+    var start = DateTime.now();
+
     final pointPaint = Paint()
       ..color = Colors.grey
       ..strokeWidth = 5
@@ -385,15 +259,17 @@ class VectorPainter extends CustomPainter {
     final Rect myRect = Offset(0,0) & Size(256.0,256.0);
     /// Normal paths
     for (var tile in tilesToRender) {
+      var usedPaintedImage = false;
       final String tileCoordsKey = tileCoordsToKey(tile.coords);
       final PositionInfo? pos = cachedVectorDataMap[tileCoordsKey]?.positionInfo;
 
-      if(useImages) {
+      if(useImages && cachedVectorDataMap[tileCoordsKey]?.image != null) {
         if ((pos != null) && (cachedVectorDataMap[tileCoordsKey]?.image != null)) {
           paintTile(canvas, pos, cachedVectorDataMap[tileCoordsKey]?.image);
         }
-        continue;
+        usedPaintedImage = true;
       }
+
 
 
 
@@ -420,33 +296,48 @@ class VectorPainter extends CustomPainter {
       // Rect myRect = Offset(pos['pos'].x, pos['pos'].y) & Size(adjustedSize.dx, adjustedSize.dy);
       // canvas.clipRect(myRect);
 
-      final List<Map<String, PathInfo>> dataMap = cachedVectorDataMap[tileCoordsKey]?.geomInfo?.pathStore ?? [];
+      if(!usedPaintedImage) {
 
-      for (Map<String, PathInfo> layer in dataMap) {
-        for (var layerKey in layer.keys) {
-          /// we have a map for each layer, paths should be combined to same style/type
-          PathInfo? pathMap = layer[layerKey];
+        final List<
+            Map<String, PathInfo>> dataMap = cachedVectorDataMap[tileCoordsKey]
+            ?.geomInfo?.pathStore ?? [];
 
-          if (pathMap?.path != null) {
-            // cache style if we can to save lookups, we may want to add
-            // a method to reload new styles in though
+        for (Map<String, PathInfo> layer in dataMap) {
+          for (var layerKey in layer.keys) {
+            /// we have a map for each layer, paths should be combined to same style/type
+            PathInfo? pathMap = layer[layerKey];
 
-            final style = pathMap?.style ?? Styles.getStyle(vectorStyle, pathMap?.featureInfo,
-                pathMap?.layerString, pathMap?.type, tileZoom,
-                pos?.scale, 2);
+            if (pathMap?.path != null) {
+              // cache style if we can to save lookups, we may want to add
+              // a method to reload new styles in though
 
-            /// if we've pinchzooming, use thin lines for speed
-            double oldStrokeWidth = style.strokeWidth;
-            if (optimisations.pinchZoom) style.strokeWidth = 0.0;
+              final style = pathMap?.style ?? Styles.getStyle(
+                  vectorStyle,
+                  pathMap?.featureInfo,
+                  pathMap?.layerString,
+                  pathMap?.type,
+                  tileZoom,
+                  pos?.scale,
+                  2);
 
-            if( pathMap != null) {
-              ///canvas.drawPath(pathMap.path.transform(matrix.storage), style);
-              canvas.drawPath(pathMap.path, style);
-              style.strokeWidth = oldStrokeWidth;
+
+              /// if we've pinchzooming, use thin lines for speed
+              double oldStrokeWidth = style.strokeWidth;
+              if (true || optimisations.pinchZoom) {
+                ///print("Style optimisation");
+                style.strokeWidth = 0.0;
+              }
+
+              if (pathMap != null) {
+                ///canvas.drawPath(pathMap.path.transform(matrix.storage), style);
+                canvas.drawPath(pathMap.path, style);
+                style.strokeWidth = oldStrokeWidth;
+              }
             }
           }
         }
       }
+
       if (debugOptions.tiles) {
         _debugTiles(canvas, tile);
       }
@@ -458,7 +349,7 @@ class VectorPainter extends CustomPainter {
 
     /// End Normal Paths
 
-    if (useImages) return;
+    ///if (useImages) return;
 
     /// Start draw Labels
 
@@ -524,18 +415,21 @@ class VectorPainter extends CustomPainter {
 
     _orderLabelsAndDraw(
         wantedLabels, hiPriQueue, canvas, pointPaint, widgetRotation,
-        isRotated);
+        isRotated, tileZoom, debugOptions);
+
+    var end = DateTime.now().difference(start).inMilliseconds;
+    print("draw paint took...${end} milliseconds");
   }
 
-  void _drawTextAt(Offset position, Canvas canvas, scale, textPainter) {
+  static void _drawTextAt(Offset position, Canvas canvas, scale, textPainter) {
     final Offset drawPosition =
     Offset(position.dx - textPainter.width / 2,
         position.dy + (textPainter.height / 2));
     textPainter.paint(canvas, drawPosition);
   }
 
-  void _orderLabelsAndDraw(wantedLabels, hiPriQueue, canvas, pointPaint,
-      widgetRotation, isRotated) {
+  static void _orderLabelsAndDraw(wantedLabels, hiPriQueue, canvas, pointPaint,
+      widgetRotation, isRotated, tileZoom, debugOptions) {
 
 
     final Map qMap = {};
@@ -597,7 +491,7 @@ class VectorPainter extends CustomPainter {
     }
   }
 
-  void _drawLabels(Label label, Canvas canvas, bool isRotated,
+  static void _drawLabels(Label label, Canvas canvas, bool isRotated,
       double widgetRotation) {
     var drawPoint = label.transformedPoint;
 
@@ -646,19 +540,20 @@ class VectorPainter extends CustomPainter {
     }
   }
 
-  void paintTile(canvas, pos, image) {
+  static void paintTile(canvas, pos, image) {
+    print("PAINTING TILE IMAGE IS $image scale is ${pos.scale}");
     paintImage(canvas: canvas,
         rect: Rect.fromLTWH(pos.point.x, pos.point.y, pos.width, pos.height),
         scale: pos.scale,
         fit: BoxFit.fitWidth,
         alignment: Alignment.topLeft,
-        filterQuality: FilterQuality.medium,
-        isAntiAlias: false, // true will give unwanted visible tile edges
+        filterQuality: FilterQuality.low,
+        isAntiAlias: true, // true will give unwanted visible tile edges
         image: image);
   }
 
 
-  bool checkLabelOverlaps( List labelsToCheck, Label label  ) { // add fontsize (14) to the check...
+  static bool checkLabelOverlaps( List labelsToCheck, Label label  ) { // add fontsize (14) to the check...
 
     bool collides = false;
 
@@ -678,7 +573,7 @@ class VectorPainter extends CustomPainter {
     return collides;
   }
 
-  void _updateLabelBounding(Label label) {
+  static void _updateLabelBounding(Label label) {
     final widthFactor = 9.0; // how big as a ratio of text to size up
     final labelLength = label.text.length;
     final padding = 10.0;
@@ -702,7 +597,7 @@ class VectorPainter extends CustomPainter {
 
   }
 
-  double getNoneUpsideDownTextAngle(Label label, double widgetRotation) {
+  static double getNoneUpsideDownTextAngle(Label label, double widgetRotation) {
     double angleDeg = -label.angle * RADTODEG;
     angleDeg += 90;
 
@@ -718,7 +613,7 @@ class VectorPainter extends CustomPainter {
     return angleDeg;
   }
 
-  void _debugTiles(Canvas canvas, VTile tile) {
+  static void _debugTiles(Canvas canvas, VTile tile) {
 
     final paint = Paint()
       ..color = Colors.yellowAccent
@@ -754,7 +649,7 @@ class VectorPainter extends CustomPainter {
     textPainter.paint(canvas, Offset(0.0,0.0));
   }
 
-  void debugRect(canvas, Label label) {
+  static void debugRect(canvas, Label label) {
     final Path path = Path();
 
     var nwx = label.boundNWx.toDouble();
