@@ -1001,10 +1001,27 @@ class Styles {
     if(type == 'LINESTRING' || type == 'line') paint.style = PaintingStyle.stroke; // are roads filled ?
     if(type == 'POLYGON'    || type == 'fill') paint.style = PaintingStyle.fill;
 
-    if(featureInfo['fill-color'] != null) {
-      ///print("XX HAVE ${featureInfo['fill-color']}");
-      var hslColor  = stringToHslColor(featureInfo['fill-color']);
-      paint.color = hslColor;
+    //print("TYPE IS $type");
+    //print("$featureInfo");
+
+    if(type == 'POLYGON') {
+      if (featureInfo['fill-color'] != null) {
+        //print("FILL COLOR HAVE ${featureInfo['fill-color']}");
+        var hslColor =  hslStringToRgbColor(featureInfo['fill-color']);
+        paint.color = hslColor;
+      }
+    } else if(type == 'LINESTRING') {
+     // print("${featureInfo['paint']}");
+      if (featureInfo['line-color'] != null) {
+        var hslColor =  hslStringToRgbColor(featureInfo['line-color']);
+        //print("LINE COLOR IS $hslColor");
+        paint.color = hslColor;
+      }
+      if (featureInfo['line-width'] != null) {
+        ///print("LINE WIDTH IS ${featureInfo['line-width']} ");
+
+        paint.strokeWidth = featureInfo['line-width'].toDouble();
+      }
     }
     /*var featurePaint = featureInfo['paint'];
     if(featurePaint != null) {
@@ -1063,7 +1080,7 @@ class Styles {
 
     ///if(!matchedFeature && debugOptions.missingFeatures) print ("$layerString $type $className $tileZoom not found");
 
-    paint.strokeWidth =  (paint.strokeWidth / scale); ///.ceilToDouble();
+    ///paint.strokeWidth =  (paint.strokeWidth / scale); ///.ceilToDouble();
 
     return paint;
   }
@@ -1150,16 +1167,69 @@ void checkMapboxFilters(Map<dynamic,dynamic> style, String layerString,String ty
   }
 }
 
-Color stringToHslColor(string) {
+List stringToHslColor(string) {
   RegExp exp = new RegExp(r"hsl\((\d+),\s*([\d.]+)%,\s*([\d.]+)%\)");
   var matches = exp.allMatches(string).toList();
 
+  return [double.parse(matches[0][1]!),double.parse(matches[0][2]!),double.parse(matches[0][3]!)];
+  //var color = HSLColor.fromAHSL(1,double.parse(matches[0][1]!),double.parse(matches[0][2]!),double.parse(matches[0][3]!));
+ // return color.toColor();
+}
 
-  var color = HSLColor.fromAHSL(100,double.parse(matches[0][1]!),double.parse(matches[0][2]!),double.parse(matches[0][3]!));
-  return color.toColor();
+Color hslStringToRgbColor(hslString) {
+  var list = stringToHslColor(hslString);
+  var rgbList = hslToRgb(list);
+  return Color.fromRGBO(rgbList[0].toInt(), rgbList[1].toInt(), rgbList[2].toInt(), 1.0);
 }
 
 /// https://pub.dev/packages/color_convert
 Color hexToColor(String hexString, {String alphaChannel = 'FF'}) {
   return Color(int.parse(hexString.replaceFirst('#', '0x$alphaChannel')));
+}
+
+/// https://github.com/crystalboxes/color_convert/blob/master/lib/src/hsl.dart that dep isn't nullsafe tho yet...
+List<num> hslToRgb(hsl) {
+  final h = hsl[0] / 360;
+  final s = hsl[1] / 100;
+  final l = hsl[2] / 100;
+  double t2, t3, val;
+
+  if (s == 0) {
+    val = l * 255;
+    return [val, val, val];
+  }
+
+  if (l < 0.5) {
+    t2 = l * (1 + s);
+  } else {
+    t2 = l + s - l * s;
+  }
+
+  final t1 = 2 * l - t2;
+
+  final rgb = <num>[0, 0, 0];
+  for (var i = 0; i < 3; i++) {
+    t3 = h + 1 / 3 * -(i - 1);
+    if (t3 < 0) {
+      t3++;
+    }
+
+    if (t3 > 1) {
+      t3--;
+    }
+
+    if (6 * t3 < 1) {
+      val = t1 + (t2 - t1) * 6 * t3;
+    } else if (2 * t3 < 1) {
+      val = t2;
+    } else if (3 * t3 < 2) {
+      val = t1 + (t2 - t1) * (2 / 3 - t3) * 6;
+    } else {
+      val = t1;
+    }
+
+    rgb[i] = val * 255;
+  }
+
+  return rgb;
 }

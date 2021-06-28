@@ -6,6 +6,7 @@ main() {
   //Map feature = { 'class': 'residential', 'filterrank': 2.0, 'sizerank': 14.0, "name": "Somename", 'rank': 5 };
   //Map feature = {'type': 'mini_roundabout', 'structure': 'none', 'oneway': 'false', 'class': 'pedestrian', 'iso_3166_2': 'GB-ENG', 'iso_3166_1': 'GB'};
   Map feature = {'admin_level': 1, 'sizerank': false, 'class': 'park', 'name': 'Great Britain', 'disputed': 'false',};
+  feature ={ 'geometry': { 'type': 'LineString'}, 'properties': {"type": "primary_link", "structure": "none", "oneway": false, "class": "primary_link", "len": 40, "iso_3166_2": "GB-ENG", "iso_3166_1": "GB"}} ;
 	String layerString = 'water';
   String type = 'Point';
   
@@ -27,7 +28,136 @@ main() {
 
     //"filter" : ['in', ['get','class'], 'xx', 'residential', 'wibble'],
     "filter" :// ['in', ['get','class'], ['xx', 'residential', 'wibble']],
- ["interpolate", ["linear"], ["zoom"], 15, ["match", ["get", "class"], "park", "hsl(78, 50%, 73%)", "airport", "hsl(225, 42%, 82%)", "cemetery", "hsl(60, 44%, 79%)", "glacier", "hsl(205, 66%, 90%)", "hospital", "hsl(3, 42%, 78%)", "pitch", "hsl(78, 51%, 68%)", "sand", "hsl(43, 48%, 76%)", "school", "hsl(40, 43%, 72%)", "hsl(40, 42%, 76%)"], 16, ["match", ["get", "class"], "park", "hsl(78, 50%, 73%)", "airport", "hsl(225, 56%, 80%)", "cemetery", "hsl(60, 44%, 79%)", "glacier", "hsl(205, 66%, 90%)", "hospital", "hsl(3, 44%, 80%)", "pitch", "hsl(78, 51%, 68%)", "sand", "hsl(43, 48%, 76%)", "school", "hsl(40, 43%, 72%)", "hsl(40, 42%, 76%)"]]
+/*
+  [
+  "all",
+  [
+  "step",
+  ["zoom"],
+  [
+  "match",
+  ["get", "class"],
+  ["motorway", "trunk"],
+  true,
+  false
+  ],
+  6,
+  [
+  "match",
+  ["get", "class"],
+  ["motorway", "trunk", "primary"],
+  true,
+  false
+  ],
+  8,
+  [
+  "match",
+  ["get", "class"],
+  ["motorway", "trunk", "primary", "secondary"],
+  true,
+  false
+  ],
+  10,
+  [
+  "match",
+  ["get", "class"],
+  [
+  "motorway",
+  "trunk",
+  "primary",
+  "secondary",
+  "tertiary",
+  "motorway_link",
+  "trunk_link"
+  ],
+  true,
+  false
+  ],
+  11,
+  [
+  "match",
+  ["get", "class"],
+  [
+  "motorway",
+  "motorway_link",
+  "trunk",
+  "trunk_link",
+  "primary",
+  "secondary",
+  "tertiary",
+  "street"
+  ],
+  true,
+  false
+  ],
+  12,
+  [
+  "match",
+  ["get", "class"],
+  [
+  "motorway",
+  "motorway_link",
+  "trunk",
+  "trunk_link",
+  "primary",
+  "secondary",
+  "tertiary",
+  "street",
+  "street_limited",
+  "primary_link"
+  ],
+  true,
+  false
+  ],
+  13,
+  [
+  "match",
+  ["get", "class"],
+  [
+  "motorway",
+  "motorway_link",
+  "trunk",
+  "trunk_link",
+  "primary",
+  "secondary",
+  "tertiary",
+  "street",
+  "street_limited",
+  "primary_link",
+  "track"
+  ],
+  true,
+  false
+  ],
+  14,
+  [
+  "match",
+  ["get", "class"],
+  [
+  "motorway",
+  "motorway_link",
+  "trunk",
+  "trunk_link",
+  "primary",
+  "primary_link",
+  "secondary",
+  "secondary_link",
+  "tertiary",
+  "tertiary_link",
+  "street",
+  "street_limited",
+  "service",
+  "track"
+  ],
+  true,
+  false
+  ]
+  ],
+*/
+//  ["match", ["get", "structure"], ["none", "ford"], true, false],
+  ["==", ["geometry-type"], "LineString"]
+//  ],
+ //["interpolate", ["linear"], ["zoom"], 15, ["match", ["get", "class"], "park", "hsl(78, 50%, 73%)", "airport", "hsl(225, 42%, 82%)", "cemetery", "hsl(60, 44%, 79%)", "glacier", "hsl(205, 66%, 90%)", "hospital", "hsl(3, 42%, 78%)", "pitch", "hsl(78, 51%, 68%)", "sand", "hsl(43, 48%, 76%)", "school", "hsl(40, 43%, 72%)", "hsl(40, 42%, 76%)"], 16, ["match", ["get", "class"], "park", "hsl(78, 50%, 73%)", "airport", "hsl(225, 56%, 80%)", "cemetery", "hsl(60, 44%, 79%)", "glacier", "hsl(205, 66%, 90%)", "hospital", "hsl(3, 44%, 80%)", "pitch", "hsl(78, 51%, 68%)", "sand", "hsl(43, 48%, 76%)", "school", "hsl(40, 43%, 72%)", "hsl(40, 42%, 76%)"]]
 
 // ["interpolate", ["linear"], ["zoom"], 15, ["match", ["get", "class"], "park", "hsl(78, 50%, 73%)", "airport","hsl(40, 43%, 72%)", "hsl(40, 42%, 76%)"]]
 
@@ -147,7 +277,7 @@ main() {
   //var args = ["in", true, [false, false]];
   //var test = ["any", args[1], ...args.sublist(2)];
   //print("$test");
- var test = checkFilter( testStyle2['layers']?[0]['filter'], layerString, type, feature, 14);
+ var test = checkFilter( testStyle2['layers']?[0]['filter'], layerString,  feature, 14);
   print("FINAL IS $test");
 }
 
@@ -291,7 +421,15 @@ class Parser {
           result = parse(args[1]) - parse(args[2]);
           break;
         case "==":
-          result = parse(args[1]) == parse(args[2]);
+          var s1 = parse(args[1]);
+          var s2 = parse(args[2]);
+	  if(s1 is String) { // messy LineString vs LINESTRING etc
+	    s2 = s2.toString(); // sometimes we seem to get a string false, rather than a bool type
+	    ///print("$s1 and $s2 $feature");
+	    result = s1.toLowerCase() == s2.toLowerCase();
+	  } else {
+            result = s1 == s2;
+          }
           break;
         case "!=":
           result = parse(args[1]) != parse(args[2]);
@@ -414,6 +552,7 @@ class Parser {
         //print("Getting....");
           if (args[1] != null) {
             result = feature[args[1]];
+            ///print("got $result and type is ${result.runtimeType}");
             //print("Get is ${args[1]} $feature");
             // hack as sometimes we get a filterrank of false...
             /*
@@ -552,10 +691,19 @@ class Parser {
           result = parse(args[args.length - 1]);
           //print("STORE $store");
           break;
+        case "false":
+          result = false;
+          break;
+        case "true":
+          result = true;
+          break;
         case "var":
           result = store[args[1]];
           break;
-
+        case "geometry-type":
+          result = type.toUpperCase();
+          ///print("Geomtype = $result");
+          break;
         case "interpolate": // base, val, keys
           var type = args[1][0];
           //print("TYPE IS $type");
@@ -563,7 +711,7 @@ class Parser {
             //print("linear");
  //print("interplinear, ${args[2]}     >>   ${args.sublist(3)}}");
  //print("${parse(args[2])}");
-var testres = args.sublist(3).map((val){return parse(val); }).toList();
+//var testres = args.sublist(3).map((val){return parse(val); }).toList();
 //print("TEST $testres");
 //           result = interp(1.0, parse(args[2]), parse(args.sublist(3)));
   result = interp(1.0, parse(args[2]), args.sublist(3).map((val){return parse(val); }).toList() );
@@ -617,28 +765,31 @@ var testres = args.sublist(3).map((val){return parse(val); }).toList();
     //print("This res = $result ?? $args");
     var xres = result != null ? result : args;
 
-   ///print("xres is $xres");
     return xres;
   }
 }
 
 
-dynamic checkFilter(dynamic style, String layerString,String type, Map feature, double tileZoom) {
+dynamic checkFilter(dynamic style, String layerString, Map featureInfo, double tileZoom) {
 
   ///print("Checking filter $layerString $style $feature");
 
   ///List layers = style['layers'] ?? [];
 
+  var feature = featureInfo['properties'];
+  var geom = featureInfo['geometry'];
+  var type = geom['type'];
   var parser = new Parser(layerString, feature, type, tileZoom);
   var result;
 
+  ///print("checkfilter type check   $type ${style} $layerString $feature");
 
   try {
     //print("here21");
     result = parser.parse(style);
     //print("here22 $result");
 
-  } catch(e) { print("Error: $e"); }
+  } catch(e) { print("FilterParseError: $e"); }
 
 
   return result;

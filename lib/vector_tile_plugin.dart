@@ -208,6 +208,7 @@ class VectorPainter extends CustomPainter {
   final rotation;
   final Optimisations optimisations;
   final useImages;
+  final useCanvas;
   final vectorStyle;
   final geoJson;
 
@@ -222,7 +223,7 @@ class VectorPainter extends CustomPainter {
   VectorPainter(Offset this.dimensions, double this.rotation,
       List<VTile> this.tilesToRender, this.tileZoom,
       this.cachedVectorDataMap, this.underZoom, this.usePerspective,
-      this.debugOptions, this.optimisations, this.useImages, this.vectorStyle, this.geoJson);
+      this.debugOptions, this.optimisations, this.useImages, this.useCanvas, this.vectorStyle, this.geoJson);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -323,9 +324,10 @@ class VectorPainter extends CustomPainter {
 
               /// if we've pinchzooming, use thin lines for speed
               double oldStrokeWidth = style.strokeWidth;
-              if (true || optimisations.pinchZoom) {
+              if (optimisations.pinchZoom) {
                 ///print("Style optimisation");
-                style.strokeWidth = 0.0;
+                ///if(!usedPaintedImage)
+                  style.strokeWidth = 0.0;
               }
 
               if (pathMap != null) {

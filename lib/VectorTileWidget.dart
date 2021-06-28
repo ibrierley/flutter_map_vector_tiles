@@ -31,8 +31,9 @@ import 'package:iso/iso.dart';
 import 'package:flutter_isolate/flutter_isolate.dart';
 
 import 'package:flutter/services.dart';
-import 'package:image/image.dart' as image;
+//import 'package:image/image.dart' as image;
 import 'dart:math' as DartMath;
+//import 'package:color_convert/color_convert.dart';
 
 Map geomToPathLayers(checkedLayers, vectorStyle, coordsKey, options, tileZoom, [ VTCache? cachedInfo ]) {
   List labelPointlist = [];
@@ -95,7 +96,7 @@ Map geomToPathLayers(checkedLayers, vectorStyle, coordsKey, options, tileZoom, [
         if (!pathMap.containsKey(key)) {
           pathMap[key] =
               PathInfo(path, thisClass, geomType, layerString, feature, 1);
-          var style = Styles.getStyle(
+          Paint style = Styles.getStyle(
               vectorStyle,
               feature,
               layerString,
@@ -104,6 +105,7 @@ Map geomToPathLayers(checkedLayers, vectorStyle, coordsKey, options, tileZoom, [
               2,
               2);
           pathMap[key]?.style = style;
+          //print("Adding path with color: ${style}");
         } else {
           pathMap[key]?.path.addPath(path, Offset(0, 0));
         }
@@ -350,24 +352,42 @@ dynamic decodeBytesToGeom( vectorStyle, coordsKey, bytes, options, tileZoom ) as
   for( var styleLayer in vectorStyle['layers']) {
     var newLayer = [];
 
-    ///print("stylelayer: $styleLayer");
+    ///if( styleLayer['id'] != 'road-simple') continue;
+    //print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!DOING stylelayer: $styleLayer");
     var sourceLayer = styleLayer['source-layer'] ?? styleLayer.keys.first; // may be a background layer we want to deal with as well
 
     if(sourceLayer != null) {
       var matchingLayer = decoded[sourceLayer] ?? [];
       if(matchingLayer.length == 0) {
-        ///print("Nothing matching decoded $sourceLayer");
+        //print("Nothing matching decoded $sourceLayer");
         ///print("keys was $keys");
       }
-      for (var featureDetails in matchingLayer) {
+      FEATURE: for (var featureDetails in matchingLayer) {
         ///print("$featureDetails");
         var addedFeature = false;
+
+        if(styleLayer['type'] == 'fill' && featureDetails['geometry']['type'] != 'POLYGON') {
+          //print("Skipping as fill but not polygon ${featureDetails['geometry']['type']} " );
+          continue FEATURE;
+        }
+        if(styleLayer['type'] == 'line' && featureDetails['geometry']['type'] != 'LINESTRING') {
+          //print("Skipping as line but not linestring ${featureDetails['geometry']['type']}");
+          continue FEATURE;
+        }
+        if(styleLayer['type'] == 'symbol' && featureDetails['geometry']['type'] != 'POINT') {
+         // print("Skipping as symbol but not point ${featureDetails['geometry']['type']}" );
+          continue FEATURE;
+        }
+        //print("Ok past here with ${styleLayer['type']} && ${featureDetails['geometry']['type']} $featureDetails");
+
+
         if(styleLayer['filter'] != null) {// || styleLayer[sourceLayer].containsKey('include')) {
           ///print("${featureDetails['geometry']['type']} ${featureDetails['properties']}");
-          var checkOk = checkFilter(styleLayer['filter'], sourceLayer, featureDetails['geometry']['type'], featureDetails['properties'], tileZoom);
+          var checkOk = checkFilter(styleLayer['filter'], sourceLayer, featureDetails, tileZoom);
 
+          //print("checkok is $checkOk");
           if(checkOk == null) {
-            ///print("CHECK OK FOR FILTER IS NULL");
+           // print("CHECK OK FOR FILTER IS NULL");
           } else if( checkOk is bool && checkOk ) {
             ///print("adding... $sourceLayer");
             ///newLayer.add(featureDetails);
@@ -377,21 +397,42 @@ dynamic decodeBytesToGeom( vectorStyle, coordsKey, bytes, options, tileZoom ) as
             //print("Not sure what to do here with $sourceLayer $classx filter was ${styleLayer['filter']}");
           }
         } else {
-          ///print("NO FILTER so adding!!!!!!!");
+          print("NO FILTER, so ADDING ???!!!!!!! ${styleLayer['type']} $sourceLayer ${featureDetails['geometry']['type']} ${styleLayer['filter']} ");
           ///newLayer.add(featureDetails);
           addedFeature = true;
         }
 
         if(addedFeature && styleLayer['paint'] != null) {
-          var featureStyle = checkFilter(styleLayer['paint'], sourceLayer, featureDetails['geometry']['type'], featureDetails['properties'], tileZoom);
-          ///print("Paint style is for $sourceLayer feature is $featureStyle");
+          var featureStyle = checkFilter(styleLayer['paint'], sourceLayer, featureDetails, tileZoom);
+          //print("Paint style is for $sourceLayer feature is $featureStyle");
+          if(featureStyle['fill-outline-color'] != null) {
+            featureDetails['fill-outline-color'] = checkFilter(featureStyle['fill-outline-color'], sourceLayer, featureDetails, tileZoom);
+            ///print("fill colour is ${featureDetails['fill-color']}");
+          }
           if(featureStyle['fill-color'] != null) {
-            featureDetails['fill-color'] = checkFilter(featureStyle['fill-color'], sourceLayer, featureDetails['geometry']['type'], featureDetails['properties'], tileZoom);
+            featureDetails['fill-color'] = checkFilter(featureStyle['fill-color'], sourceLayer, featureDetails, tileZoom);
+            ///print("fill colour is ${featureDetails['fill-color']}");
+          }
+          if(featureStyle['fill-opacity'] != null) {
+            featureDetails['fill-opacity'] = checkFilter(featureStyle['fill-opacity'], sourceLayer, featureDetails, tileZoom);
+            ///print("fill colour is ${featureDetails['fill-color']}");
+          }
+          if(featureStyle['line-opacity'] != null) {
+            featureDetails['line-opacity'] = checkFilter(featureStyle['line-opacity'], sourceLayer, featureDetails, tileZoom);
+            ///print("fill colour is ${featureDetails['fill-color']}");
+          }
+          if(featureStyle['line-color'] != null) {
+            featureDetails['line-color'] = checkFilter(featureStyle['line-color'], sourceLayer, featureDetails, tileZoom);
+            ///print("LINE colour is ${featureDetails['line-color']} $featureDetails");
+          }
+          if(featureStyle['line-width'] != null) {
+            featureDetails['line-width'] = checkFilter(featureStyle['line-width'], sourceLayer, featureDetails, tileZoom);
             ///print("fill colour is ${featureDetails['fill-color']}");
           }
           featureDetails['paint'] = featureStyle;
         }
         if(addedFeature) {
+          ///print("adding...");
           newLayer.add(featureDetails);
         }
       }
@@ -512,6 +553,7 @@ class VectorWidget extends StatefulWidget {
   DebugOptions debugOptions = DebugOptions();
   final optimisations;
   final useImages;
+  final useCanvas;
   Map vectorStyle;
   Map geoJson;
 
@@ -525,6 +567,7 @@ class VectorWidget extends StatefulWidget {
       this.debugOptions,
       this.optimisations,
       this.useImages,
+      this.useCanvas,
       this.vectorStyle,
       this.geoJson,
       );
@@ -553,7 +596,7 @@ class _VectorWidgetState extends State<VectorWidget> {
             isComplex: true, //Tells flutter to cache the painter.
             painter: VectorPainter( dimensions, widget.rotation, widget.tilesToRender, widget.tileZoom,
                 widget.cachedVectorDataMap, widget.underZoom, widget.usePerspective,
-                widget.debugOptions, widget.optimisations, widget.useImages, widget.vectorStyle, widget.geoJson ) )
+                widget.debugOptions, widget.optimisations, widget.useImages, widget.useCanvas, widget.vectorStyle, widget.geoJson ) )
        )
     );
 
@@ -673,7 +716,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       if(msg.containsKey('decodedLayers')) {
         cache.geoJson = { 'layers': msg['decodedLayers'] };
 
-        if(vectorOptions.useCanvas) {
+        if(true || vectorOptions.useCanvas) { // we still need to get labels even if using tiles as bottom layer?
           MapboxTile.decodeGeoToNative(
               coordsKey, _cachedVectorData[coordsKey]!, {}, vectorOptions.vectorStyle, msg['tileZoom'],
               debugOptions);
@@ -891,7 +934,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           /// 64,22 & 65,22 & 64,23 & 65, 23 in one direction, and 16,10 in going
           /// backwards. So if we've recently completed it, there's a good chance
           /// it's a the cache.
-          [1, 2, 3, -1, -2].forEach((levelDifference) {
+          /// [1, 2, 3, -1, -2]
+          [-1,-2,1,2].forEach((levelDifference) {
             var ratio = math.pow(2, levelDifference);
 
             /// If we need covering tiles from a higher zoom we may need
@@ -995,7 +1039,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
            color: Colors.blueGrey,
          child: VectorWidget(widget.mapState.rotation, _cachedVectorData, allTilesToRender, _tileZoom, underZoom,
              vectorOptions.usePerspective, vectorOptions.debugOptions ?? DebugOptions(),
-             optimisations, vectorOptions.useImages, vectorStyle, geoJson  )
+             optimisations, vectorOptions.useImages, vectorOptions.useCanvas, vectorStyle, geoJson  )
      );
   }
 
