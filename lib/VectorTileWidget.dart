@@ -800,7 +800,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
                 (event is MapEventMoveStart)) {
               optimisations.pinchZoom = true;
             }
-            if (event.source == MapEventSource.onDrag &&
+            if (false && event.source == MapEventSource.onDrag &&
                 (event is MapEventMoveStart)) {
               optimisations.pinchZoom = true;
             }
@@ -849,6 +849,26 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     }
 
     _setZoomTransforms(center, zoom);
+  }
+
+  bool hasCompletedImage(coordsKey) {
+    bool recentlyCompleted = false;
+    if( _recentTilesCompleted.containsKey(coordsKey) &&
+        _cachedVectorData.containsKey(coordsKey) &&
+        _cachedVectorData[coordsKey]?.image != null ) {
+      recentlyCompleted = true;
+    }
+    return recentlyCompleted;
+  }
+
+  bool hasCompletedGeo(coordsKey) {
+    bool recentlyCompleted = false;
+    if( _recentTilesCompleted.containsKey(coordsKey) &&
+        _cachedVectorData.containsKey(coordsKey) &&
+        _cachedVectorData[coordsKey]?.geoJson != null ) {
+      recentlyCompleted = true;
+    }
+    return recentlyCompleted;
   }
 
   @override
@@ -921,9 +941,10 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
         ///
         var debugBackupTiles = false;
 
-        if (
-        vectorOptions.useBackupTiles &&
-            (!_recentTilesCompleted.containsKey(coordsKey) ||
+        if ( ((vectorOptions.useImages && !hasCompletedImage(coordsKey)) ||
+              (vectorOptions.useCanvas && !hasCompletedGeo(coordsKey))) &&
+        (vectorOptions.useBackupTiles ||
+            //(!_recentTilesCompleted.containsKey(coordsKey) ||
                 debugBackupTiles)) {
           Coords backupCoords;
 
@@ -934,8 +955,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           /// 64,22 & 65,22 & 64,23 & 65, 23 in one direction, and 16,10 in going
           /// backwards. So if we've recently completed it, there's a good chance
           /// it's a the cache.
-          /// [1, 2, 3, -1, -2]
-          [-1,-2,1,2].forEach((levelDifference) {
+          /// [1, 2, 3, -1, -2] [-1,-2,1,2]
+          [1, 2, 3, -1, -2].forEach((levelDifference) {
             var ratio = math.pow(2, levelDifference);
 
             /// If we need covering tiles from a higher zoom we may need

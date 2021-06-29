@@ -86,7 +86,7 @@ class _MyHomePageState extends State<MyHomePage> {
         hairlineOption: true, // use hairlines on paths at low zoom (true recommended)
     );
     DebugOptions debugOptions = DebugOptions(
-        tiles: false, // show a tile border
+        tiles: true, // show a tile border
         labels: false, // show a label border thats used for label collision checks
         decoding: false, // show http gets and when decoding is done
         featureSummary: false,

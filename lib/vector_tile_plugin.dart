@@ -297,7 +297,7 @@ class VectorPainter extends CustomPainter {
       // Rect myRect = Offset(pos['pos'].x, pos['pos'].y) & Size(adjustedSize.dx, adjustedSize.dy);
       // canvas.clipRect(myRect);
 
-      if(!usedPaintedImage) {
+      if(!usedPaintedImage && useCanvas) {
 
         final List<
             Map<String, PathInfo>> dataMap = cachedVectorDataMap[tileCoordsKey]
@@ -332,6 +332,7 @@ class VectorPainter extends CustomPainter {
 
               if (pathMap != null) {
                 ///canvas.drawPath(pathMap.path.transform(matrix.storage), style);
+                print("DRAWING VECTOR MAP!!!!!!");
                 canvas.drawPath(pathMap.path, style);
                 style.strokeWidth = oldStrokeWidth;
               }
@@ -550,7 +551,7 @@ class VectorPainter extends CustomPainter {
         fit: BoxFit.fitWidth,
         alignment: Alignment.topLeft,
         filterQuality: FilterQuality.low,
-        isAntiAlias: true, // true will give unwanted visible tile edges
+        isAntiAlias: false, // true will give unwanted visible tile edges
         image: image);
   }
 
