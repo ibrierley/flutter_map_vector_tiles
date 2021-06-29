@@ -87,7 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
         hairlineOption: true, // use hairlines on paths at low zoom (true recommended)
     );
     DebugOptions debugOptions = DebugOptions(
-        tiles: true, // show a tile border
+        tiles: false, // show a tile border
         labels: false, // show a label border thats used for label collision checks
         decoding: false, // show http gets and when decoding is done
         featureSummary: false,
@@ -126,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ///https://mran.microsoft.com/snapshot/2018-03-29/web/packages/mapmisc/vignettes/mapLayers.html
                 ///https://stamen.com/open-source/
 
-                highZoomCanvas: 15,
+                highZoomCanvas: 21,
                 useCanvas: false,
                 useImages: true, //disabled, code currently removed, but could be added, not sure I currently see the benefit
                 useBackupTiles: true, //use a previously loaded tile if current one not available yet

@@ -181,6 +181,7 @@ dynamic pathsToImage( checkedLayers, vectorStyle, coordsKey, options, tileZoom )
   canvas.scale(dpr, dpr);
 
   for(var pathInfo in pathLayers['pathLayers']) {
+    pathInfo.style.isAntiAlias = true;
     canvas.drawPath(pathInfo.path, pathInfo.style);
   }
 
@@ -705,11 +706,13 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
   /// /////////////////////////////////////////////////////////////////////////////////
   static int isoRunning = 0;
-  static late ReceivePort receivePort;
+  //static late ReceivePort receivePort;
   static late SendPort sendPort;
   static int isoRequests = 0;
-  static late ReceivePort isolateToMainStream; // = ReceivePort();
-  static late SendPort mainToIsolateStream;
+  static late List<ReceivePort> isolateToMainStream = []; // = ReceivePort();
+  static late List<SendPort> mainToIsolateStream = [];
+  int lastIso = 0;
+  int numIso = Platform.numberOfProcessors > 2 ? Platform.numberOfProcessors - 2 : 1;
 
   void storeCachedTileInfo( coordsKey, msg, vectorOptions, debugOptions ) async {
 
@@ -739,40 +742,65 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
         }
       }
     }
+    msg = null;
   }
 
   Future<String> isoTest( tileMap, vectorOptions, debugOptions ) async {
 
+    //print("Number of cores ${Platform.numberOfProcessors}");
+
     WidgetsFlutterBinding.ensureInitialized();
     isoRequests++;
-
     if(isoRunning == 0) {
-      isoRunning = 1;
-      isolateToMainStream = ReceivePort();
-      isolateToMainStream.listen((data){
-        if(data is SendPort) {
-          mainToIsolateStream = data;
-        } else {
-          if(data is Map) {
-            if(data.containsKey('decodedLayers')  || data.containsKey('imageByteData')) {
-              storeCachedTileInfo( data['coordsKey'], data, vectorOptions, debugOptions );
+    for(var isolateCount=0; isolateCount < numIso; isolateCount++) {
+      //if (isoRunning == 0) {
+        isoRunning = 1;
+        var rp = ReceivePort();
+        isolateToMainStream.add(rp);
+        //print("ADDING");
+        rp.listen((data) {
+          if (data is SendPort) {
+            mainToIsolateStream.add(data);
+            isoRunning = 2;
+          } else {
+            if (data is Map) {
+              if (data.containsKey('decodedLayers') ||
+                  data.containsKey('imageByteData')) {
+                storeCachedTileInfo(
+                    data['coordsKey'], data, vectorOptions, debugOptions);
+              }
             }
           }
-        }
-      });
+        });
 
-      FlutterIsolate.spawn(isoRun, isolateToMainStream.sendPort);
-
-      await Future.delayed(Duration(seconds: 2), () async {
-        isoRunning = 2;
-        mainToIsolateStream.send([tileMap, isolateToMainStream.sendPort]);
-      });
+        FlutterIsolate.spawn(isoRun, rp.sendPort);
+      //}
     }
-    var waitTime = isoRunning < 2 ? 3 : 0;
 
+      //var waitTime = isoRunning < 2 ? 3 : 0;
+
+      //await Future.delayed(Duration(seconds: waitTime), () async {
+      //  mainToIsolateStream[isolateCount].send([tileMap, isolateToMainStream[isolateCount].sendPort]);
+      //});
+    }
+
+   // print("isorunning is $isoRunning");
+
+    var waitTime = isoRunning < 2 ? 5 : 0;
+
+    //print("isorunning is now $isoRunning");
+
+    //print("ISO IS $lastIso");
     await Future.delayed(Duration(seconds: waitTime), () async {
-      mainToIsolateStream.send([tileMap, isolateToMainStream.sendPort]);
+      print("last iso is $lastIso ${mainToIsolateStream.length} ${isolateToMainStream.length}");
+      mainToIsolateStream[lastIso].send([tileMap, isolateToMainStream[lastIso].sendPort]);
     });
+
+    lastIso++;
+    if(lastIso >= mainToIsolateStream.length) {
+      lastIso = 0;
+    }
+   // print("ISO increased to  $lastIso");
 
     return tileMap['coordsKey'];
   }
@@ -958,7 +986,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           /// backwards. So if we've recently completed it, there's a good chance
           /// it's a the cache.
           /// [1, 2, 3, -1, -2] [-1,-2,1,2]
-          [1, 2, 3, -1, -2].forEach((levelDifference) {
+          [1,-1,2,-2].forEach((levelDifference) {
             var ratio = math.pow(2, levelDifference);
 
             /// If we need covering tiles from a higher zoom we may need

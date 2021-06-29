@@ -287,7 +287,7 @@ class VectorPainter extends CustomPainter {
 
       /// clip prevents the odd clashing artifact with overlapping tiles features
 
-      canvas.clipRect(myRect);
+      if(!useImages) canvas.clipRect(myRect); /// feel like vectors want this, but images don't, introduced hairline crack between tiles ?
 
       //if we need a clip that isn't already transformed, we can use below..
       //if( pos != null) {
@@ -547,7 +547,6 @@ class VectorPainter extends CustomPainter {
   }
 
   static void paintTile(canvas, pos, image) {
-    ///print("PAINTING TILE IMAGE IS $image scale is ${pos.scale}");
     paintImage(canvas: canvas,
         rect: Rect.fromLTWH(pos.point.x, pos.point.y, pos.width, pos.height),
         scale: pos.scale,
