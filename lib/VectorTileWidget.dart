@@ -397,7 +397,7 @@ dynamic decodeBytesToGeom( vectorStyle, coordsKey, bytes, options, tileZoom ) as
             //print("Not sure what to do here with $sourceLayer $classx filter was ${styleLayer['filter']}");
           }
         } else {
-          print("NO FILTER, so ADDING ???!!!!!!! ${styleLayer['type']} $sourceLayer ${featureDetails['geometry']['type']} ${styleLayer['filter']} ");
+          ///print("NO FILTER, so ADDING ???!!!!!!! ${styleLayer['type']} $sourceLayer ${featureDetails['geometry']['type']} ${styleLayer['filter']} ");
           ///newLayer.add(featureDetails);
           addedFeature = true;
         }
@@ -554,6 +554,7 @@ class VectorWidget extends StatefulWidget {
   final optimisations;
   final useImages;
   final useCanvas;
+  final highZoomCanvas;
   Map vectorStyle;
   Map geoJson;
 
@@ -568,6 +569,7 @@ class VectorWidget extends StatefulWidget {
       this.optimisations,
       this.useImages,
       this.useCanvas,
+      this.highZoomCanvas,
       this.vectorStyle,
       this.geoJson,
       );
@@ -596,7 +598,7 @@ class _VectorWidgetState extends State<VectorWidget> {
             isComplex: true, //Tells flutter to cache the painter.
             painter: VectorPainter( dimensions, widget.rotation, widget.tilesToRender, widget.tileZoom,
                 widget.cachedVectorDataMap, widget.underZoom, widget.usePerspective,
-                widget.debugOptions, widget.optimisations, widget.useImages, widget.useCanvas, widget.vectorStyle, widget.geoJson ) )
+                widget.debugOptions, widget.optimisations, widget.useImages, widget.useCanvas, widget.highZoomCanvas, widget.vectorStyle, widget.geoJson ) )
        )
     );
 
@@ -1060,7 +1062,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
            color: Colors.blueGrey,
          child: VectorWidget(widget.mapState.rotation, _cachedVectorData, allTilesToRender, _tileZoom, underZoom,
              vectorOptions.usePerspective, vectorOptions.debugOptions ?? DebugOptions(),
-             optimisations, vectorOptions.useImages, vectorOptions.useCanvas, vectorStyle, geoJson  )
+             optimisations, vectorOptions.useImages, vectorOptions.useCanvas, vectorOptions.highZoomCanvas, vectorStyle, geoJson  )
      );
   }
 
@@ -1479,6 +1481,7 @@ class VectorTileLayerPluginOptions extends TileLayerOptions {
 
   bool useImages;
   bool useCanvas;
+  double highZoomCanvas;
   bool useBackupTiles;
   bool usePerspective;
   DebugOptions? debugOptions;
@@ -1506,6 +1509,7 @@ class VectorTileLayerPluginOptions extends TileLayerOptions {
     this.useCanvas = true,
     this.useBackupTiles = true,
     this.usePerspective = false,
+    this.highZoomCanvas = 16.0,
     this.debugOptions,
     this.vectorStyle,
     this.underZoom,

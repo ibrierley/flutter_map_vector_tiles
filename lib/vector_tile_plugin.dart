@@ -187,9 +187,9 @@ class MapboxTile {
 
     cachedInfo.state = 'Decoded';
 
-    var end = DateTime.now().difference(start);
-    print("decode to paths took...${end.inMilliseconds} milli");
-    print("dpr here is ${dartui.window.devicePixelRatio}");
+    //var end = DateTime.now().difference(start);
+    //print("decode to paths took...${end.inMilliseconds} milli");
+    //print("dpr here is ${dartui.window.devicePixelRatio}");
 
   }
 }
@@ -209,6 +209,7 @@ class VectorPainter extends CustomPainter {
   final Optimisations optimisations;
   final useImages;
   final useCanvas;
+  final highZoomCanvas;
   final vectorStyle;
   final geoJson;
 
@@ -223,7 +224,7 @@ class VectorPainter extends CustomPainter {
   VectorPainter(Offset this.dimensions, double this.rotation,
       List<VTile> this.tilesToRender, this.tileZoom,
       this.cachedVectorDataMap, this.underZoom, this.usePerspective,
-      this.debugOptions, this.optimisations, this.useImages, this.useCanvas, this.vectorStyle, this.geoJson);
+      this.debugOptions, this.optimisations, this.useImages, this.useCanvas, this.highZoomCanvas, this.vectorStyle, this.geoJson );
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -264,11 +265,13 @@ class VectorPainter extends CustomPainter {
       final String tileCoordsKey = tileCoordsToKey(tile.coords);
       final PositionInfo? pos = cachedVectorDataMap[tileCoordsKey]?.positionInfo;
 
-      if(useImages && cachedVectorDataMap[tileCoordsKey]?.image != null) {
+      if(useImages && cachedVectorDataMap[tileCoordsKey]?.image != null && tileZoom < highZoomCanvas) {
         if ((pos != null) && (cachedVectorDataMap[tileCoordsKey]?.image != null)) {
+          ///print("PAINTING TILE $tileZoom");
           paintTile(canvas, pos, cachedVectorDataMap[tileCoordsKey]?.image);
+          usedPaintedImage = true;
         }
-        usedPaintedImage = true;
+        //usedPaintedImage = true;
       }
 
 
@@ -297,7 +300,7 @@ class VectorPainter extends CustomPainter {
       // Rect myRect = Offset(pos['pos'].x, pos['pos'].y) & Size(adjustedSize.dx, adjustedSize.dy);
       // canvas.clipRect(myRect);
 
-      if(!usedPaintedImage && useCanvas) {
+      if(!usedPaintedImage && (useCanvas || (tileZoom >= highZoomCanvas))) {
 
         final List<
             Map<String, PathInfo>> dataMap = cachedVectorDataMap[tileCoordsKey]
@@ -327,12 +330,12 @@ class VectorPainter extends CustomPainter {
               if (optimisations.pinchZoom) {
                 ///print("Style optimisation");
                 ///if(!usedPaintedImage)
-                  style.strokeWidth = 0.0;
+                  ///style.strokeWidth = 0.0;
               }
 
               if (pathMap != null) {
                 ///canvas.drawPath(pathMap.path.transform(matrix.storage), style);
-                print("DRAWING VECTOR MAP!!!!!!");
+                ///print("DRAWING VECTOR MAP path $tileZoom!!!!!!");
                 canvas.drawPath(pathMap.path, style);
                 style.strokeWidth = oldStrokeWidth;
               }
@@ -421,7 +424,7 @@ class VectorPainter extends CustomPainter {
         isRotated, tileZoom, debugOptions);
 
     var end = DateTime.now().difference(start).inMilliseconds;
-    print("draw paint took...${end} milliseconds");
+    //print("draw paint took...${end} milliseconds");
   }
 
   static void _drawTextAt(Offset position, Canvas canvas, scale, textPainter) {
@@ -544,7 +547,7 @@ class VectorPainter extends CustomPainter {
   }
 
   static void paintTile(canvas, pos, image) {
-    print("PAINTING TILE IMAGE IS $image scale is ${pos.scale}");
+    ///print("PAINTING TILE IMAGE IS $image scale is ${pos.scale}");
     paintImage(canvas: canvas,
         rect: Rect.fromLTWH(pos.point.x, pos.point.y, pos.width, pos.height),
         scale: pos.scale,
