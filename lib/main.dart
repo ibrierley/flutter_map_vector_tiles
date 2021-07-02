@@ -6,6 +6,7 @@ import 'vector_tile_plugin.dart';
 import 'package:flutter_map_vector_tile/VectorTileWidget.dart';
 import 'package:flutter_map_vector_tile/styles.dart';
 import 'parse_expressions.dart';
+import 'apikeys.dart';
 
 
 void main() {
@@ -50,13 +51,14 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
 
   MapController? mapController;
+  bool mapControllerReady = false;
 
 
   @override
   void initState() {
     super.initState();
     mapController = MapController();
-    ///mapController?.onReady.then((_){print("mapcontroller ready...."); });
+    mapController?.onReady.then((_){print("mapcontroller ready...."); mapControllerReady = true; });
 
   }
 
@@ -97,8 +99,13 @@ class _MyHomePageState extends State<MyHomePage> {
         missingFeatures: false,
     );
 
+    print("$mapController $mapControllerReady");
+
+    if(mapControllerReady && mapController != null)
+      print("mapready ${mapController?.center}");
+
     var fmap =  FlutterMap(
-      key: ValueKey(MediaQuery.of(context).orientation),
+      //key: ValueKey(MediaQuery.of(context).orientation),
             mapController: mapController,
             options: new MapOptions(
               plugins: [
@@ -106,14 +113,16 @@ class _MyHomePageState extends State<MyHomePage> {
               ],
               interactiveFlags: InteractiveFlag.all, // MapEventMoveStart& ~InteractiveFlag.rotate,
               center: LatLng(50.8323646,-0.1871463),
-              zoom: 13.3,
+              zoom: 10.3,
               //rotation: 45,
             ),
             layers: [
               VectorTileLayerPluginOptions(
-                urlTemplate: 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?mapbox://styles/gibble/ckoe1dv003l7s17pb219opzj0&access_token=pk.eyJ1IjoiZ2liYmxlIiwiYSI6ImNqbjBlZDB6ejFrODcza3Fsa3o3eXR1MzkifQ.pC89zLnuSWrRdCkDrsmynQ',
-                subdomains: ['a', 'b', 'c'],
-                ///urlTemplate: "https://tiles.stadiamaps.com/data/openmaptiles/{z}/{x}/{y}.pbf?api_key=e296edff-4d3c-47ed-8a36-3128af55b57e",
+                //urlTemplate: 'https://api.os.uk/maps/vector/v1/vts/tile/{z}/{y}/{x}.pbf?srs=3857&key=' + APIKeys.OS,
+                urlTemplate: 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?mapbox://styles/gibble/ckoe1dv003l7s17pb219opzj0&access_token=' + APIKeys.mapbox,
+
+                ///subdomains: ['a', 'b', 'c'],
+                ///urlTemplate: "https://tiles.stadiamaps.com/data/openmaptiles/{z}/{x}/{y}.pbf?api_key" + APIKeys.stadia,
                 ///urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                 ///urlTemplate: "https://tiles.wmflabs.org/osm-no-labels/{z}/{x}/{y}.png",
                 ///urlTemplate: "https://a.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}@2x.png",

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:math' as math;
@@ -43,11 +44,7 @@ Map geomToPathLayers(checkedLayers, vectorStyle, coordsKey, options, tileZoom, [
 
   for(var featureLayer in checkedLayers) {
 
-    // var layerString = featureLayer['layerString'];
-    //print("$layerString");
-
     Map<String, PathInfo> pathMap = {};
-
 
     for (var feature in featureLayer) {
       var layerString = feature['layerString'];
@@ -96,6 +93,7 @@ Map geomToPathLayers(checkedLayers, vectorStyle, coordsKey, options, tileZoom, [
         if (!pathMap.containsKey(key)) {
           pathMap[key] =
               PathInfo(path, thisClass, geomType, layerString, feature, 1);
+
           Paint style = Styles.getStyle(
               vectorStyle,
               feature,
@@ -105,7 +103,6 @@ Map geomToPathLayers(checkedLayers, vectorStyle, coordsKey, options, tileZoom, [
               2,
               2);
           pathMap[key]?.style = style;
-          //print("Adding path with color: ${style}");
         } else {
           pathMap[key]?.path.addPath(path, Offset(0, 0));
         }
@@ -129,6 +126,7 @@ Map geomToPathLayers(checkedLayers, vectorStyle, coordsKey, options, tileZoom, [
         if (!pathMap.containsKey(key)) {
           pathMap[key] =
               PathInfo(path, thisClass, geomType, layerString, feature, 1);
+
           var style = Styles.getStyle(
               vectorStyle,
               feature,
@@ -244,6 +242,8 @@ dynamic decodeBytesToGeom( vectorStyle, coordsKey, bytes, options, tileZoom ) as
           val = layerObj.intValue.toInt();
         } else if (layerObj.hasUintValue()) {
           val = layerObj.uintValue.toInt();
+        } else if (layerObj.hasSintValue()) {
+          val = layerObj.sintValue.toInt();
         } else if (layerObj.hasDoubleValue()) {
           val = layerObj.doubleValue.toDouble();
         } else if (layerObj.hasStringValue()) {
@@ -354,13 +354,13 @@ dynamic decodeBytesToGeom( vectorStyle, coordsKey, bytes, options, tileZoom ) as
     var newLayer = [];
 
     ///if( styleLayer['id'] != 'road-simple') continue;
-    //print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!DOING stylelayer: $styleLayer");
+    ///print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!DOING stylelayer: $styleLayer");
     var sourceLayer = styleLayer['source-layer'] ?? styleLayer.keys.first; // may be a background layer we want to deal with as well
 
     if(sourceLayer != null) {
       var matchingLayer = decoded[sourceLayer] ?? [];
       if(matchingLayer.length == 0) {
-        //print("Nothing matching decoded $sourceLayer");
+        ///print("Nothing matching decoded $sourceLayer");
         ///print("keys was $keys");
       }
       FEATURE: for (var featureDetails in matchingLayer) {
@@ -404,7 +404,8 @@ dynamic decodeBytesToGeom( vectorStyle, coordsKey, bytes, options, tileZoom ) as
         }
 
         if(addedFeature && styleLayer['paint'] != null) {
-          var featureStyle = checkFilter(styleLayer['paint'], sourceLayer, featureDetails, tileZoom);
+          ///var featureStyle = checkFilter(styleLayer['paint'], sourceLayer, featureDetails, tileZoom);
+          var featureStyle = styleLayer['paint'];
           //print("Paint style is for $sourceLayer feature is $featureStyle");
           if(featureStyle['fill-outline-color'] != null) {
             featureDetails['fill-outline-color'] = checkFilter(featureStyle['fill-outline-color'], sourceLayer, featureDetails, tileZoom);
@@ -427,6 +428,7 @@ dynamic decodeBytesToGeom( vectorStyle, coordsKey, bytes, options, tileZoom ) as
             ///print("LINE colour is ${featureDetails['line-color']} $featureDetails");
           }
           if(featureStyle['line-width'] != null) {
+            ///print("checkFilter in widget ${featureStyle['line-width']}");
             featureDetails['line-width'] = checkFilter(featureStyle['line-width'], sourceLayer, featureDetails, tileZoom);
             ///print("fill colour is ${featureDetails['fill-color']}");
           }
@@ -654,6 +656,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   VectorLevel _level = VectorLevel();
   StreamSubscription? _moveSub;
   late CustomPoint _tileSize;
+  Map latestWantedCoordsKeys = {};
 
   ValueNotifier<int>? paintNotifier;
 
@@ -689,10 +692,30 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       var data = val[0];
       if(data is Map) {
         if(data.containsKey('bytes')) {
+          var start = DateTime.now();
           var checkedLayers = await decodeBytesToGeom(testStyle, data['coordsKey'], data['bytes'], {}, data['tileZoom']);
-          isolateToMainStream.send({ "decodedLayers": checkedLayers, 'coordsKey': data['coordsKey'] });
+          var diff = DateTime.now().difference(start).inMilliseconds;
+          print("decodebytesgeom diff $diff");
+          start = DateTime.now();
+          isolateToMainStream.send({ "decodedLayers": checkedLayers, 'coordsKey': data['coordsKey'], 'tileZoom': data['tileZoom']  });
+          diff = DateTime.now().difference(start).inMilliseconds;
+          print("send isotomain diff $diff");
+          start = DateTime.now();
           var imageByteData = await pathsToImage(checkedLayers, testStyle, data['coordsKey'], {}, data['tileZoom'] );
-          isolateToMainStream.send({ "imageByteData": imageByteData, 'coordsKey': data['coordsKey'] });
+          diff = DateTime.now().difference(start).inMilliseconds;
+          print("save paths2image $diff");
+          start = DateTime.now();
+          ///isolateToMainStream.send({ "imageByteData": imageByteData, 'coordsKey': data['coordsKey'], 'tileZoom': data['tileZoom'] });
+          ///diff = DateTime.now().difference(start).inMilliseconds;
+          ///print("bytesend image $diff");
+
+          var save = await DefaultCacheManager().putFile(data['coordsKey'] + "_image.png", imageByteData.buffer.asUint8List(), fileExtension: "png");
+          isolateToMainStream.send({ "savedImage": true, 'coordsKey': data['coordsKey'], 'tileZoom': data['tileZoom'] });
+          print("save was $save");
+          //var test = await DefaultCacheManager().getFileFromCache(data['coordsKey'] + "_image.png");
+          //print("TESTING CACHE FILE $test");
+          //print("TESTING CACHE FIL2E ${test?.file.readAsBytesSync}");
+
         }
       }
     });
@@ -721,7 +744,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       if(msg.containsKey('decodedLayers')) {
         cache.geoJson = { 'layers': msg['decodedLayers'] };
 
-        if(true || vectorOptions.useCanvas) { // we still need to get labels even if using tiles as bottom layer?
+        if(true || vectorOptions.useCanvas) { // we still need to get labels even if using tiles as bottom layer? does mean we dupe a bit of processing
           MapboxTile.decodeGeoToNative(
               coordsKey, _cachedVectorData[coordsKey]!, {}, vectorOptions.vectorStyle, msg['tileZoom'],
               debugOptions);
@@ -729,9 +752,26 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           _outstandingTileLoads.remove(coordsKey);
         }
       }
-      if(msg.containsKey('imageByteData')) {
+
+      if(msg.containsKey('savedImage')) {
         if(vectorOptions.useImages) {
-          if(msg.containsKey('imageByteData')) {
+          print("TESTING DIRECT");
+          var test = await DefaultCacheManager().getFileFromCache(
+              coordsKey + "_image.png").then((file) async {
+            ui.Codec codec2 = await ui.instantiateImageCodec(
+                file!.file.readAsBytesSync());
+            ui.FrameInfo frameInfo = await codec2.getNextFrame();
+            cache.image = frameInfo.image;
+            _recentTilesCompleted[coordsKey] = DateTime.now();
+            _outstandingTileLoads.remove(coordsKey);
+          });
+        }
+      if(msg.containsKey('imageByteData')) {
+
+
+
+
+          if(false && msg.containsKey('imageByteData')) {
             ui.Codec codec = await ui.instantiateImageCodec(
                 msg['imageByteData'].buffer.asUint8List());
             ui.FrameInfo frameInfo = await codec.getNextFrame();
@@ -752,55 +792,44 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     WidgetsFlutterBinding.ensureInitialized();
     isoRequests++;
     if(isoRunning == 0) {
-    for(var isolateCount=0; isolateCount < numIso; isolateCount++) {
-      //if (isoRunning == 0) {
-        isoRunning = 1;
-        var rp = ReceivePort();
-        isolateToMainStream.add(rp);
-        //print("ADDING");
-        rp.listen((data) {
-          if (data is SendPort) {
-            mainToIsolateStream.add(data);
-            isoRunning = 2;
-          } else {
-            if (data is Map) {
-              if (data.containsKey('decodedLayers') ||
-                  data.containsKey('imageByteData')) {
-                storeCachedTileInfo(
-                    data['coordsKey'], data, vectorOptions, debugOptions);
+      for(var isolateCount=0; isolateCount < numIso; isolateCount++) {
+          isoRunning = 1;
+          var rp = ReceivePort();
+          isolateToMainStream.add(rp);
+          rp.listen((data) {
+            if (data is SendPort) {
+              mainToIsolateStream.add(data);
+              isoRunning = 2;
+            } else {
+              if (data is Map) {
+                if (data.containsKey('decodedLayers') ||
+                    data.containsKey('imageByteData') || // may want to removed eventually...
+                    data.containsKey('savedImage')
+                ) {
+                  storeCachedTileInfo(
+                      data['coordsKey'], data, vectorOptions, debugOptions);
+                }
               }
             }
-          }
-        });
-
-        FlutterIsolate.spawn(isoRun, rp.sendPort);
-      //}
+          });
+          FlutterIsolate.spawn(isoRun, rp.sendPort);
+      }
     }
-
-      //var waitTime = isoRunning < 2 ? 3 : 0;
-
-      //await Future.delayed(Duration(seconds: waitTime), () async {
-      //  mainToIsolateStream[isolateCount].send([tileMap, isolateToMainStream[isolateCount].sendPort]);
-      //});
-    }
-
-   // print("isorunning is $isoRunning");
 
     var waitTime = isoRunning < 2 ? 5 : 0;
 
-    //print("isorunning is now $isoRunning");
-
-    //print("ISO IS $lastIso");
     await Future.delayed(Duration(seconds: waitTime), () async {
       print("last iso is $lastIso ${mainToIsolateStream.length} ${isolateToMainStream.length}");
-      mainToIsolateStream[lastIso].send([tileMap, isolateToMainStream[lastIso].sendPort]);
+      if(latestWantedCoordsKeys.containsKey(tileMap['coordsKey'])) {
+        mainToIsolateStream[lastIso].send(
+            [tileMap, isolateToMainStream[lastIso].sendPort]);
+      }
     });
 
     lastIso++;
     if(lastIso >= mainToIsolateStream.length) {
       lastIso = 0;
     }
-   // print("ISO increased to  $lastIso");
 
     return tileMap['coordsKey'];
   }
@@ -808,8 +837,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
   @override
   void initState() {
-
-    print("INIT STATE");
 
     super.initState();
     geoJson = {};
@@ -845,7 +872,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
 
     _tileSize = CustomPoint(vectorOptions.tileSize, vectorOptions.tileSize);
-    ///print("calling resetview");
     _resetView();
     _moveSub = widget.stream.listen((_) => _handleMove());
     _housekeepingTimer = Timer.periodic(Duration(hours: 24), (Timer t) => _tidyOldTileListEntries());
@@ -912,6 +938,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     var _tiles = {};
     var _haveBackupTileMap = {};
     Map levelupCoordsMap = {};
+    Map newWantedCoordsKeys = {};
 
     _tidyOldTileListEntries();
 
@@ -933,6 +960,11 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     int minx = (tileRange.min.x - 0).toInt();
     int maxx = (tileRange.max.x + 0).toInt();
 
+    //debug single tile 110/342/510 (mapbox xy opposite to o.smaps)
+    //minx=510;
+    //maxx = 510;
+    //miny = 342;
+    //maxy=342;
 
     _prevCenter ??= map.center;
 
@@ -985,8 +1017,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           /// 64,22 & 65,22 & 64,23 & 65, 23 in one direction, and 16,10 in going
           /// backwards. So if we've recently completed it, there's a good chance
           /// it's a the cache.
-          /// [1, 2, 3, -1, -2] [-1,-2,1,2]
-          [1,-1,2,-2].forEach((levelDifference) {
+          /// [1, 2, 3, -1, -2] [-1,-2,1,2], [1,-1,2,-2]
+          [1, 2, 3, -1, -2].forEach((levelDifference) {
             var ratio = math.pow(2, levelDifference);
 
             /// If we need covering tiles from a higher zoom we may need
@@ -1038,6 +1070,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
             }
           });
         }
+ //print("breaking");
+ //break;
       }
     }
 
@@ -1050,17 +1084,16 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     var tilesToRender = <VTile>[];
     for (var tile in _tiles.values) {
-      //print("here");
-      //print("${tile.coords.z}");
-      //print("${_level.zoom}");
       if ((tile.coords.z - _level.zoom).abs() <= 1 + math.pow(2, underZoom)) {
         if (!_cachedVectorData.containsKey(_tileCoordsToKey(tile.coords))) {
           fetchData(tile.coords);
         } else {
           tilesToRender.add(tile);
         }
+        newWantedCoordsKeys[tileCoordsToKey(tile.coords)] = true;
       }
     }
+    latestWantedCoordsKeys = newWantedCoordsKeys;
 
     tilesToRender.sort((aTile, bTile) {
       final a = aTile.coords; // TODO there was an implicit casting here.
@@ -1138,6 +1171,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
       if (_cachedVectorData[coordsKey]?.state == 'gettingHttp') {
 
+        print("URL $url");
+
         DefaultCacheManager().getSingleFile(url).then( ( value ) async {
           var cachedVectorData = _cachedVectorData[coordsKey];
 
@@ -1153,7 +1188,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           } catch (e) {
             print("$e");
           }
-        });
+        }).onError((error, stackTrace) { print("Error getting $url with error: $error"); });
       }
     }
 
@@ -1199,7 +1234,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     }
 
     var levelZoom = _levels[zoom];
-    ///print("_updatelevels $zoom $levelZoom ${_levels[zoom]}");
     if(levelZoom != null)
       _level = levelZoom;
 

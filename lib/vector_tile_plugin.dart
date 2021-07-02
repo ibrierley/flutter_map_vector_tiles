@@ -102,8 +102,9 @@ class Label {
   double angle;
   int priority = 1; // 0-2 atm
   TextPainter textPainter;
+  Label? backgroundLabel;
   Label( {required this.text, required this.point, required this.textPainter,
-    required this.dedupeKey, required this.priority, required this.coordsKey,  this.isRoad = false, this.angle = 0.0 } );
+    required this.dedupeKey, required this.priority, required this.coordsKey,  this.isRoad = false, this.angle = 0.0, this.backgroundLabel } );
 }
 
 class TileStats {
@@ -145,10 +146,16 @@ class MapboxTile {
           var info = pointInfo[2]['properties']['name'];
 
           if (info != null) {
-            cachedInfo.geomInfo?.labels.add(
+            var backPainter = getNewPainter(info.toString(), Colors.white, 12.0, 2.0);
+            var backgroundLabel =
               Label( text: info.toString(), point: pointInfo[0],
-                  textPainter: getNewPainter(info.toString()), dedupeKey: pointInfo[3],
-                  priority: pointInfo[4], coordsKey: coordsKey ) );
+                  textPainter: backPainter, dedupeKey: pointInfo[3] + '_b',
+                  priority: pointInfo[4], coordsKey: coordsKey );
+
+            cachedInfo.geomInfo?.labels.add(
+                Label( text: info.toString(), point: pointInfo[0],
+                    textPainter: getNewPainter(info.toString(), Colors.black, 12.0, 1.0), dedupeKey: pointInfo[3],
+                    priority: pointInfo[4], coordsKey: coordsKey, backgroundLabel: backgroundLabel ) );
           }
           tileStats.labels++;
 
@@ -173,7 +180,7 @@ class MapboxTile {
 
         if(halfway != null && road.text != "")
           cachedInfo.geomInfo?.labels.add(
-              Label( text: road.text, point: halfway.position, textPainter: getNewPainter(road.text),
+              Label( text: road.text, point: halfway.position, textPainter: getNewPainter(road.text, Colors.black, 12.0, 1.0),
                   dedupeKey: road.text + '|' + coordsKey, priority: 2,
                   coordsKey: coordsKey, angle: halfway.angle, isRoad: true ) ); /// use named params and a class for pointInfo
 
@@ -536,10 +543,14 @@ class VectorPainter extends CustomPainter {
         canvas.rotate(-widgetRotation * 0.0174533);
       }
 
-      if( drawPoint != null)
+      if( drawPoint != null) {
+        if(label.backgroundLabel != null) {
+          _drawTextAt(drawPoint, canvas, 1,
+              label.backgroundLabel?.textPainter); //
+        }
         _drawTextAt(drawPoint, canvas, 1,
-          label.textPainter); // we don't want to scale text
-
+            label.textPainter); // we don't want to scale text
+      }
       if (isRotated) {
         canvas.restore();
       }
@@ -684,14 +695,24 @@ class VectorPainter extends CustomPainter {
           cachedVectorDataMap != oldDelegate.cachedVectorDataMap;
 }
 
-TextPainter getNewPainter(String text) {
-  final TextStyle textStyle = TextStyle(
-      color: Colors.black,
-      fontSize: 14 //scale == 1 ? scale : 16 / scale, // diffratio, ?
-  );
+TextPainter getNewPainter(String text, color, fontSize, strokeWidth) {
+  ///final TextStyle textStyle = TextStyle(
+  ///    color: color,
+  ///    fontSize: fontSize, //scale == 1 ? scale : 16 / scale, // diffratio, ?
+  ///    foreground: Paint()
+  ///    ..style = PaintingStyle.stroke
+  ///    ..strokeWidth = strokeWidth
+  ///    ..color = color,
+    //background: Paint() // block background for text
+    //  ..style = PaintingStyle.stroke
+    //  ..strokeWidth = strokeWidth * 2
+    //  ..color = Colors.red,
+
+  ///);
   final TextSpan textSpan = TextSpan(
     text: text,
-    style: textStyle,
+    //style: textStyle,
+    style: Styles.labelTextStyles['blackNormalThick']
   );
 
   return TextPainter(

@@ -5,8 +5,16 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'parse_expressions.dart';
+//import 'package:hexcolor/hexcolor.dart';
 
 class Styles {
+
+  static Map<String, dynamic> colorRegex = {
+    'isHexRgb' : new RegExp(r'^(#.*)'),
+    'isRgba'   : new RegExp(r'^rgba\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3}),\s*(\d*(?:\.\d+)?)\)$'),
+    'isHsl'    : new RegExp(r"hsl\((\d+),\s*([\d.]+)%,\s*([\d.]+)%\)"),
+
+  };
 
   /// https://github.com/mapbox/mapbox-gl-js/issues/4225
   static Map<String, int> defaultLayerOrder() {
@@ -982,6 +990,9 @@ class Styles {
   static Paint getStyle(style, featureInfo, layerString, type, tileZoom, scale, diffRatio) {
     var paramsMap = { 'layer': layerString, 'type': type, 'zoom': tileZoom, 'diffRatio': diffRatio, 'featureInfo': featureInfo };
 
+    ///print("new parser $layerString $type $tileZoom $featureInfo");
+    var parser = new Parser(layerString, featureInfo, type, tileZoom);
+
     ///print("getStyle check");
 
     var className;
@@ -1007,20 +1018,29 @@ class Styles {
     if(type == 'POLYGON') {
       if (featureInfo['fill-color'] != null) {
         //print("FILL COLOR HAVE ${featureInfo['fill-color']}");
-        var hslColor =  hslStringToRgbColor(featureInfo['fill-color']);
-        paint.color = hslColor;
+        var color =  getColorFromString(featureInfo['fill-color']);//
+        // RgbColor(featureInfo['fill-color']);
+        paint.color = color;
       }
     } else if(type == 'LINESTRING') {
      // print("${featureInfo['paint']}");
       if (featureInfo['line-color'] != null) {
-        var hslColor =  hslStringToRgbColor(featureInfo['line-color']);
+        var color =  getColorFromString(featureInfo['line-color']);
         //print("LINE COLOR IS $hslColor");
-        paint.color = hslColor;
+        paint.color = color;
       }
       if (featureInfo['line-width'] != null) {
-        ///print("LINE WIDTH IS ${featureInfo['line-width']} ");
+        var lineWidth = featureInfo['line-width'];
+        //print("featureinfo $featureInfo");
+        //print("LINE WIDTH IS... $lineWidth ");
 
-        paint.strokeWidth = featureInfo['line-width'].toDouble();
+        if(lineWidth is String || lineWidth is Map || lineWidth is List) {
+          var parsed = parser.parse(lineWidth);
+          //print("parsed is $parsed");
+          paint.strokeWidth = double.parse(parser.parse(lineWidth));
+        } else {
+          paint.strokeWidth = lineWidth.toDouble();
+        }
       }
     }
     /*var featurePaint = featureInfo['paint'];
@@ -1086,12 +1106,35 @@ class Styles {
   }
 
   static Future<Map<dynamic,dynamic>> getJsonTestStyle(filename) async {
-    return await rootBundle.loadString('assets/data/streets.json')
+    return await rootBundle.loadString('assets/data/streets.jsonxxxxxx')
     .then((contents){
       Map<dynamic,dynamic> json = jsonDecode(contents);
       return json;
     });
   }
+
+  static final normalFontSize = 12.0;
+  static final outlineWidth = 2.0;
+  static final lineWidth = 1.0;
+
+  static Map labelTextStyles = {
+    'blackNormalThick': TextStyle(
+      color: Colors.black,
+      fontSize: normalFontSize, //scale == 1 ? scale : 16 / scale, // diffratio, ?
+      foreground: Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = lineWidth
+        ..color = Colors.black,
+    ),
+    'whiteNormalOutline': TextStyle(
+      color: Colors.white,
+      fontSize: normalFontSize, //scale == 1 ? scale : 16 / scale, // diffratio, ?
+      foreground: Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = outlineWidth
+        ..color = Colors.white,
+    )
+  };
 }
 
 bool filterCheck( check ) {
@@ -1167,8 +1210,26 @@ void checkMapboxFilters(Map<dynamic,dynamic> style, String layerString,String ty
   }
 }
 
+
+
+Color getColorFromString(colorString) {
+  //print("getting color $colorString");
+  var colorMatches = Styles.colorRegex['isHexRgb'].allMatches(colorString).toList();
+  if(colorMatches.length > 0) {
+   // print("got hex color");
+    return hexToColor(colorMatches[0][1]);
+  }
+  colorMatches = Styles.colorRegex['isRgba'].allMatches(colorString).toList();
+  if(colorMatches.length > 0) {
+    //print("got rgba $colorMatches");
+    return Color.fromRGBO(int.parse(colorMatches[0][1]), int.parse(colorMatches[0][2]), int.parse(colorMatches[0][3]), double.parse(colorMatches[0][4]));
+  }
+  //print("got hsl");
+  return hslStringToRgbColor(colorString);
+}
+
 List stringToHslColor(string) {
-  RegExp exp = new RegExp(r"hsl\((\d+),\s*([\d.]+)%,\s*([\d.]+)%\)");
+  RegExp exp = Styles.colorRegex['isHsl']; //new RegExp(r"hsl\((\d+),\s*([\d.]+)%,\s*([\d.]+)%\)");
   var matches = exp.allMatches(string).toList();
 
   return [double.parse(matches[0][1]!),double.parse(matches[0][2]!),double.parse(matches[0][3]!)];
