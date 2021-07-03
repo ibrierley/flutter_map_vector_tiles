@@ -30,6 +30,7 @@ import 'package:flutter_map_vector_tile/styles.dart';
 import 'package:iso/iso.dart';
 //import 'package:flutter_startup/flutter_startup.dart';
 import 'package:flutter_isolate/flutter_isolate.dart';
+import 'dart:convert';
 
 import 'package:flutter/services.dart';
 //import 'package:image/image.dart' as image;
@@ -696,10 +697,27 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           var checkedLayers = await decodeBytesToGeom(testStyle, data['coordsKey'], data['bytes'], {}, data['tileZoom']);
           var diff = DateTime.now().difference(start).inMilliseconds;
           print("decodebytesgeom diff $diff");
-          start = DateTime.now();
-          isolateToMainStream.send({ "decodedLayers": checkedLayers, 'coordsKey': data['coordsKey'], 'tileZoom': data['tileZoom']  });
-          diff = DateTime.now().difference(start).inMilliseconds;
-          print("send isotomain diff $diff");
+          ///start = DateTime.now();
+          ///isolateToMainStream.send({ "decodedLayers": checkedLayers, 'coordsKey': data['coordsKey'], 'tileZoom': data['tileZoom']  });
+          ///diff = DateTime.now().difference(start).inMilliseconds;
+
+          ///print("Encoding..");
+          //String jsonEncodeBytes = utf8.encode(json.encode(checkedLayers));
+         /// var jsonEncodeIntList = json.encode(checkedLayers).codeUnits;
+          //var test = Utf8Encoder().convert(jsonEncodeIntList)
+          ///var uintList = Uint8List.fromList(jsonEncodeIntList);
+
+          var encoded = json.encode(checkedLayers);
+          Uint8List utf8encoded = Utf8Encoder().convert(encoded);
+
+          await DefaultCacheManager().putFile(data['coordsKey'] + "_layers.json", utf8encoded, fileExtension: "json").catchError((err){
+            print("error saving to file");
+          });
+          isolateToMainStream.send({ "savedGeo": true, 'coordsKey': data['coordsKey'], 'tileZoom': data['tileZoom'] });
+          //await File(data['coordsKey'] + "_layers.json").writeAsString(json.encode(checkedLayers)).catchError((err){
+          //  print("Error writing json to file");
+          //});
+
           start = DateTime.now();
           var imageByteData = await pathsToImage(checkedLayers, testStyle, data['coordsKey'], {}, data['tileZoom'] );
           diff = DateTime.now().difference(start).inMilliseconds;
@@ -709,9 +727,9 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           ///diff = DateTime.now().difference(start).inMilliseconds;
           ///print("bytesend image $diff");
 
-          var save = await DefaultCacheManager().putFile(data['coordsKey'] + "_image.png", imageByteData.buffer.asUint8List(), fileExtension: "png");
+          await DefaultCacheManager().putFile(data['coordsKey'] + "_image.png", imageByteData.buffer.asUint8List(), fileExtension: "png");
           isolateToMainStream.send({ "savedImage": true, 'coordsKey': data['coordsKey'], 'tileZoom': data['tileZoom'] });
-          print("save was $save");
+          ///print("save was $save");
           //var test = await DefaultCacheManager().getFileFromCache(data['coordsKey'] + "_image.png");
           //print("TESTING CACHE FILE $test");
           //print("TESTING CACHE FIL2E ${test?.file.readAsBytesSync}");
@@ -739,10 +757,34 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
   void storeCachedTileInfo( coordsKey, msg, vectorOptions, debugOptions ) async {
 
+    ///print("Storing cached tile info ${msg.keys}");
+
     var cache = _cachedVectorData[coordsKey];
     if(cache != null) {
-      if(msg.containsKey('decodedLayers')) {
-        cache.geoJson = { 'layers': msg['decodedLayers'] };
+      if(msg.containsKey('savedGeo')) {
+        ///print("testing json load...");
+
+        var json;
+        await DefaultCacheManager().getFileFromCache(
+            coordsKey + "_layers.json").then((file) async {
+              ///print("Got file....");
+              var bytes = file!.file.readAsBytesSync();
+              String s = new String.fromCharCodes(bytes);
+              json = jsonDecode(s);
+              ///print("GOT SOMETHING AND ITS $json");
+         // ui.Codec codec2 = await ui.instantiateImageCodec(
+         //     file!.file.readAsBytesSync());
+        }).catchError((err){ print("getfile error was $err"); });
+
+        if(json != null)
+          cache.geoJson = { 'layers': json };
+        ///print("GEOJSON IS ${cache.geoJson}");
+        /// cache.geoJson = { 'layers': msg['decodedLayers'] };
+        //final File file = await File(data['coordsKey'] + "_layers.json").writeAsString(json.encode(checkedLayers)).catchError((err){
+        //  print("Error writing json to file");
+        //});
+
+        ///cache.geoJson = { 'layers': msg['decodedLayers'] };
 
         if(true || vectorOptions.useCanvas) { // we still need to get labels even if using tiles as bottom layer? does mean we dupe a bit of processing
           MapboxTile.decodeGeoToNative(
@@ -755,7 +797,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
       if(msg.containsKey('savedImage')) {
         if(vectorOptions.useImages) {
-          print("TESTING DIRECT");
+          ///print("TESTING DIRECT");
           var test = await DefaultCacheManager().getFileFromCache(
               coordsKey + "_image.png").then((file) async {
             ui.Codec codec2 = await ui.instantiateImageCodec(
@@ -804,7 +846,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
               if (data is Map) {
                 if (data.containsKey('decodedLayers') ||
                     data.containsKey('imageByteData') || // may want to removed eventually...
-                    data.containsKey('savedImage')
+                    data.containsKey('savedImage') ||
+                    data.containsKey('savedGeo')
                 ) {
                   storeCachedTileInfo(
                       data['coordsKey'], data, vectorOptions, debugOptions);
@@ -819,7 +862,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     var waitTime = isoRunning < 2 ? 5 : 0;
 
     await Future.delayed(Duration(seconds: waitTime), () async {
-      print("last iso is $lastIso ${mainToIsolateStream.length} ${isolateToMainStream.length}");
+      ///print("last iso is $lastIso ${mainToIsolateStream.length} ${isolateToMainStream.length}");
       if(latestWantedCoordsKeys.containsKey(tileMap['coordsKey'])) {
         mainToIsolateStream[lastIso].send(
             [tileMap, isolateToMainStream[lastIso].sendPort]);
@@ -1170,8 +1213,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       }
 
       if (_cachedVectorData[coordsKey]?.state == 'gettingHttp') {
-
-        print("URL $url");
 
         DefaultCacheManager().getSingleFile(url).then( ( value ) async {
           var cachedVectorData = _cachedVectorData[coordsKey];

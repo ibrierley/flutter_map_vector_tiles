@@ -337,7 +337,7 @@ class VectorPainter extends CustomPainter {
               if (optimisations.pinchZoom) {
                 ///print("Style optimisation");
                 ///if(!usedPaintedImage)
-                  ///style.strokeWidth = 0.0;
+                 /// style.strokeWidth = 0.0;
               }
 
               if (pathMap != null) {

@@ -660,11 +660,11 @@ class Parser {
           break;
         case "step":
         //["step", ["zoom"], "butt", 11, "round"],
-        print("Doing STEP!!! args[2] is ${args[2]} trying to parse ");
+        //print("Doing STEP!!! args[2] is ${args[2]} trying to parse ");
           result = parse(args[2]);
           STEP: for (var c = 3; c < args.length; c = c + 2) {
-            print("Checking parse ${args[1]}");
-            print("vs parse ${args[c]}");
+            //print("Checking parse ${args[1]}");
+            //print("vs parse ${args[c]}");
             if (parse(args[1]) >= parse(args[c])) {
               result = parse(args[c + 1]);
             } else {
