@@ -334,10 +334,12 @@ class VectorPainter extends CustomPainter {
 
               /// if we've pinchzooming, use thin lines for speed
               double oldStrokeWidth = style.strokeWidth;
-              if (optimisations.pinchZoom) {
+              if (optimisations.pinchZoom || tileZoom < 15) {
                 ///print("Style optimisation");
                 ///if(!usedPaintedImage)
-                 /// style.strokeWidth = 0.0;
+               /// if(tileZoom <= 14)
+                if(style.strokeWidth < 4.0) // too jarring to switch from fat to thin
+                  style.strokeWidth = 0.0;
               }
 
               if (pathMap != null) {

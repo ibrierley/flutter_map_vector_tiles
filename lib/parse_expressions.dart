@@ -376,40 +376,20 @@ class Parser {
   Parser(this.layerString, this.feature, this.type, this.tileZoom);
 
   dynamic parse(dynamic args, [bool useList = true]) {
-    ///print("FEATURESTART featre is $feature");
-
-    ///if (eval && !(args is List)) return args;
-
-    ///print("part2");
-
-
-
-    ///if(args is double || args is int) return args;
-
-
-    //print("still here $args");
 
     var command = args is List ? args[0] : args;
     var result;
 
-   ///print("here2 [$command]");
-
     if( args is Map) { // oslayer style ?
       if(args.containsKey("base")) {
-        //(base, val, tempkeys)
         result = interp(args['base'], tileZoom, args['stops']);
       } else if (args.containsKey("stops")) {
-        ///print("map found ... stops ${args['stops']}");
-
         result = parse([...["stops" ],...args['stops']]);
-        ///print("result was $result with zoom $tileZoom");
       }  else {
         result = args;
       }
       return result;
     }
-
-    ///print("Before switch [$command]");
 
     if(command is String) {
       switch (command) {
@@ -426,14 +406,13 @@ class Parser {
           result = parse(args[1]) - parse(args[2]);
           break;
         case "==":
-          var s1 = parse(args[1]);
+          final s1 = parse(args[1]);
           var s2 = parse(args[2]);
-	  if(s1 is String) { // messy LineString vs LINESTRING etc
-	    s2 = s2.toString(); // sometimes we seem to get a string false, rather than a bool type
-	    ///print("$s1 and $s2 $feature");
-	    result = s1.toLowerCase() == s2.toLowerCase();
-	  } else {
-            result = s1 == s2;
+          if(s1 is String) { // messy LineString vs LINESTRING etc
+            s2 = s2.toString(); // sometimes we seem to get a string false, rather than a bool type
+            result = s1.toLowerCase() == s2.toLowerCase();
+          } else {
+                  result = s1 == s2;
           }
           break;
         case "!=":
@@ -443,7 +422,6 @@ class Parser {
           result = parse(args[1]) >= parse(args[2]);
           break;
         case "<=":
-          ///print("uioiu $args $feature");
           result = parse(args[1]) <= parse(args[2]);
           break;
         case "<":
@@ -453,92 +431,48 @@ class Parser {
           result = parse(args[1]) > parse(args[2]);
           break;
         case "any":
-        //print("anytest $args");
           result = args.sublist(1).any((val) {
             return parse(val) as bool;
-          }); // return parse(val);
+          });
           break;
         case '\$type':
-        //print("TYPE!!!!!!!!!!!!!! will return $type");
           result = type;
           break;
         case "all":
-          var sublist = args.sublist(1);
+          final sublist = args.sublist(1);
           var all = true;
-	  var notAllBool = false;
-	  for( var c=0; c<sublist.length; c++ ) {
-		var test = parse(sublist[c]);
+	        var notAllBool = false;
+	        for( var c=0; c<sublist.length; c++ ) {
+		        final test = parse(sublist[c]);
+            if( (test is bool) && test == false ) {
+              all = false;
+              break;
+            } else if( (test is bool) && test == true ) {
 
-		if( (test is bool) && test == false ) {
-			all = false;
-			break;
-		} else if( (test is bool) && test == true ) {
-
-		} else {
-			notAllBool = true;
-		}
-		
+            } else {
+              notAllBool = true;
+            }
           }
-	if(notAllBool) {
-		result = args;
-	} else {
-		result = all;
-	}
-	/*
-	if( 
-          result = args.sublist(1).every((val) {
-		if( parse(val) is bool ) {
-			return bool;
-		}
-            //return parse(val) as bool;
-          }); // return parse(val);
-          break;
-        ///case "none":
-         // print("Doing [none] and args is $args");
-        ///  result = "none";
-
-        if(args is List) {
-          //print("is list...");
-          //print("${args.sublist(1)}");
-          if(args.length > 1) {
-            //print("herekkk");
-            //print("ii ${args.sublist(1)}");
-            result = !parse(["any", ...args.sublist(1)]); // return parse(val);
-          } else {
-            //print("herelll");
+          if(notAllBool) {
             result = args;
+          } else {
+            result = all;
           }
-          //print("passed none list");
-        } else {
-          //print("String so none...");
-          result = "none";
-        }
-	*/
 
           break;
         case "in":
-
         /// http://kuanbutts.com/2019/02/18/mapbox-expressions/
-        //print("xx got here IN $args");
+
           if (args.length >= 2) {
-            //print("enough args");
-            //print("zznext bit in ${args[1]}   .. ${args[2]}   ${args.sublist(2)}  ");
-            var featureVal = parse(args[1]);
-            //print("featureval $featureVal");
+            final featureVal = parse(args[1]);
             if (featureVal != null) {
-             // print("herepppp  ${args.sublist(2)} any of $featureVal");
               var checkList;
               if (args[2] is List) {
-//print("opt1 ${args[2]}");
                 checkList = parse(args[2]);
               } else {
-//print("opt2");
                 checkList = parse(args.sublist(2));
               }
-
-              //print("IN ANY TEST $checkList");
               result = checkList.any((val) {
-                //print("Checking $featureVal vs parsing $val");
                 return featureVal == parse(val);
               });
               ///print("res kkk = $result");
@@ -546,93 +480,47 @@ class Parser {
               result = false;
             }
           }
-          //print("args small");
           break;
         case "!in":
-        //print("yy got here !in");
           result = !parse(["in", ...args.sublist(1)]);
-          //print("next bit res is $result");
           break;
         case "get":
-        //print("Getting....");
           if (args[1] != null) {
             result = feature[args[1]];
-            ///print("got $result and type is ${result.runtimeType}");
-            //print("Get is ${args[1]} $feature");
-            // hack as sometimes we get a filterrank of false...
-            /*
-            if (args[1] == 'filterrank' && feature.containsKey('filterrank')) {
-              if (feature['filterrank'] is bool || feature['filterrank'] == "false") {
-                //print("ppp");
-                result = 3;
-              } else {
-                //print("dlksa");
-                result = feature['filterrank'];
-              }
-            } else {
-             // print("remainder");
-              result = feature[args[1]];
-            }
-            */
-
-            //print("Get is ${args[1]} result is $result");
           } else {
-            //print("GET not found");
           }
           return result;
-
-          /// just let it pass through ?
           break;
         case "has":
-        //print("DOING HAS!!");
           if (feature.containsKey(parse(args[1]))) {
             result = true;
           } else {
             result = false;
           }
-          //print("RESULT $result");
           break;
         case "match":
-          ///print("wwwChecking match $args");
-        //print(args.sublist(1, args.length-1));
-        //print( args[args.length-1]);
-        ///result = parse(["in", ...args.sublist(1, args.length-1)]) ? true : args[args.length-1];
-
           var checkArg = parse(args[1]);
-          //print("Checkarg is $checkArg");
+
           for (var c = 2; c < args.length - 2; c = c + 2) {
-            //print("loop doing $checkArg c=$c   ${args[c]}");
-            ///if(parse(["in", checkArg, args[c]], false)) {
             if (args[c] is String) {
-              //print("HEREXX parsing ${args[c]}");
               if (checkArg == parse(args[c])) {
                 return args[c + 1];
               }
             } else if (args[c] is List) {
-              //print("DOING MATCH CHECKING $checkArg in ${args[c]}");
               if (parse(["in", checkArg, args[c]])) {
-                //print("MATCH CHECKING $checkArg in ${args[c]} matches");
                 return args[c + 1];
               } else {
-                //print("MATCH CHECKING $checkArg in ${args[c]} fails");
               }
             } else {
-              //print("NOT SURE $args");
             }
-            //if(checkArg == parse(args[c])) {
-            //  return args[c+1];
-            //}
           }
           return args.last;
 
           /// just let it pass through ?
           break;
         case "coalesce":
-        //print("Doing coalesce $args");
           for (var c = 1; c < args.length; c++) {
-            //print("will parse ${args[c]}");
             var test = parse(args[c]);
-            //print("TET PARSE IS $test");
             if (test != null) {
               return test;
             }
@@ -659,12 +547,8 @@ class Parser {
           //print("got zoom, result is $result");
           break;
         case "step":
-        //["step", ["zoom"], "butt", 11, "round"],
-        //print("Doing STEP!!! args[2] is ${args[2]} trying to parse ");
           result = parse(args[2]);
           STEP: for (var c = 3; c < args.length; c = c + 2) {
-            //print("Checking parse ${args[1]}");
-            //print("vs parse ${args[c]}");
             if (parse(args[1]) >= parse(args[c])) {
               result = parse(args[c + 1]);
             } else {
@@ -673,10 +557,8 @@ class Parser {
           }
           break;
         case "stops":
-          ///print("doing later case stops.......$args");
           result = parse(args[1][1]);
           STOP: for (var c = 1; c < args.length; c = c + 1) {
-            ///print("Checking tilezoom vs parse ${args[c]}");
             if (tileZoom >= parse(args[c][0])) {
               result = parse(args[c][1]);
             } else {
@@ -685,27 +567,20 @@ class Parser {
           }
           break;
         case "case":
-        //print("Doing CASE $args");
           result = parse(args[args.length - 1]);
-          //print("FALLBACK RESULT SO FAR IS $result");
           xcase:
           for (var c = 1; c < args.length - 1; c = c + 2) {
-            //print("CHECKING!!!! ${args[c]}");
             if (parse(args[c])) {
-              //print("OK! Setting result");
               result = parse(args[c + 1]);
               break xcase;
             }
           }
           break;
         case "let":
-        //print("Doing let");
-          let:
           for (var c = 1; c < args.length - 1; c = c + 2) {
             store[args[c]] = parse(args[c + 1]);
           }
           result = parse(args[args.length - 1]);
-          //print("STORE $store");
           break;
         case "false":
           result = false;
@@ -722,31 +597,18 @@ class Parser {
           break;
         case "interpolate": // base, val, keys
           var type = args[1][0];
-          //print("TYPE IS $type");
           if (type == "linear") {
-            //print("linear");
- //print("interplinear, ${args[2]}     >>   ${args.sublist(3)}}");
- //print("${parse(args[2])}");
-//var testres = args.sublist(3).map((val){return parse(val); }).toList();
-//print("TEST $testres");
-//           result = interp(1.0, parse(args[2]), parse(args.sublist(3)));
-  result = interp(1.0, parse(args[2]), args.sublist(3).map((val){return parse(val); }).toList() );
+            result = interp(1.0, parse(args[2]), args.sublist(3).map((val)
+              { return parse(val); }).toList() );
 
           } else if (type == "exponential") {
-            //print("expo");
-//            result = interp(
-//                parse(args[1][1]), parse(args[2]), parse(args.sublist(3)));
-		result = interp( parse(args[1][1]), parse(args[2]), args.sublist(3).map((val){return parse(val); }).toList() );
+		        result = interp( parse(args[1][1]), parse(args[2]), args.sublist(3).map( (val)
+              {return parse(val); }).toList() );
           } else if (type == "identity") {
             result = args[1]; // untested
-            //print("no interp type found");
           }
           break;
-        case "xxxxfilterrank":
 
-          //print("got zoom, result is $result");
-          result = args;
-          break;
       }
     }
 
@@ -757,28 +619,6 @@ class Parser {
         result = false;
     }
 
-    if(result is String) {
-      //print("String res is $result");
-    }
-    //print("near end...");
-    //if(result == null) {
-   //   if(args is String) {
-   //     print("String check $args $feature");
-   //     if(feature.containsKey(args))
-   //       result = feature[args]; /// not sure this is right for mapbox, but ok for others..maybe a flag needed
-
-   //   } //else if(args is List && (args.length == 1)) {
-        //print("LEN1 ${args}");
-        //result = parse(args[0]);
-
-   // } else {
-        //print("not an expression, returning $args");
-   //     result = args;
-     // }
-   // }
-
-
-    //print("This res = $result ?? $args");
     var xres = result != null ? result : args;
 
     return xres;

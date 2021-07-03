@@ -344,6 +344,7 @@ dynamic decodeBytesToGeom( vectorStyle, coordsKey, bytes, options, tileZoom ) as
     }
   } // layer
 
+  /*
   var checkedLayers = [];
 
   var keys = '';
@@ -412,25 +413,157 @@ dynamic decodeBytesToGeom( vectorStyle, coordsKey, bytes, options, tileZoom ) as
             featureDetails['fill-outline-color'] = checkFilter(featureStyle['fill-outline-color'], sourceLayer, featureDetails, tileZoom);
             ///print("fill colour is ${featureDetails['fill-color']}");
           }
-          if(featureStyle['fill-color'] != null) {
-            featureDetails['fill-color'] = checkFilter(featureStyle['fill-color'], sourceLayer, featureDetails, tileZoom);
+          final fillColor = featureStyle['fill-color'];
+          if(fillColor != null) {
+            featureDetails['fill-color'] = checkFilter(fillColor, sourceLayer, featureDetails, tileZoom);
             ///print("fill colour is ${featureDetails['fill-color']}");
           }
-          if(featureStyle['fill-opacity'] != null) {
-            featureDetails['fill-opacity'] = checkFilter(featureStyle['fill-opacity'], sourceLayer, featureDetails, tileZoom);
+          final fillOpacity = featureStyle['fill-opacity'];
+          if(fillOpacity != null) {
+            featureDetails['fill-opacity'] = checkFilter(fillOpacity, sourceLayer, featureDetails, tileZoom);
             ///print("fill colour is ${featureDetails['fill-color']}");
           }
-          if(featureStyle['line-opacity'] != null) {
-            featureDetails['line-opacity'] = checkFilter(featureStyle['line-opacity'], sourceLayer, featureDetails, tileZoom);
+          final lineOpacity = featureStyle['line-opacity'];
+          if(lineOpacity != null) {
+            featureDetails['line-opacity'] = checkFilter(lineOpacity, sourceLayer, featureDetails, tileZoom);
             ///print("fill colour is ${featureDetails['fill-color']}");
           }
-          if(featureStyle['line-color'] != null) {
-            featureDetails['line-color'] = checkFilter(featureStyle['line-color'], sourceLayer, featureDetails, tileZoom);
+          final lineColor = featureStyle['line-color'];
+          if(lineColor != null) {
+            featureDetails['line-color'] = checkFilter(lineColor, sourceLayer, featureDetails, tileZoom);
             ///print("LINE colour is ${featureDetails['line-color']} $featureDetails");
           }
-          if(featureStyle['line-width'] != null) {
+          final lineWidth = featureStyle['line-width'];
+          if(lineWidth != null) {
             ///print("checkFilter in widget ${featureStyle['line-width']}");
-            featureDetails['line-width'] = checkFilter(featureStyle['line-width'], sourceLayer, featureDetails, tileZoom);
+            featureDetails['line-width'] = checkFilter(lineWidth, sourceLayer, featureDetails, tileZoom);
+            ///print("fill colour is ${featureDetails['fill-color']}");
+          }
+          featureDetails['paint'] = featureStyle;
+        }
+        if(addedFeature) {
+          ///print("adding...");
+          newLayer.add(featureDetails);
+        }
+      }
+    } else {
+      ///print("Have no $sourceLayer");
+    }
+
+    if(newLayer.length != 0) {
+      //print("adding newlayer");
+      checkedLayers.add(newLayer);
+    } else {
+      ///print("Nothing to add!!!!!!!!!!!!!!!!!!!!!!!!!! $sourceLayer ${styleLayer['filter']}");
+    }
+  }
+
+  return checkedLayers;
+
+   */
+
+  return decoded;
+  ///return getMatchedStyleLayers(decoded, vectorStyle, tileZoom);
+}
+
+List getMatchedStyleLayers (decodedGeom, vectorStyle, tileZoom) {
+  var checkedLayers = [];
+
+  var keys = '';
+  for(var key in decodedGeom.keys) {
+    keys += key + ", ";
+  }
+
+  for( var styleLayer in vectorStyle['layers']) {
+    var newLayer = [];
+    final styleLayerType = styleLayer['type'];
+    final styleLayerFilter = styleLayer['filter'];
+    final styleLayerPaint = styleLayer['paint'];
+
+    ///if( styleLayer['id'] != 'road-simple') continue;
+    ///print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!DOING stylelayer: $styleLayer");
+    final sourceLayer = styleLayer['source-layer'] ?? styleLayer.keys.first; // may be a background layer we want to deal with as well
+
+    if(sourceLayer != null) {
+      var matchingLayer = decodedGeom[sourceLayer] ?? [];
+      if(matchingLayer.length == 0) {
+        ///print("Nothing matching decoded $sourceLayer");
+        ///print("keys was $keys");
+      }
+      FEATURE: for (var featureDetails in matchingLayer) {
+        var featureGeomType = featureDetails['geometry']['type'];
+        ///print("$featureDetails");
+        var addedFeature = false;
+
+        if(styleLayerType == 'fill' && featureGeomType != 'POLYGON') {
+          //print("Skipping as fill but not polygon ${featureDetails['geometry']['type']} " );
+          continue FEATURE;
+        }
+        if(styleLayerType == 'line' && featureGeomType != 'LINESTRING') {
+          //print("Skipping as line but not linestring ${featureDetails['geometry']['type']}");
+          continue FEATURE;
+        }
+        if(styleLayerType == 'symbol' && featureGeomType != 'POINT') {
+          // print("Skipping as symbol but not point ${featureDetails['geometry']['type']}" );
+          continue FEATURE;
+        }
+        //print("Ok past here with ${styleLayer['type']} && ${featureDetails['geometry']['type']} $featureDetails");
+
+
+        if(styleLayerFilter != null) {// || styleLayer[sourceLayer].containsKey('include')) {
+          ///print("${featureDetails['geometry']['type']} ${featureDetails['properties']}");
+          var checkOk = checkFilter(styleLayerFilter, sourceLayer, featureDetails, tileZoom);
+
+          //print("checkok is $checkOk");
+          if(checkOk == null) {
+            // print("CHECK OK FOR FILTER IS NULL");
+          } else if( checkOk is bool && checkOk ) {
+            ///print("adding... $sourceLayer");
+            ///newLayer.add(featureDetails);
+            addedFeature = true;
+          } else {
+            ///print("NOT SURE HERE!!!!!!! FILTER $sourceLayer $checkOk");
+            //print("Not sure what to do here with $sourceLayer $classx filter was ${styleLayer['filter']}");
+          }
+        } else {
+          ///print("NO FILTER, so ADDING ???!!!!!!! ${styleLayer['type']} $sourceLayer ${featureDetails['geometry']['type']} ${styleLayer['filter']} ");
+          ///newLayer.add(featureDetails);
+          addedFeature = true;
+        }
+
+        if(addedFeature && styleLayerPaint != null) {
+          ///var featureStyle = checkFilter(styleLayer['paint'], sourceLayer, featureDetails, tileZoom);
+          final featureStyle = styleLayerPaint;
+          //print("Paint style is for $sourceLayer feature is $featureStyle");
+          final fillOutlineColor = featureStyle['fill-outline-color'];
+          if(fillOutlineColor != null) {
+            featureDetails['fill-outline-color'] = checkFilter(fillOutlineColor, sourceLayer, featureDetails, tileZoom);
+            ///print("fill colour is ${featureDetails['fill-color']}");
+          }
+          final fillColor = featureStyle['fill-color'];
+          if(fillColor != null) {
+            featureDetails['fill-color'] = checkFilter(fillColor, sourceLayer, featureDetails, tileZoom);
+            ///print("fill colour is ${featureDetails['fill-color']}");
+          }
+          final fillOpacity = featureStyle['fill-opacity'];
+          if(fillOpacity != null) {
+            featureDetails['fill-opacity'] = checkFilter(fillOpacity, sourceLayer, featureDetails, tileZoom);
+            ///print("fill colour is ${featureDetails['fill-color']}");
+          }
+          final lineOpacity = featureStyle['line-opacity'];
+          if(lineOpacity != null) {
+            featureDetails['line-opacity'] = checkFilter(lineOpacity, sourceLayer, featureDetails, tileZoom);
+            ///print("fill colour is ${featureDetails['fill-color']}");
+          }
+          final lineColor = featureStyle['line-color'];
+          if(lineColor != null) {
+            featureDetails['line-color'] = checkFilter(lineColor, sourceLayer, featureDetails, tileZoom);
+            ///print("LINE colour is ${featureDetails['line-color']} $featureDetails");
+          }
+          final lineWidth = featureStyle['line-width'];
+          if(lineWidth != null) {
+            ///print("checkFilter in widget ${featureStyle['line-width']}");
+            featureDetails['line-width'] = checkFilter(lineWidth, sourceLayer, featureDetails, tileZoom);
             ///print("fill colour is ${featureDetails['fill-color']}");
           }
           featureDetails['paint'] = featureStyle;
@@ -454,7 +587,6 @@ dynamic decodeBytesToGeom( vectorStyle, coordsKey, bytes, options, tileZoom ) as
 
   return checkedLayers;
 }
-
 
 class Geo {
   Geo();
@@ -694,9 +826,13 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       if(data is Map) {
         if(data.containsKey('bytes')) {
           var start = DateTime.now();
-          var checkedLayers = await decodeBytesToGeom(testStyle, data['coordsKey'], data['bytes'], {}, data['tileZoom']);
+          var decoded = await decodeBytesToGeom(testStyle, data['coordsKey'], data['bytes'], {}, data['tileZoom']);
           var diff = DateTime.now().difference(start).inMilliseconds;
-          print("decodebytesgeom diff $diff");
+          print("decodebytesgeom took $diff millisecs");
+          start = DateTime.now();
+          var checkedLayers = getMatchedStyleLayers(decoded, testStyle,  data['tileZoom']);
+          diff = DateTime.now().difference(start).inMilliseconds;
+          print("stylematching took $diff millisecs");
           ///start = DateTime.now();
           ///isolateToMainStream.send({ "decodedLayers": checkedLayers, 'coordsKey': data['coordsKey'], 'tileZoom': data['tileZoom']  });
           ///diff = DateTime.now().difference(start).inMilliseconds;
@@ -718,22 +854,34 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           //  print("Error writing json to file");
           //});
 
-          start = DateTime.now();
-          var imageByteData = await pathsToImage(checkedLayers, testStyle, data['coordsKey'], {}, data['tileZoom'] );
-          diff = DateTime.now().difference(start).inMilliseconds;
-          print("save paths2image $diff");
-          start = DateTime.now();
-          ///isolateToMainStream.send({ "imageByteData": imageByteData, 'coordsKey': data['coordsKey'], 'tileZoom': data['tileZoom'] });
-          ///diff = DateTime.now().difference(start).inMilliseconds;
-          ///print("bytesend image $diff");
+          if(data['useImages']) {
+            start = DateTime.now();
+            var imageByteData = await pathsToImage(
+                checkedLayers, testStyle, data['coordsKey'], {},
+                data['tileZoom']);
+            diff = DateTime.now().difference(start).inMilliseconds;
+            print("save paths2image $diff");
+            start = DateTime.now();
 
-          await DefaultCacheManager().putFile(data['coordsKey'] + "_image.png", imageByteData.buffer.asUint8List(), fileExtension: "png");
-          isolateToMainStream.send({ "savedImage": true, 'coordsKey': data['coordsKey'], 'tileZoom': data['tileZoom'] });
-          ///print("save was $save");
-          //var test = await DefaultCacheManager().getFileFromCache(data['coordsKey'] + "_image.png");
-          //print("TESTING CACHE FILE $test");
-          //print("TESTING CACHE FIL2E ${test?.file.readAsBytesSync}");
+            ///isolateToMainStream.send({ "imageByteData": imageByteData, 'coordsKey': data['coordsKey'], 'tileZoom': data['tileZoom'] });
+            ///diff = DateTime.now().difference(start).inMilliseconds;
+            ///print("bytesend image $diff");
 
+            await DefaultCacheManager().putFile(
+                data['coordsKey'] + "_image.png",
+                imageByteData.buffer.asUint8List(), fileExtension: "png");
+            isolateToMainStream.send({
+              "savedImage": true,
+              'coordsKey': data['coordsKey'],
+              'tileZoom': data['tileZoom']
+            });
+            diff = DateTime.now().difference(start).inMilliseconds;
+
+            print("storing took $diff ms");
+            //var test = await DefaultCacheManager().getFileFromCache(data['coordsKey'] + "_image.png");
+            //print("TESTING CACHE FILE $test");
+            //print("TESTING CACHE FIL2E ${test?.file.readAsBytesSync}");
+          }
         }
       }
     });
@@ -900,7 +1048,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
                 (event is MapEventMoveStart)) {
               optimisations.pinchZoom = true;
             }
-            if (false && event.source == MapEventSource.onDrag &&
+            if (event.source == MapEventSource.onDrag &&
                 (event is MapEventMoveStart)) {
               optimisations.pinchZoom = true;
             }
@@ -1225,7 +1373,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
             /// /////////////////////////////////////////////////////
             cachedVectorData?.units = bytes;
             isoTest( { 'bytes': bytes, 'coordsKey' : coordsKey,
-              'tileZoom': _tileZoom, 'usePerspective': vectorOptions.usePerspective, }, vectorOptions, debugOptions );
+              'tileZoom': _tileZoom, 'usePerspective': vectorOptions.usePerspective, 'useImages': vectorOptions.useImages }, vectorOptions, debugOptions );
           } catch (e) {
             print("$e");
           }
