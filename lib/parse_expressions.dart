@@ -9,357 +9,60 @@ main() {
   feature ={ 'geometry': { 'type': 'LineString'}, 'properties': {"type": "primary_link", "structure": "none", "oneway": false, "class": "primary_link", "len": 40, "iso_3166_2": "GB-ENG", "iso_3166_1": "GB"}} ;
 	String layerString = 'water';
   String type = 'Point';
-  
 
-//  print("here1");
-  //print("${interp(1.2, 16.0)}");
-  //var res = parse(['>=', 4, ["+", 1, 3]]);
-  //var res = parse(["any", ["==", true, false], ["==", true, ["==", false, true]]]);
-  ///var res = parse(["all", ["==", true, true], ["==", true, ["==", false, false]]]);
-  //var res = parse(["none", ["==", false, true], ["==", false, false]]);
-  //var res = parse(["!in", "one", ["one","three"]]);
 
   var testStyle2 = { 'layers' : [{
     "id": "test",
     "type" : "line",
     "layer": "water",
-    //"maxZoom" : 6.0,
-
-
-    //"filter" : ['in', ['get','class'], 'xx', 'residential', 'wibble'],
-    "filter" :// ['in', ['get','class'], ['xx', 'residential', 'wibble']],
-/*
-  [
-  "all",
-  [
-  "step",
-  ["zoom"],
-  [
-  "match",
-  ["get", "class"],
-  ["motorway", "trunk"],
-  true,
-  false
-  ],
-  6,
-  [
-  "match",
-  ["get", "class"],
-  ["motorway", "trunk", "primary"],
-  true,
-  false
-  ],
-  8,
-  [
-  "match",
-  ["get", "class"],
-  ["motorway", "trunk", "primary", "secondary"],
-  true,
-  false
-  ],
-  10,
-  [
-  "match",
-  ["get", "class"],
-  [
-  "motorway",
-  "trunk",
-  "primary",
-  "secondary",
-  "tertiary",
-  "motorway_link",
-  "trunk_link"
-  ],
-  true,
-  false
-  ],
-  11,
-  [
-  "match",
-  ["get", "class"],
-  [
-  "motorway",
-  "motorway_link",
-  "trunk",
-  "trunk_link",
-  "primary",
-  "secondary",
-  "tertiary",
-  "street"
-  ],
-  true,
-  false
-  ],
-  12,
-  [
-  "match",
-  ["get", "class"],
-  [
-  "motorway",
-  "motorway_link",
-  "trunk",
-  "trunk_link",
-  "primary",
-  "secondary",
-  "tertiary",
-  "street",
-  "street_limited",
-  "primary_link"
-  ],
-  true,
-  false
-  ],
-  13,
-  [
-  "match",
-  ["get", "class"],
-  [
-  "motorway",
-  "motorway_link",
-  "trunk",
-  "trunk_link",
-  "primary",
-  "secondary",
-  "tertiary",
-  "street",
-  "street_limited",
-  "primary_link",
-  "track"
-  ],
-  true,
-  false
-  ],
-  14,
-  [
-  "match",
-  ["get", "class"],
-  [
-  "motorway",
-  "motorway_link",
-  "trunk",
-  "trunk_link",
-  "primary",
-  "primary_link",
-  "secondary",
-  "secondary_link",
-  "tertiary",
-  "tertiary_link",
-  "street",
-  "street_limited",
-  "service",
-  "track"
-  ],
-  true,
-  false
-  ]
-  ],
-*/
-//  ["match", ["get", "structure"], ["none", "ford"], true, false],
-  ["==", ["geometry-type"], "LineString"]
-//  ],
- //["interpolate", ["linear"], ["zoom"], 15, ["match", ["get", "class"], "park", "hsl(78, 50%, 73%)", "airport", "hsl(225, 42%, 82%)", "cemetery", "hsl(60, 44%, 79%)", "glacier", "hsl(205, 66%, 90%)", "hospital", "hsl(3, 42%, 78%)", "pitch", "hsl(78, 51%, 68%)", "sand", "hsl(43, 48%, 76%)", "school", "hsl(40, 43%, 72%)", "hsl(40, 42%, 76%)"], 16, ["match", ["get", "class"], "park", "hsl(78, 50%, 73%)", "airport", "hsl(225, 56%, 80%)", "cemetery", "hsl(60, 44%, 79%)", "glacier", "hsl(205, 66%, 90%)", "hospital", "hsl(3, 44%, 80%)", "pitch", "hsl(78, 51%, 68%)", "sand", "hsl(43, 48%, 76%)", "school", "hsl(40, 43%, 72%)", "hsl(40, 42%, 76%)"]]
-
-// ["interpolate", ["linear"], ["zoom"], 15, ["match", ["get", "class"], "park", "hsl(78, 50%, 73%)", "airport","hsl(40, 43%, 72%)", "hsl(40, 42%, 76%)"]]
-
-//["interpolate", ["linear"], ["zoom"], 15, ["match", "park", "park", "hsl(78, 50%, 73%)", "airport","hsl(40, 43%, 72%)", "hsl(40, 42%, 76%)"]]
-
-//["interpolate", ["linear"], ["zoom"], 15, ["match", ["get", "class"], "park", "hsl(78, 50%, 73%)", "airport", "hsl(40, 43%, 72%)", "hsl(40, 42%, 76%)"]]
-
-//["match", "park", "park", "hsl(78, 50%, 73%)", "airport","hsl(40, 43%, 72%)", "hsl(40, 42%, 76%)"]
-
-//['all', ['match', ['get', 'class'], ['glacier', 'landform'], ['match', ['get', 'worldview'], ['all', 'US'], true, false], ['disputed_glacier', 'disputed_landform'], ['all', ['==', ['get', 'disputed'], true], ['match', ['get', 'worldview'], ['all', 'US'], true, false]], false], ['==', ['geometry-type'], 'LineString'], ['<=', ['get', 'filterrank'], 2]]
-//['all','landform']
-  ///['all', ['==', ['get', 'admin_level'], 1]]
-//  ["match", ["get", "class"], "park", "hsl(78, 50%, 73%)", "hsl(40, 42%, 76%)"]
-//["match", ["get", "class"], "park", "hsl(78, 50%, 73%)", "airport", "hsl(225, 42%, 82%)", "cemetery", "hsl(60, 44%, 79%)", "glacier", "hsl(205, 66%, 90%)", "hospital", "hsl(3, 42%, 78%)", "pitch", "hsl(78, 51%, 68%)", "sand", "hsl(43, 48%, 76%)", "school", "hsl(40, 43%, 72%)", "hsl(40, 42%, 76%)"]
-//['all', ['match', ['landform'], ['glacier', 'landform'], ['disputed_glacier', 'disputed_landform'], false]]
-//[
-//              "match",
-//              ["get", "class"],
-//              ["all", "landform"],
-//              true,
-//              false
-//            ]
-
-/*
-[
-        "all",
-[
-          "match",
-          ["get", "class"],
-          ["glacier", "landform"],
-          ["match", ["get", "worldview"], ["all", "US"], true, false],
-          ["disputed_glacier", "disputed_landform"],
-          [
-            "all",
-            ["==", ["get", "disputed"], "true"],
-            [
-              "match",
-              ["get", "worldview"],
-              ["all", "US"],
-              true,
-              false
-            ]
-          ],
-          false
-        ],
-        ["==", ["geometry-type"], "LineString"],
-        ["<=", ["get", "filterrank"], 2]
-]
-*/
-/*
-    {
-      "base": 1.2,
-      "stops": [
-        [11, 0.5],
-        [20, 6]
-      ]
-    }
-*/
-///  ['step', ['zoom'], ['match', ['get', 'class'], ['pedestrian'], true, false], 15, ['match', ['get', 'class'], ['path', 'pedestrian'], true, false]]
-
-//['step', ['zoom'], ['match', ['get', 'class'], ['pedestrian'], true, false], 15, false]
-//['step', ['zoom'], ['match', 'mini_roundabout', ['pedestrian'], true, false], 15, false]
-
-//['match', ['get', 'class'], ['path', 'pedestrian'], true, false]
-
-
-    //],
-       // ["case", ["has", ], 1, 0],
-  //]
-
-      //["coalesce", ["get", "name"], ["get", "class"]],
-    //["concat", ["get", "class"], "b", "c"]
-    //"step",
-    //["zoom"],
-    //["concat", ["get", "maki"], "-11"],
-    //15,
-    //["concat", ["get", "maki"], "-15"],
-    //]
-    //["upcase", "wibble"],
-     // ]
-    /*
-[
-    "match",
-    ["get", "class"],
-      [
-        "motorway",
-        "xxresidential",
-      ],
-      3,
-      ["blah", "residential"],
-      9,
-      4
-      */
-
-    //  true,
-    //  [false],
-    //  1,
-    //  [false],
-    //  2,
-    //  [false],
-    //  3,
-    //  4
-    //],
-
-      ///"all",
-      ///["==", ["get", "class"], "residential"],
-      //["!in", "brunnel", "bridge", "tunnel"],
-      //["in", "class", "residential", "trunk"]
-    ///],
-    }
-    ]
+    "filter" :
+      ["==", ["geometry-type"], "LineString"]
+    }]
   };
 
-
-
-  //print("$res");
-  //var args = ["in", true, [false, false]];
-  //var test = ["any", args[1], ...args.sublist(2)];
-  //print("$test");
  var test = checkFilter( testStyle2['layers']?[0]['filter'], layerString,  feature, 14);
   print("FINAL IS $test");
 }
 
 
-var xxkeys = [
-  [0,0],
-    [12.5, 0],
-    [13, 1.5],
-    [14, 2.5],
-    [20, 11.5],
-  [20,11.5]
-];
-
 dynamic interp (base, val, tempkeys) {
-//print("III $base >> $val >> $tempkeys");
-  ///print("INTERP $base, $val, $tempkeys");
+
   var keys = [];
 
   if(!(tempkeys[0] is List)) {
     for(var c=0; c<tempkeys.length; c=c+2) {
-      //keys.add([tempkeys[c],tempkeys[c+1]]);
-	keys.add([tempkeys[c],tempkeys[c+1]]);
+	    keys.add([tempkeys[c],tempkeys[c+1]]);
     }
   } else {
     keys = tempkeys;
   }
 
-  ///print("keys is $keys");
-  ///print("Val is $val");
-
-
   if(val >= keys[keys.length-1][0].toDouble()) return keys[keys.length-1][1];
   if(val <= keys[0][0].toDouble()) return keys[0][1];
-
-  ///print("here.....");
 
   var i;
   for (i = 0; i < keys.length; i++) {
     if (keys[i][0].toDouble() > val) break;
   }
 
-  ///print("herex.....$i... ${keys[i][1]}");
-
   var ii = i-1;
   if(keys[ii][1] is String || keys[ii][1] is bool) // not a num, so dont interp
     return keys[ii][1];
-
-  ///print("here.....3");
-
 
   double before0 =  keys[ii][0].toDouble();
   double after0 = keys[ii+1][0].toDouble();
 
   double before1 = keys[ii][1].toDouble();
   double after1 = keys[ii+1][1].toDouble();
-  ///print("here3.5");
-
-
-  ///print ("Here4");
 
   var a = (val - before0) / (after0 - before0);
 
-  ///print("here5");
-
   var intKey = before1 * (1-a) + after1 * a;
-
-  ///print("here6");
-  //var lower = keys[ii];
-  //var higher = keys[ii+1];
-
-  ///print("Dump base: $base val: $val lower: ${before0} higher:${after0}");
-  ///print(pow(base, after0 - before0) - 1);
 
   var ratio = (pow(base, val - before0) - 1) / (pow(base, after0 - before0) - 1);
 
-  ///print("Dumper ${before1} $ratio ${after1}");
-
-
   if(base > 1) // exponential
     intKey = (before1 * (1 - ratio)) + (after1 * ratio);
-
-  ///print("test ");
 
   return intKey;
 
@@ -439,24 +142,27 @@ class Parser {
           result = type;
           break;
         case "all":
-          final sublist = args.sublist(1);
-          var all = true;
-	        var notAllBool = false;
-	        for( var c=0; c<sublist.length; c++ ) {
-		        final test = parse(sublist[c]);
-            if( (test is bool) && test == false ) {
-              all = false;
-              break;
-            } else if( (test is bool) && test == true ) {
-
-            } else {
-              notAllBool = true;
-            }
-          }
-          if(notAllBool) {
-            result = args;
+          if(args is String) {
+            result = "all"; // we can get a value "all" as well as keyword "all"
           } else {
-            result = all;
+            final sublist = args.sublist(1);
+            var all = true;
+            var notAllBool = false;
+            for (var c = 0; c < sublist.length; c++) {
+              final test = parse(sublist[c]);
+              if ((test is bool) && test == false) {
+                all = false;
+                break;
+              } else if ((test is bool) && test == true) {
+              } else {
+                notAllBool = true;
+              }
+            }
+            if (notAllBool) {
+              result = args;
+            } else {
+              result = all;
+            }
           }
 
           break;
@@ -593,7 +299,6 @@ class Parser {
           break;
         case "geometry-type":
           result = type.toUpperCase();
-          ///print("Geomtype = $result");
           break;
         case "interpolate": // base, val, keys
           var type = args[1][0];
@@ -645,7 +350,7 @@ dynamic checkFilter(dynamic style, String layerString, Map featureInfo, double t
     result = parser.parse(style);
     //print("here22 $result");
 
-  } catch(e) { print("FilterParseError: $e"); }
+  } catch(e) { print("FilterParseError: $e from $style, feature $featureInfo"); }
 
 
   return result;

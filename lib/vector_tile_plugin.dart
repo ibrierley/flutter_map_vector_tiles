@@ -121,7 +121,7 @@ class MapboxTile {
     map[ key ] = map.containsKey(key) ? map[ key ]++ : 1;
   }
 
-  static void decodeGeoToNative( coordsKey, VTCache cachedInfo, options, vectorStyle, tileZoom, DebugOptions debugOptions ) {
+  static void decodeGeoToNative( pathLayers, coordsKey, VTCache cachedInfo, options, vectorStyle, tileZoom, DebugOptions debugOptions ) {
 
     var start = DateTime.now();
 
@@ -132,7 +132,8 @@ class MapboxTile {
 
     var jsonMap = cachedInfo.geoJson ?? {};
 
-    var pathLayers = geomToPathLayers(jsonMap['layers'], vectorStyle, coordsKey, options, tileZoom, cachedInfo);
+    if(pathLayers == null )
+      pathLayers = geomToCanvasObjects(jsonMap['layers'], vectorStyle, coordsKey, options, tileZoom, cachedInfo);
 
     if(!options.containsKey('noLabels')) {
 
@@ -146,7 +147,8 @@ class MapboxTile {
           var info = pointInfo[2]['properties']['name'];
 
           if (info != null) {
-            var backPainter = getNewPainter(info.toString(), Colors.white, 12.0, 2.0);
+
+            var backPainter = getNewTextPainter(info.toString(), pointInfo[2], 12.0, 2.0);
             var backgroundLabel =
               Label( text: info.toString(), point: pointInfo[0],
                   textPainter: backPainter, dedupeKey: pointInfo[3] + '_b',
@@ -154,7 +156,7 @@ class MapboxTile {
 
             cachedInfo.geomInfo?.labels.add(
                 Label( text: info.toString(), point: pointInfo[0],
-                    textPainter: getNewPainter(info.toString(), Colors.black, 12.0, 1.0), dedupeKey: pointInfo[3],
+                    textPainter: getNewTextPainter(info.toString(), pointInfo[2], 12.0, 1.0), dedupeKey: pointInfo[3],
                     priority: pointInfo[4], coordsKey: coordsKey, backgroundLabel: backgroundLabel ) );
           }
           tileStats.labels++;
@@ -178,11 +180,20 @@ class MapboxTile {
           }
         }
 
-        if(halfway != null && road.text != "")
+        if(halfway != null && road.text != "") {
+
           cachedInfo.geomInfo?.labels.add(
-              Label( text: road.text, point: halfway.position, textPainter: getNewPainter(road.text, Colors.black, 12.0, 1.0),
-                  dedupeKey: road.text + '|' + coordsKey, priority: 2,
-                  coordsKey: coordsKey, angle: halfway.angle, isRoad: true ) ); /// use named params and a class for pointInfo
+              Label(text: road.text,
+                  point: halfway.position,
+                  textPainter: getNewTextPainter(road.text, { 'text-color': Colors.black }, 12.0, 1.0),
+                  dedupeKey: road.text + '|' + coordsKey,
+                  priority: 2,
+                  coordsKey: coordsKey,
+                  angle: halfway.angle,
+                  isRoad: true));
+
+          /// use named params and a class for pointInfo
+        }
 
       }
     }
@@ -274,14 +285,10 @@ class VectorPainter extends CustomPainter {
 
       if(useImages && cachedVectorDataMap[tileCoordsKey]?.image != null && tileZoom < highZoomCanvas) {
         if ((pos != null) && (cachedVectorDataMap[tileCoordsKey]?.image != null)) {
-          ///print("PAINTING TILE $tileZoom");
           paintTile(canvas, pos, cachedVectorDataMap[tileCoordsKey]?.image);
           usedPaintedImage = true;
         }
-        //usedPaintedImage = true;
       }
-
-
 
 
       final Matrix4 matrix = Matrix4.identity();
@@ -338,7 +345,7 @@ class VectorPainter extends CustomPainter {
                 ///print("Style optimisation");
                 ///if(!usedPaintedImage)
                /// if(tileZoom <= 14)
-                if(style.strokeWidth < 4.0) // too jarring to switch from fat to thin
+                if(style.strokeWidth < 4.0 && tileZoom < 16.0) // too jarring to switch from fat to thin
                   style.strokeWidth = 0.0;
               }
 
@@ -649,7 +656,7 @@ class VectorPainter extends CustomPainter {
     canvas.drawPath(path, paint);
 
     final TextStyle textStyle = TextStyle(
-        color: Colors.yellow,
+        color: Colors.green,
         fontSize: 14 //scale == 1 ? scale : 16 / scale, // diffratio, ?
     );
     final TextSpan textSpan = TextSpan(
@@ -697,24 +704,59 @@ class VectorPainter extends CustomPainter {
           cachedVectorDataMap != oldDelegate.cachedVectorDataMap;
 }
 
-TextPainter getNewPainter(String text, color, fontSize, strokeWidth) {
-  ///final TextStyle textStyle = TextStyle(
-  ///    color: color,
-  ///    fontSize: fontSize, //scale == 1 ? scale : 16 / scale, // diffratio, ?
-  ///    foreground: Paint()
-  ///    ..style = PaintingStyle.stroke
-  ///    ..strokeWidth = strokeWidth
-  ///    ..color = color,
-    //background: Paint() // block background for text
-    //  ..style = PaintingStyle.stroke
-    //  ..strokeWidth = strokeWidth * 2
-    //  ..color = Colors.red,
+TextPainter getNewTextPainter(String text, featureInfo, fontSize, strokeWidth) {
+  final textColor = featureInfo['text-color'];
+  var textSize = featureInfo['text-size'];
+  var font = featureInfo['text-font'];
+  var textHaloColorString = featureInfo['text-halo-color'];
+  var textHaloWidth = featureInfo['text-halo-width'] ?? 2.0;
 
-  ///);
+  Color textHaloColor = Colors.grey;
+  if(textHaloColorString != null) {
+    textHaloColor = getColorFromString(textHaloColorString);
+  }
+
+  if( textSize == null) {
+    textSize = 13.0;
+  } else if( textSize is int) {
+    textSize = textSize.toDouble();
+  } else if(textSize is String) {
+    textSize = double.parse(textSize);
+  } else {
+    textSize = 13.0;
+  }
+
+  Color color = Colors.black;
+  if(textColor != null) {
+    if( textColor is String) {
+      color = getColorFromString(textColor);
+    } else if(textColor is Color) {
+      color = textColor;
+    }
+  }
+
+  if(font == null) {
+    font = 'Roboto';
+  } else {
+    font = font[0];
+  }
+
+  final TextStyle textStyle = TextStyle(
+      shadows: [ Shadow(color: textHaloColor , blurRadius: textHaloWidth, offset: Offset(0,0) ),
+                 Shadow(color: textHaloColor , blurRadius: textHaloWidth, offset: Offset(-1,-1),),
+                  Shadow(color: textHaloColor , blurRadius: textHaloWidth, offset: Offset(0,-1)),
+                  Shadow(color: textHaloColor , blurRadius: textHaloWidth, offset: Offset(-1,0))
+      ],
+      color: color,
+      fontSize: textSize,//style.fontSize, //scale == 1 ? scale : 16 / scale, // diffratio, ?
+      fontFamily: font,
+      fontFamilyFallback: [font[1] ?? font],
+      fontWeight: FontWeight.bold,
+  );
+
   final TextSpan textSpan = TextSpan(
     text: text,
-    //style: textStyle,
-    style: Styles.labelTextStyles['blackNormalThick']
+    style: textStyle,
   );
 
   return TextPainter(

@@ -932,7 +932,7 @@ class Styles {
   }
 
 
-  static bool includeFeature(vectorStyle, layerString, type, featureInfo, zoom) { //reduce code...
+  static bool xxxincludeFeature(vectorStyle, layerString, type, featureInfo, zoom) { //reduce code...
 
     print("includefeature check");
 
@@ -990,10 +990,7 @@ class Styles {
   static Paint getStyle(style, featureInfo, layerString, type, tileZoom, scale, diffRatio) {
     var paramsMap = { 'layer': layerString, 'type': type, 'zoom': tileZoom, 'diffRatio': diffRatio, 'featureInfo': featureInfo };
 
-    ///print("new parser $layerString $type $tileZoom $featureInfo");
     var parser = new Parser(layerString, featureInfo, type, tileZoom);
-
-    ///print("getStyle check");
 
     var className;
     if(featureInfo?.containsKey('properties')) {
@@ -1012,50 +1009,38 @@ class Styles {
     if(type == 'LINESTRING' || type == 'line') paint.style = PaintingStyle.stroke; // are roads filled ?
     if(type == 'POLYGON'    || type == 'fill') paint.style = PaintingStyle.fill;
 
-    //print("TYPE IS $type");
-    //print("$featureInfo");
-
     if(type == 'POLYGON') {
-      if (featureInfo['fill-color'] != null) {
-        //print("FILL COLOR HAVE ${featureInfo['fill-color']}");
-        var color =  getColorFromString(featureInfo['fill-color']);//
-        // RgbColor(featureInfo['fill-color']);
-        paint.color = color;
+      final featureFillColor = featureInfo['fill-color'];
+      if (featureFillColor != null) {
+        paint.color =  getColorFromString(featureFillColor);
       }
     } else if(type == 'LINESTRING') {
-     // print("${featureInfo['paint']}");
-      if (featureInfo['line-color'] != null) {
-        var color =  getColorFromString(featureInfo['line-color']);
-        //print("LINE COLOR IS $hslColor");
-        paint.color = color;
+      final lineColor = featureInfo['line-color'];
+      if (lineColor != null) {
+        paint.color =  getColorFromString(lineColor);
       }
-      if (featureInfo['line-width'] != null) {
-        var lineWidth = featureInfo['line-width'];
-        //print("featureinfo $featureInfo");
-        //print("LINE WIDTH IS... $lineWidth ");
-
+      final lineWidth = featureInfo['line-width'];
+      if (lineWidth != null) {
         if(lineWidth is String || lineWidth is Map || lineWidth is List) {
-          var parsed = parser.parse(lineWidth);
-          //print("parsed is $parsed");
           paint.strokeWidth = double.parse(parser.parse(lineWidth));
         } else {
           paint.strokeWidth = lineWidth.toDouble();
         }
       }
-    }
-    /*var featurePaint = featureInfo['paint'];
-    if(featurePaint != null) {
-      print("OK WE HAVE $featurePaint");
-      if(featurePaint['fill-color'] != null) {
-        print("Converting ${featurePaint['fill-color']}");
-        var hslList  = stringToHsl(featurePaint['fill-color']);
-        //var color =
-        print("hslList is $hslList");
-        ///paint.color = HSLColor.fromAHSL()
-
+      final strokeCap = featureInfo['stroke-cap'];
+      if(strokeCap != null) {
+        paint.strokeCap = strokeCap;
       }
+      final strokeJoin = featureInfo['stroke-join'];
+      if(strokeJoin != null) {
+        paint.strokeJoin = strokeJoin;
+      }
+    } else if(type == 'POINT') {
+      paint.color = featureInfo['text-color']; /// swap this for point vs text
     }
-     */
+
+    /*
+
     bool matchedFeature = false;
     Map vectorStyle = funcCheck(style, paramsMap);
 
@@ -1098,9 +1083,7 @@ class Styles {
       }
     }
 
-    ///if(!matchedFeature && debugOptions.missingFeatures) print ("$layerString $type $className $tileZoom not found");
-
-    ///paint.strokeWidth =  (paint.strokeWidth / scale); ///.ceilToDouble();
+     */
 
     return paint;
   }
@@ -1117,24 +1100,6 @@ class Styles {
   static final outlineWidth = 2.0;
   static final lineWidth = 1.0;
 
-  static Map labelTextStyles = {
-    'blackNormalThick': TextStyle(
-      color: Colors.black,
-      fontSize: normalFontSize, //scale == 1 ? scale : 16 / scale, // diffratio, ?
-      foreground: Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = lineWidth
-        ..color = Colors.black,
-    ),
-    'whiteNormalOutline': TextStyle(
-      color: Colors.white,
-      fontSize: normalFontSize, //scale == 1 ? scale : 16 / scale, // diffratio, ?
-      foreground: Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = outlineWidth
-        ..color = Colors.white,
-    )
-  };
 }
 
 bool filterCheck( check ) {
