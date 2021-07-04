@@ -925,6 +925,161 @@ class Styles {
 
   };
 
+  static List getMatchedStyleLayers (decodedGeom, vectorStyle, tileZoom) {
+    var checkedLayers = [];
+
+    var keys = '';
+    for(var key in decodedGeom.keys) {
+      keys += key + ", ";
+    }
+
+    for( var styleLayer in vectorStyle['layers']) {
+      var newLayer = [];
+
+      final styleLayerType = styleLayer['type'];
+      final styleLayerFilter = styleLayer['filter'];
+      final styleLayerPaint = styleLayer['paint'];
+      final styleLayerLayout =  styleLayer['layout'];
+      final minZoom = styleLayer['minzoom'] ?? 0;
+      final maxZoom = styleLayer['maxzoom'] ?? 50;
+
+      if(tileZoom < minZoom) {
+        continue;
+      }
+      if(tileZoom > maxZoom) {
+        continue;
+      }
+
+      final sourceLayer = styleLayer['source-layer'] ?? styleLayer.keys.first; // may be a background layer we want to deal with as well
+
+      if(sourceLayer != null) {
+        final matchingLayer = decodedGeom[sourceLayer] ?? [];
+        if(matchingLayer.length == 0) {
+        }
+        FEATURE: for (var featureDetails in matchingLayer) {
+          final featureGeomType = featureDetails['geometry']['type'];
+          var addedFeature = false;
+
+          if(styleLayerType == 'fill' && featureGeomType != 'POLYGON') {
+            continue FEATURE;
+          }
+          if(styleLayerType == 'line' && featureGeomType != 'LINESTRING') {
+            continue FEATURE;
+          }
+          if(styleLayerType == 'symbol' && featureGeomType != 'POINT') {
+            continue FEATURE;
+          }
+
+          if(styleLayerFilter != null) {// || styleLayer[sourceLayer].containsKey('include')) {
+            final checkOk = checkFilter(styleLayerFilter, sourceLayer, featureDetails, tileZoom);
+
+            if(checkOk == null) {
+            } else if( checkOk is bool && checkOk ) {
+              addedFeature = true;
+            } else {
+            }
+          } else {
+            addedFeature = true;
+          }
+
+          if(addedFeature && styleLayerPaint != null) {
+
+            final paintKeys = ['fill-outline-color','fill-color','fill-opacity', 'fill-outline-color'
+                'line-opacity','line-color','line-width','text-color',
+              "text-halo-blur", "text-halo-width", "text-halo-color" ];
+
+            for( var key in paintKeys) {
+              if(styleLayerPaint[key] != null) {
+                featureDetails[key] = checkFilter(styleLayerPaint[key], sourceLayer, featureDetails, tileZoom);
+              }
+            }
+
+            featureDetails['paint'] = styleLayerPaint; /// maybe we want to recalc paint every frame, so pass the original
+
+            final layoutKeys = ['line-cap','line-join','text-size', "text-font", "text-field", "text-anchor", "text-offset"];
+            for( var key in layoutKeys) {
+              if(styleLayerLayout[key] != null) {
+                featureDetails[key] = checkFilter(styleLayerLayout[key], sourceLayer, featureDetails, tileZoom);
+              }
+            }
+          }
+          if(addedFeature) {
+            newLayer.add(featureDetails);
+          }
+        }
+      }
+
+      if(newLayer.length != 0) {
+        checkedLayers.add(newLayer);
+      }
+    }
+
+    return checkedLayers;
+  }
+
+  static TextPainter getNewTextPainter(String text, featureInfo, fontSize, strokeWidth) {
+    final textColor = featureInfo['text-color'];
+    var textSize = featureInfo['text-size'];
+    var font = featureInfo['text-font'];
+    var textHaloColorString = featureInfo['text-halo-color'];
+    var textHaloWidth = featureInfo['text-halo-width'] ?? 2.0;
+
+    Color textHaloColor = Colors.grey;
+    if(textHaloColorString != null) {
+      textHaloColor = getColorFromString(textHaloColorString);
+    }
+
+    if( textSize == null) {
+      textSize = 13.0;
+    } else if( textSize is int) {
+      textSize = textSize.toDouble();
+    } else if(textSize is String) {
+      textSize = double.parse(textSize);
+    } else {
+      textSize = 13.0;
+    }
+
+    Color color = Colors.black;
+    if(textColor != null) {
+      if( textColor is String) {
+        color = getColorFromString(textColor);
+      } else if(textColor is Color) {
+        color = textColor;
+      }
+    }
+
+    if(font == null) {
+      font = 'Roboto';
+    } else {
+      font = font[0];
+    }
+
+    final TextStyle textStyle = TextStyle(
+      shadows: [ Shadow(color: textHaloColor , blurRadius: textHaloWidth, offset: Offset(0,0) ),
+        Shadow(color: textHaloColor , blurRadius: textHaloWidth, offset: Offset(-1,-1),),
+        Shadow(color: textHaloColor , blurRadius: textHaloWidth, offset: Offset(0,-1)),
+        Shadow(color: textHaloColor , blurRadius: textHaloWidth, offset: Offset(-1,0))
+      ],
+      color: color,
+      fontSize: textSize,//style.fontSize, //scale == 1 ? scale : 16 / scale, // diffratio, ?
+      fontFamily: font,
+      fontFamilyFallback: [font[1] ?? font],
+      fontWeight: FontWeight.bold,
+    );
+
+    final TextSpan textSpan = TextSpan(
+      text: text,
+      style: textStyle,
+    );
+
+    return TextPainter(
+        text: textSpan,
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center)
+      ..layout(minWidth: 0, maxWidth: double.infinity)
+      ..text = textSpan;
+  }
+
   /// We want to give the option of any var being a func to call..
   static dynamic funcCheck( dynamic checkVar, Map paramMap ) {
     if(checkVar is Function) return checkVar( paramMap );

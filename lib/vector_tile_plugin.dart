@@ -2,19 +2,16 @@ import 'dart:typed_data';
 import 'dart:ui' as dartui;
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
-import 'vector_tile.pb.dart' as vector_tile;
 import 'filters.dart';
 import 'styles.dart';
 import 'package:flutter_map_vector_tile/VectorTileWidget.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:vector_math/vector_math_64.dart' as VectorMath hide Colors;
 import 'dart:math' as DartMath;
 import 'package:flutter/painting.dart';
-//import 'package:geojson/geojson.dart';
-import 'package:geojson_vi/geojson_vi.dart';
+import 'decoding.dart';
+
 
 const RADTODEG = 57.2958;
 const DEGTORAD = 0.0174533;
@@ -133,7 +130,7 @@ class MapboxTile {
     var jsonMap = cachedInfo.geoJson ?? {};
 
     if(pathLayers == null )
-      pathLayers = geomToCanvasObjects(jsonMap['layers'], vectorStyle, coordsKey, options, tileZoom, cachedInfo);
+      pathLayers = Decoding.geomToCanvasObjects(jsonMap['layers'], vectorStyle, coordsKey, options, tileZoom, cachedInfo);
 
     if(!options.containsKey('noLabels')) {
 
@@ -148,7 +145,7 @@ class MapboxTile {
 
           if (info != null) {
 
-            var backPainter = getNewTextPainter(info.toString(), pointInfo[2], 12.0, 2.0);
+            var backPainter = Styles.getNewTextPainter(info.toString(), pointInfo[2], 12.0, 2.0);
             var backgroundLabel =
               Label( text: info.toString(), point: pointInfo[0],
                   textPainter: backPainter, dedupeKey: pointInfo[3] + '_b',
@@ -156,7 +153,7 @@ class MapboxTile {
 
             cachedInfo.geomInfo?.labels.add(
                 Label( text: info.toString(), point: pointInfo[0],
-                    textPainter: getNewTextPainter(info.toString(), pointInfo[2], 12.0, 1.0), dedupeKey: pointInfo[3],
+                    textPainter: Styles.getNewTextPainter(info.toString(), pointInfo[2], 12.0, 1.0), dedupeKey: pointInfo[3],
                     priority: pointInfo[4], coordsKey: coordsKey, backgroundLabel: backgroundLabel ) );
           }
           tileStats.labels++;
@@ -185,7 +182,7 @@ class MapboxTile {
           cachedInfo.geomInfo?.labels.add(
               Label(text: road.text,
                   point: halfway.position,
-                  textPainter: getNewTextPainter(road.text, { 'text-color': Colors.black }, 12.0, 1.0),
+                  textPainter: Styles.getNewTextPainter(road.text, { 'text-color': Colors.black }, 12.0, 1.0),
                   dedupeKey: road.text + '|' + coordsKey,
                   priority: 2,
                   coordsKey: coordsKey,
@@ -276,7 +273,7 @@ class VectorPainter extends CustomPainter {
       canvas.transform(m.storage);
     }
 
-    final Rect myRect = Offset(0,0) & Size(256.0,256.0);
+    final Rect myRect = Offset(200,20) & Size(256.0,256.0);
     /// Normal paths
     for (var tile in tilesToRender) {
       var usedPaintedImage = false;
@@ -342,16 +339,12 @@ class VectorPainter extends CustomPainter {
               /// if we've pinchzooming, use thin lines for speed
               double oldStrokeWidth = style.strokeWidth;
               if (optimisations.pinchZoom || tileZoom < 15) {
-                ///print("Style optimisation");
-                ///if(!usedPaintedImage)
-               /// if(tileZoom <= 14)
                 if(style.strokeWidth < 4.0 && tileZoom < 16.0) // too jarring to switch from fat to thin
                   style.strokeWidth = 0.0;
               }
 
               if (pathMap != null) {
                 ///canvas.drawPath(pathMap.path.transform(matrix.storage), style);
-                ///print("DRAWING VECTOR MAP path $tileZoom!!!!!!");
                 canvas.drawPath(pathMap.path, style);
                 style.strokeWidth = oldStrokeWidth;
               }
@@ -418,29 +411,10 @@ class VectorPainter extends CustomPainter {
         _updateLabelBounding(label);
       }
     }
-    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    if(false && geoJson != null) {
-      ///print("herexxxx $geoJson");
-      var paths = geoJson['paths'];
-      var paint = Paint();
-      paint.color = Colors.green;
-      paint.style = PaintingStyle.stroke;
-      paint.strokeWidth = 3.0;
-      if( paths != null) {
-        print("Paths is $paths");
-        for (var feature in paths) {
-          print("Drawing feature");
-          canvas.drawPath(feature, paint);
-        }
-      }
-    }
 
     _orderLabelsAndDraw(
         wantedLabels, hiPriQueue, canvas, pointPaint, widgetRotation,
         isRotated, tileZoom, debugOptions);
-
-    var end = DateTime.now().difference(start).inMilliseconds;
-    //print("draw paint took...${end} milliseconds");
   }
 
   static void _drawTextAt(Offset position, Canvas canvas, scale, textPainter) {
@@ -539,8 +513,6 @@ class VectorPainter extends CustomPainter {
       canvas.restore();
 
     } else {
-
-      /// /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
       if (isRotated) { // we need to realign the text so its upright
         drawPoint = Offset(0.0, 0.0);
@@ -703,7 +675,7 @@ class VectorPainter extends CustomPainter {
           ///tileZoom != oldDelegate.tileZoom ||
           cachedVectorDataMap != oldDelegate.cachedVectorDataMap;
 }
-
+/*
 TextPainter getNewTextPainter(String text, featureInfo, fontSize, strokeWidth) {
   final textColor = featureInfo['text-color'];
   var textSize = featureInfo['text-size'];
@@ -767,3 +739,5 @@ TextPainter getNewTextPainter(String text, featureInfo, fontSize, strokeWidth) {
     ..text = textSpan;
 }
 
+
+ */
