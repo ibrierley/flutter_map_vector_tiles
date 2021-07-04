@@ -8,6 +8,8 @@ import 'package:flutter_map_vector_tile/styles.dart';
 import 'parse_expressions.dart';
 import 'apikeys.dart';
 import 'quickstyles.dart';
+import 'osteststyle.dart';
+import 'mapboxteststyle.dart';
 
 
 void main() {
@@ -146,7 +148,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 mapController: mapController,
                 optimisations: optimisations,
                 ///vectorStyle: Styles.stadiaClassColorStyles,
-                vectorStyle: DefaultQuickStyles.mapBoxClassColorStyles,
+                //vectorStyle: //DefaultQuickStyles.mapBoxClassColorStyles,
+                vectorStyle: mapboxtestStyle,
                /// vectorStyle: testStyle
                 ///vectorStyle: testStyle,
               ),

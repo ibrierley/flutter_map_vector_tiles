@@ -205,8 +205,7 @@ class Decoding {
   }
 
 
-  static dynamic decodeBytesToGeom(vectorStyle, coordsKey, bytes, options,
-      tileZoom) async {
+  static dynamic decodeBytesToGeom(coordsKey, bytes, options, tileZoom) async {
     final Map decoded = {};
 
     late vector_tile.Tile vt;

@@ -11,6 +11,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map/src/core/bounds.dart';
 import 'package:flutter_map/src/core/point.dart';
 import 'package:flutter_map/src/map/map.dart';
+import 'package:flutter_map_vector_tile/mapboxteststyle.dart';
 import 'package:flutter_map_vector_tile/parse_expressions.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:tuple/tuple.dart';
@@ -173,11 +174,11 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       if(data is Map) {
         if(data.containsKey('bytes')) {
           var start = DateTime.now();
-          var decoded = await Decoding.decodeBytesToGeom(testStyle, data['coordsKey'], data['bytes'], {}, data['tileZoom']);
+          var decoded = await Decoding.decodeBytesToGeom(data['coordsKey'], data['bytes'], {}, data['tileZoom']);
           var diff = DateTime.now().difference(start).inMilliseconds;
           Log.out(L.decode, "decodebytesgeom took $diff millisecs");
           start = DateTime.now();
-          var checkedLayers = Styles.getMatchedStyleLayers(decoded, testStyle,  data['tileZoom']);
+          var checkedLayers = Styles.getMatchedStyleLayers(decoded, mapboxtestStyle,  data['tileZoom']);
           diff = DateTime.now().difference(start).inMilliseconds;
           Log.out(L.decode, "stylematching took $diff millisecs");
 
@@ -203,7 +204,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           if(data['useImages']) {
             start = DateTime.now();
             var imageByteData = await Decoding.pathsToImage(
-                checkedLayers, testStyle, data['coordsKey'], {},
+                checkedLayers, mapboxtestStyle, data['coordsKey'], {},
                 data['tileZoom']);
             diff = DateTime.now().difference(start).inMilliseconds;
             Log.out(L.decode, "save paths2image $diff");
