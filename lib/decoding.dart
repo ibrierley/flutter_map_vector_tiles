@@ -5,6 +5,7 @@ import 'vector_tile.pb.dart' as vector_tile;
 import 'vector_tile_plugin.dart';
 import 'package:flutter_map_vector_tile/styles.dart';
 import 'VectorTileWidget.dart';
+import 'quickstyles.dart';
 
 class Decoding {
 
@@ -214,7 +215,8 @@ class Decoding {
 
     int reps = 0;
 
-    Map<String, int> layerOrderMap = Styles.defaultLayerOrder();
+    /// We prob don't need this now unless using the old style methods...
+    Map<String, int> layerOrderMap = DefaultQuickStyles.defaultLayerOrder();
 
     if (layerOrderMap.keys.length > 0) {
       vt.layers.sort((a, b) {

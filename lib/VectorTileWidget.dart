@@ -20,6 +20,7 @@ import 'package:flutter_map_vector_tile/styles.dart';
 import 'package:flutter_isolate/flutter_isolate.dart';
 import 'dart:convert';
 import 'decoding.dart';
+import 'quickstyles.dart';
 
 class VectorWidget extends StatefulWidget {
   final rotation;
@@ -54,7 +55,7 @@ class VectorWidget extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    vectorStyle = Styles.mapBoxClassColorStyles;
+    vectorStyle = DefaultQuickStyles.mapBoxClassColorStyles;
     return _VectorWidgetState();
   }
 }
@@ -361,7 +362,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     optimisations = vectorOptions.optimisations ?? Optimisations();
     debugOptions = vectorOptions.debugOptions ?? DebugOptions();
     underZoom = vectorOptions.underZoom ?? 0;
-    vectorStyle = vectorOptions.vectorStyle ?? Styles.mapBoxClassColorStyles;
+    vectorStyle = vectorOptions.vectorStyle ?? DefaultQuickStyles.mapBoxClassColorStyles;
 
     var mapController = vectorOptions.mapController;
 
@@ -633,7 +634,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       _cachedVectorData[coordsKey]?.lastUsed = DateTime.now();
     }
 
-    var vectorStyle = vectorOptions.vectorStyle ?? Styles.mapBoxClassColorStyles;
+    var vectorStyle = vectorOptions.vectorStyle ?? DefaultQuickStyles.mapBoxClassColorStyles;
 
     return Container(
            color: Colors.blueGrey,

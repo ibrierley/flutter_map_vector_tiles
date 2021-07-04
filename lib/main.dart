@@ -7,6 +7,7 @@ import 'package:flutter_map_vector_tile/VectorTileWidget.dart';
 import 'package:flutter_map_vector_tile/styles.dart';
 import 'parse_expressions.dart';
 import 'apikeys.dart';
+import 'quickstyles.dart';
 
 
 void main() {
@@ -145,7 +146,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 mapController: mapController,
                 optimisations: optimisations,
                 ///vectorStyle: Styles.stadiaClassColorStyles,
-                vectorStyle: Styles.mapBoxClassColorStyles,
+                vectorStyle: DefaultQuickStyles.mapBoxClassColorStyles,
                /// vectorStyle: testStyle
                 ///vectorStyle: testStyle,
               ),
