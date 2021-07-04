@@ -178,7 +178,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           var diff = DateTime.now().difference(start).inMilliseconds;
           Log.out(L.decode, "decodebytesgeom took $diff millisecs");
           start = DateTime.now();
-          var checkedLayers = Styles.getMatchedStyleLayers(decoded, mapboxtestStyle,  data['tileZoom']);
+          var checkedLayers = Styles.getMatchedStyleLayers(decoded, data['vectorStyle'],  data['tileZoom']);
           diff = DateTime.now().difference(start).inMilliseconds;
           Log.out(L.decode, "stylematching took $diff millisecs");
 
@@ -204,7 +204,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           if(data['useImages']) {
             start = DateTime.now();
             var imageByteData = await Decoding.pathsToImage(
-                checkedLayers, mapboxtestStyle, data['coordsKey'], {},
+                checkedLayers, data['vectorStyle'], data['coordsKey'], {},
                 data['tileZoom']);
             diff = DateTime.now().difference(start).inMilliseconds;
             Log.out(L.decode, "save paths2image $diff");
@@ -703,7 +703,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
             cachedVectorData?.units = bytes;
             runInIsolate( { 'bytes': bytes, 'coordsKey' : coordsKey,
-              'tileZoom': _tileZoom, 'usePerspective': vectorOptions.usePerspective, 'useImages': vectorOptions.useImages }, vectorOptions, debugOptions );
+              'tileZoom': _tileZoom, 'usePerspective': vectorOptions.usePerspective, 'useImages': vectorOptions.useImages, 'vectorStyle': vectorStyle }, vectorOptions, debugOptions );
           } catch (e) {
             print("$e");
           }
