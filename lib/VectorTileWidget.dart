@@ -155,6 +155,13 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
   late Map geoJson;
 
+  static int isoRunning = 0;
+  static late SendPort sendPort;
+  static late List<ReceivePort> isolateToMainStream = []; // = ReceivePort();
+  static late List<SendPort> mainToIsolateStream = [];
+  int lastIso = 0;
+  int numIso = Platform.numberOfProcessors > 2 ? Platform.numberOfProcessors - 2 : 1;
+
   static Future isolateRunCode (SendPort isolateToMainStream) async {
 
     ReceivePort mainToIsolateStream = new ReceivePort();
@@ -217,7 +224,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
               print("There was an error from cachemanager pt3 $e");
             }
             diff = DateTime.now().difference(start).inMilliseconds;
-            print("storing took $diff ms");
+            print("storing  on disk took $diff ms");
           }
         }
       }
@@ -229,14 +236,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
   /// https://www.jpryan.me/dartbyexample/examples/isolates/
 
-  static int isoRunning = 0;
-  static late SendPort sendPort;
-  static late List<ReceivePort> isolateToMainStream = []; // = ReceivePort();
-  static late List<SendPort> mainToIsolateStream = [];
-  int lastIso = 0;
-  int numIso = Platform.numberOfProcessors > 2 ? Platform.numberOfProcessors - 2 : 1;
-
-  void storeCachedTileInfo( coordsKey, msg, vectorOptions, debugOptions ) async {
+  void cacheLoadedTileInfo( coordsKey, msg, vectorOptions, debugOptions ) async {
 
     var cache = _cachedVectorData[coordsKey];
     if(cache != null) {
@@ -301,6 +301,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
         }
       }
     }
+    setState(() {});
     msg = null;
   }
 
@@ -324,7 +325,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
                     data.containsKey('savedImage') ||
                     data.containsKey('savedGeo')
                 ) {
-                  storeCachedTileInfo(
+                  cacheLoadedTileInfo(
                       data['coordsKey'], data, vectorOptions, debugOptions);
                 }
               }

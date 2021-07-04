@@ -17,7 +17,7 @@ class Styles {
   };
 
   /// https://github.com/mapbox/mapbox-gl-js/issues/4225
-  
+
   static List getMatchedStyleLayers (decodedGeom, vectorStyle, tileZoom) {
     var checkedLayers = [];
 
