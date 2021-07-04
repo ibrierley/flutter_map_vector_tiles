@@ -21,6 +21,7 @@ import 'package:flutter_isolate/flutter_isolate.dart';
 import 'dart:convert';
 import 'decoding.dart';
 import 'quickstyles.dart';
+import 'log.dart';
 
 class VectorWidget extends StatefulWidget {
   final rotation;
@@ -174,11 +175,11 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           var start = DateTime.now();
           var decoded = await Decoding.decodeBytesToGeom(testStyle, data['coordsKey'], data['bytes'], {}, data['tileZoom']);
           var diff = DateTime.now().difference(start).inMilliseconds;
-          print("decodebytesgeom took $diff millisecs");
+          Log.out(L.decode, "decodebytesgeom took $diff millisecs");
           start = DateTime.now();
           var checkedLayers = Styles.getMatchedStyleLayers(decoded, testStyle,  data['tileZoom']);
           diff = DateTime.now().difference(start).inMilliseconds;
-          print("stylematching took $diff millisecs");
+          Log.out(L.decode, "stylematching took $diff millisecs");
 
           var encoded = json.encode(checkedLayers);
           Uint8List utf8encoded = Utf8Encoder().convert(encoded);
@@ -205,16 +206,20 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
                 checkedLayers, testStyle, data['coordsKey'], {},
                 data['tileZoom']);
             diff = DateTime.now().difference(start).inMilliseconds;
-            print("save paths2image $diff");
-            start = DateTime.now();
+            Log.out(L.decode, "save paths2image $diff");
+
 
             try {
+              start = DateTime.now();
               await DefaultCacheManager().putFile(
                   data['coordsKey'] + "_image.png",
                   imageByteData.buffer.asUint8List(), fileExtension: "png")
                   .catchError((error) {
                 print("Error saving file ${data['coordsKey']} $error");
               });
+              diff = DateTime.now().difference(start).inMilliseconds;
+              Log.out(L.decode, "storing on disk took $diff ms");
+
               isolateToMainStream.send({
                 "savedImage": true,
                 'coordsKey': data['coordsKey'],
@@ -223,8 +228,6 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
             } catch (e) {
               print("There was an error from cachemanager pt3 $e");
             }
-            diff = DateTime.now().difference(start).inMilliseconds;
-            print("storing  on disk took $diff ms");
           }
         }
       }

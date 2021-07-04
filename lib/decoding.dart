@@ -6,6 +6,7 @@ import 'vector_tile_plugin.dart';
 import 'package:flutter_map_vector_tile/styles.dart';
 import 'VectorTileWidget.dart';
 import 'quickstyles.dart';
+import 'log.dart';
 
 class Decoding {
 
@@ -216,7 +217,7 @@ class Decoding {
     int reps = 0;
 
     /// We prob don't need this now unless using the old style methods...
-    Map<String, int> layerOrderMap = DefaultQuickStyles.defaultLayerOrder();
+    /*final Map<String, int> layerOrderMap = DefaultQuickStyles.defaultLayerOrder();
 
     if (layerOrderMap.keys.length > 0) {
       vt.layers.sort((a, b) {
@@ -225,21 +226,24 @@ class Decoding {
       });
     }
 
-    Map layerSummary = {};
+     */
+
+    final wantLayerSummary = false;
+    final Map layerSummary = {};
 
     for (var layer in vt.layers) {
       final layerString = layer.name.toString();
 
       decoded[layerString] = [];
 
-      if (layerSummary.containsKey(layerString)) {
+      if (wantLayerSummary && layerSummary.containsKey(layerString)) {
         layerSummary[layerString]++;
       } else {
         layerSummary[layerString] = 0;
       }
 
       for (var feature in layer.features) {
-        Map<String, dynamic> fullFeature = { 'type': "Feature"};
+        Map<String, dynamic> fullFeature = { 'type': "Feature" };
         final properties = {};
         final geometryInfo = {};
 
@@ -277,7 +281,7 @@ class Decoding {
         var type = feature.type.toString();
         geometryInfo['type'] = type;
 
-        if (layerSummary.containsKey(type)) {
+        if (wantLayerSummary && layerSummary.containsKey(type)) {
           layerSummary[type]++;
         } else {
           layerSummary[type] = 1;
@@ -294,7 +298,7 @@ class Decoding {
 
           if (reps == 0) {
             command = 'M';
-            var checkCom = commandByte & 0x7;
+            final checkCom = commandByte & 0x7;
             reps = commandByte >> 3;
 
             if (checkCom == 1) {
@@ -356,5 +360,4 @@ class Decoding {
 
     return decoded;
   }
-
 }
