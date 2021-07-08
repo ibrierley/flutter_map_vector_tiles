@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:flutter_map_vector_tile/log.dart';
+
 dynamic interp (base, val, tempkeys) {
 
   var keys = [];
@@ -51,12 +53,19 @@ class Parser {
   final type;
   Map store = {};
 
+  static l ( string ) {
+    Log.out(L.expression, string);
+  }
+
   Parser(this.layerString, this.feature, this.type, this.tileZoom);
 
   dynamic parse(dynamic args, [bool useList = true]) {
 
+    //l("$args");
     var command = args is List ? args[0] : args;
     var result;
+
+
 
     if( args is Map) { // oslayer style ?
       if(args.containsKey("base")) {
@@ -90,7 +99,7 @@ class Parser {
             s2 = s2.toString(); // sometimes we seem to get a string false, rather than a bool type
             result = s1.toLowerCase() == s2.toLowerCase();
           } else {
-                  result = s1 == s2;
+            result = s1 == s2;
           }
           break;
         case "!=":
@@ -117,42 +126,49 @@ class Parser {
           result = type;
           break;
         case "all":
-          if(args is String) {
-            result = "all"; // we can get a value "all" as well as keyword "all"
+          if(args is String || !(allBool(args.sublist(1)))) {
+            result = args; // we can get a value "all" as well as keyword "all"
           } else {
+            //l("DOING ALL for $args");
             final sublist = args.sublist(1);
-            var all = true;
-            var notAllBool = false;
-            for (var c = 0; c < sublist.length; c++) {
+            result = true;
+            //var notAllBool = false;
+            SUB: for (var c = 0; c < sublist.length; c++) {
+              //l("DOING ALL CHECK FOR parse ${sublist[c]}");
               final test = parse(sublist[c]);
               if ((test is bool) && test == false) {
-                all = false;
-                break;
+                //l("ALL HERE WAS FALSE");
+                result = false;
+                break SUB;
               } else if ((test is bool) && test == true) {
+                //l("ALL test is bool and true (test is $test)");
               } else {
-                notAllBool = true;
+                //l("ALL something else..test was $test");
+                result = false;
+                break SUB;
               }
-            }
-            if (notAllBool) {
-              result = args;
-            } else {
-              result = all;
             }
           }
 
+          l("ALL final result was $result");
           break;
         case "in":
         /// http://kuanbutts.com/2019/02/18/mapbox-expressions/
 
+        //l("DOING REAL IN WITH $args");
           if (args.length >= 2) {
             final featureVal = parse(args[1]);
             if (featureVal != null) {
+              //l("featureval is $featureVal");
               var checkList;
               if (args[2] is List) {
+                l("args2 is list ${args[2]}");
                 checkList = parse(args[2]);
               } else {
+                //l("args2 is NOT list so working on parsing ${args.sublist(2)} args2 is ${args[2]}");
                 checkList = parse(args.sublist(2));
               }
+              //l("_IN_ DOING ANY!!! checklist is $checkList args is $args");
               result = checkList.any((val) {
                 return featureVal == parse(val);
               });
@@ -166,6 +182,8 @@ class Parser {
           result = !parse(["in", ...args.sublist(1)]);
           break;
         case "get":
+          //l("getting ${args[1]}");
+          //l("res is ${feature[args[1]]} feature is $feature");
           if (args[1] != null) {
             result = feature[args[1]];
           } else {
@@ -179,22 +197,37 @@ class Parser {
             result = false;
           }
           break;
+        case "!has":
+          if (feature.containsKey(parse(args[1]))) {
+            result = false;
+          } else {
+            result = true;
+          }
+          break;
+        case "!":
+          result = !parse(args[1]);
+          break;
         case "match":
+          //l("MATCH checkarg will be parse ${args[1]}");
           var checkArg = parse(args[1]);
 
           for (var c = 2; c < args.length - 2; c = c + 2) {
             if (args[c] is String) {
               if (checkArg == parse(args[c])) {
-                return args[c + 1];
+                //l("matches true $checkArg and parsed ${args[c]}");
+                return parse(args[c + 1]);
               }
             } else if (args[c] is List) {
+              //l("GOT HERE WANT TO DO [IN] $checkArg ${args[c]} (result would be ${args[c+1]})");
               if (parse(["in", checkArg, args[c]])) {
-                return args[c + 1];
+                l("matches IN true $checkArg and parsed ${args[c]}, will return ${args[c+1]}");
+                return parse(args[c + 1]);
               } else {
               }
             } else {
             }
           }
+          //l("didn't match so returning last ${args.last}");
           return args.last;
 
           /// just let it pass through ?
@@ -228,7 +261,9 @@ class Parser {
           //print("got zoom, result is $result");
           break;
         case "step":
+         //l("DOING STEP, initial result is parsed ${args[2]}");
           result = parse(args[2]);
+          //l("have step result here of $result");
           STEP: for (var c = 3; c < args.length; c = c + 2) {
             if (parse(args[1]) >= parse(args[c])) {
               result = parse(args[c + 1]);
@@ -236,6 +271,7 @@ class Parser {
               break STEP;
             }
           }
+          l("STEP RES IS $result");
           break;
         case "stops":
           result = parse(args[1][1]);
@@ -274,6 +310,7 @@ class Parser {
           break;
         case "geometry-type":
           result = type.toUpperCase();
+          //l("GEOMTYPE IS actually $result");
           break;
         case "interpolate": // base, val, keys
           var type = args[1][0];
@@ -303,10 +340,22 @@ class Parser {
 
     return xres;
   }
+
+  bool allBool(list) {
+    l("ALLBOOL CHECK $list");
+    for(var e in list) {
+      if(!(parse(e) is bool)) {
+        return false;
+      }
+    }
+    return true;
+  }
 }
 
 
 dynamic checkFilter(dynamic style, String layerString, Map featureInfo, double tileZoom) {
+
+  //print("CHECKING FILTER!!!!!!!!!!!!!!!!!!!");
 
   var feature = featureInfo['properties'];
   var geom = featureInfo['geometry'];
@@ -317,6 +366,7 @@ dynamic checkFilter(dynamic style, String layerString, Map featureInfo, double t
   try {
     result = parser.parse(style);
   } catch(e) { print("FilterParseError: $e from $style, feature $featureInfo"); }
+
 
   return result;
 }

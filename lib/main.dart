@@ -10,6 +10,7 @@ import 'apikeys.dart';
 import 'quickstyles.dart';
 import 'osteststyle.dart';
 import 'mapboxteststyle.dart';
+import 'osmteststyle.dart';
 
 
 void main() {
@@ -125,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 urlTemplate: 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.mvt?mapbox://styles/gibble/ckoe1dv003l7s17pb219opzj0&access_token=' + APIKeys.mapbox,
 
                 ///subdomains: ['a', 'b', 'c'],
-                ///urlTemplate: "https://tiles.stadiamaps.com/data/openmaptiles/{z}/{x}/{y}.pbf?api_key" + APIKeys.stadia,
+                ///urlTemplate: "https://tiles.stadiamaps.com/data/openmaptiles/{z}/{x}/{y}.pbf?api_key=" + APIKeys.stadia,
                 ///urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                 ///urlTemplate: "https://tiles.wmflabs.org/osm-no-labels/{z}/{x}/{y}.png",
                 ///urlTemplate: "https://a.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}@2x.png",
@@ -150,7 +151,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ///vectorStyle: Styles.stadiaClassColorStyles,
                 //vectorStyle: //DefaultQuickStyles.mapBoxClassColorStyles,
                 vectorStyle: mapboxtestStyle,
-               /// vectorStyle: testStyle
+                ///vectorStyle: osmtestStyle
                 ///vectorStyle: testStyle,
               ),
 

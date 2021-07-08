@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -10,7 +11,7 @@ import 'log.dart';
 
 class Decoding {
 
-  static Map geomToCanvasObjects(checkedLayers, vectorStyle, coordsKey, options,
+  static Map geomToCanvasObjects(LinkedHashMap checkedLayers, vectorStyle, coordsKey, options,
       tileZoom, [ VTCache? cachedInfo ]) {
     List labelPointlist = [];
     List<Road> roadLabelList = [];
@@ -19,10 +20,11 @@ class Decoding {
 
     if (checkedLayers == null) {
       print("checkedLayer was null...");
-      checkedLayers = [];
+      checkedLayers = LinkedHashMap();
     }
 
-    for (var featureLayer in checkedLayers) {
+    //for (var featureLayer in checkedLayers) {
+    checkedLayers.forEach((key, featureLayer) {
       Map<String, PathInfo> pathMap = {};
       Map<String, PathInfo> outlinePathMap = {};
 
@@ -155,7 +157,7 @@ class Decoding {
       outlinePathMap.forEach((key, value) {
         pathLayers.add(value);
       });
-    } // layer
+    }); // layer
 
     return {
       'pathLayers': pathLayers,
@@ -227,6 +229,7 @@ class Decoding {
 
      */
 
+
     final wantLayerSummary = false;
     final Map layerSummary = {};
 
@@ -242,11 +245,10 @@ class Decoding {
       }
 
       for (var feature in layer.features) {
+
         Map<String, dynamic> fullFeature = { 'type': "Feature" };
         final properties = {};
         final geometryInfo = {};
-
-        var command = '';
 
         for (var tagIndex = 0; tagIndex < feature.tags.length; tagIndex += 2) {
           final valIndex = feature.tags[tagIndex + 1];
@@ -292,46 +294,40 @@ class Decoding {
         int cx = 0;
         int cy = 0;
 
+        //int command = 1;
+        int checkCom = 1;
+
         while (gIndex < geometry.length) {
           final commandByte = geometry[ gIndex ];
 
           if (reps == 0) {
-            command = 'M';
-            final checkCom = commandByte & 0x7;
+
+            checkCom = commandByte & 0x7;
             reps = commandByte >> 3;
 
-            if (checkCom == 1) {
-              command = 'M';
-            } else if (checkCom == 2) {
-              command = 'L';
-            } else if (checkCom == 7) {
-              command = 'C';
-              reps = 0;
-            } else {
-              print("Shouldn't have got here, some command unknown");
-            }
-
+            if (checkCom == 7) reps = 0;
             gIndex++;
           } else {
             cx += decodeZigZag(geometry[ gIndex ]);
             cy += decodeZigZag(geometry[ gIndex + 1]);
 
             var ncx, ncy;
-            if (command == 'M' || (command == 'L')) {
-              ncx = (cx.toDouble() / 16); // Change /16 to a tileRatio passed in..
-              ncy = (cy.toDouble() / 16);
+            if (checkCom < 3) {
+              ncx = (cx / 16); // Change /16 to a tileRatio passed in..
+              ncy = (cy / 16);
             }
 
-            var type = feature.type.toString();
-            if (command == 'C') { // CLOSE
+            if (checkCom == 7) { // Close
               if (coords.length != 0) {
                 coordinatesList.add(coords);
               }
               coords = [];
-            } else if (command == 'M') { // MOVETO
+
+            } else if (checkCom == 1) { // Moveto
               if (coords.length != 0) coordinatesList.add(coords);
               coords = [[ncx, ncy]];
-            } else if (command == 'L') { // LINETO
+
+            } else if (checkCom == 2) { // Lineto
               coords.add([ncx, ncy]);
             } else {
               print("Incorrect command string");
@@ -356,6 +352,7 @@ class Decoding {
           decoded[layerString].add(fullFeature);
       }
     } // layer
+
 
     return decoded;
   }

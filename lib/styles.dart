@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/widgets.dart';
@@ -5,29 +6,164 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'parse_expressions.dart';
+import 'log.dart';
 //import 'package:hexcolor/hexcolor.dart';
 
 class Styles {
 
   static Map<String, dynamic> colorRegex = {
     'isHexRgb' : new RegExp(r'^(#.*)'),
-    'isRgba'   : new RegExp(r'^rgba\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3}),\s*(\d*(?:\.\d+)?)\)$'),
+    'isRgba'   : new RegExp(r'^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3}),?\s*(\d*(?:\.\d+)?)\)$'),
     'isHsl'    : new RegExp(r"hsl\((\d+),\s*([\d.]+)%,\s*([\d.]+)%\)"),
-
+    'isHsla'   : new RegExp(r"hsla?\((\d+),\s*([\d.]+)%,\s*([\d.]+)%,?\s*([\d.]+)*\s*\)"),
   };
 
   /// https://github.com/mapbox/mapbox-gl-js/issues/4225
 
-  static List getMatchedStyleLayers (decodedGeom, vectorStyle, tileZoom) {
+  static LinkedHashMap getMatchedStyleLayers (decodedGeom, vectorStyle, tileZoom) {
     var checkedLayers = [];
+
+    if(vectorStyle == null) {
+      print("No style, returning");
+      return LinkedHashMap();
+    }
 
     var keys = '';
     for(var key in decodedGeom.keys) {
       keys += key + ", ";
     }
+    //print("KEYS ARE $keys");
+    //print("decodegeom is $decodedGeom");
 
+    var start = DateTime.now();
+    var diff = DateTime.now().difference(start).inMilliseconds;
+
+    var seenLayer = {};
+    var sourceLayers = [];
+    LinkedHashMap styleLinkedMap = new LinkedHashMap();
+
+    if(vectorStyle['layers'] != null) {
+      for (var styleLayer in vectorStyle['layers']) {
+        var layerString = styleLayer['source-layer'];
+        if (layerString == null) continue;
+        if (styleLinkedMap.containsKey(layerString)) {
+          styleLinkedMap[layerString].add(styleLayer);
+        } else {
+          styleLinkedMap[layerString] = [styleLayer];
+        }
+      }
+    } else {
+      print("vector style layers is Null, somethign went wrong ? $vectorStyle $decodedGeom");
+    }
+
+    //print("$sourceLayers");
+    //print("linked map $styleLinkedMap");
+
+    LinkedHashMap sortedFeatureLayers = new LinkedHashMap();
+
+    //final checkOk = checkFilter(styleLayerFilter, sourceLayer, featureDetails, tileZoom);
+    styleLinkedMap.forEach((layerString, value) {
+      //print("key $layerString");
+      var layerFeatures = decodedGeom[layerString] ?? [];
+      for(var feature in layerFeatures) {
+        STYLE_ENTRY: for(Map layerStyle in styleLinkedMap[layerString]) {
+          //print("key $layerStyle ");
+
+          var willAdd = false;
+          var minZoom = layerStyle['minZoom'];
+          var maxZoom = layerStyle['maxZoom'];
+
+          if(minZoom != null && tileZoom < minZoom) {
+            //print("skipping due to min $tileZoom vs $minZoom");
+            continue;
+          }
+          if(maxZoom != null && tileZoom > layerStyle['minZoom']) {
+            //print("skipping due to max $tileZoom vs $maxZoom");
+            continue;
+          }
+
+          final featureGeomType = feature['geometry']['type'];
+          final styleLayerType = layerStyle['type'];
+          if(styleLayerType == 'fill' && featureGeomType != 'POLYGON') {
+            continue STYLE_ENTRY;
+          }
+          if(styleLayerType == 'line' && featureGeomType != 'LINESTRING') {
+            continue STYLE_ENTRY;
+          }
+          if(styleLayerType == 'symbol' && featureGeomType != 'POINT') {
+            continue STYLE_ENTRY;
+          }
+
+          var filter = layerStyle['filter'];
+
+          if(filter == null) {
+            //print("$layerString no filter so will pass");
+
+            var sortedFeature = sortedFeatureLayers[layerString];
+            if(sortedFeature == null) {
+              willAdd = true;
+            }
+
+          } else {
+            //checkFilter...
+
+            final checkOk = checkFilter(filter, layerString, feature, tileZoom);
+            if(!(checkOk is bool)) {
+              print("CHECKOK: $checkOk $feature");
+            }
+            if(checkOk) {
+              willAdd = true;
+            }
+          }
+
+          if(willAdd) {
+            final styleLayerPaint =  layerStyle['paint'];
+            final styleLayerLayout = layerStyle['layout'];
+
+            if(willAdd && styleLayerPaint != null) {
+
+              final paintKeys = ['fill-outline-color','fill-color','fill-opacity', 'fill-outline-color'
+                  'line-opacity','line-color','line-width','text-color',
+                "text-halo-blur", "text-halo-width", "text-halo-color" ];
+
+              for( var key in paintKeys) {
+                if(styleLayerPaint != null && styleLayerPaint[key] != null) {
+                  feature[key] = checkFilter(styleLayerPaint[key], layerString, feature, tileZoom);
+                }
+              }
+
+              feature['paint'] = styleLayerPaint; /// maybe we want to recalc paint every frame, so pass the original
+
+              final layoutKeys = ['line-cap','line-join','text-size', "text-font", "text-field", "text-anchor", "text-offset"];
+              for( var key in layoutKeys ) {
+                if(styleLayerLayout != null && styleLayerLayout[key] != null) {
+                  feature[key] = checkFilter(styleLayerLayout[key], layerString, feature, tileZoom);
+                }
+              }
+            }
+
+            var sortedFeature = sortedFeatureLayers[layerString];
+            if(sortedFeature == null) {
+              sortedFeatureLayers[layerString] = [feature];
+            } else {
+              sortedFeatureLayers[layerString].add(feature);
+            }
+            break STYLE_ENTRY;
+          }
+        }
+      }
+    });
+
+    ///print("sortedfeatures $sortedFeatureLayers");
+
+
+
+    /*
     for( var styleLayer in vectorStyle['layers']) {
       var newLayer = [];
+      diff = DateTime.now().difference(start).inMilliseconds;
+      start = DateTime.now();
+      Log.out(L.decode, "decodebytesgeom took $diff millisecs ${styleLayer['source-layer']}");
 
       final styleLayerType = styleLayer['type'];
       final styleLayerFilter = styleLayer['filter'];
@@ -82,7 +218,7 @@ class Styles {
               "text-halo-blur", "text-halo-width", "text-halo-color" ];
 
             for( var key in paintKeys) {
-              if(styleLayerPaint[key] != null) {
+              if(styleLayerPaint != null && styleLayerPaint[key] != null) {
                 featureDetails[key] = checkFilter(styleLayerPaint[key], sourceLayer, featureDetails, tileZoom);
               }
             }
@@ -90,8 +226,8 @@ class Styles {
             featureDetails['paint'] = styleLayerPaint; /// maybe we want to recalc paint every frame, so pass the original
 
             final layoutKeys = ['line-cap','line-join','text-size', "text-font", "text-field", "text-anchor", "text-offset"];
-            for( var key in layoutKeys) {
-              if(styleLayerLayout[key] != null) {
+            for( var key in layoutKeys ) {
+              if(styleLayerLayout != null && styleLayerLayout[key] != null) {
                 featureDetails[key] = checkFilter(styleLayerLayout[key], sourceLayer, featureDetails, tileZoom);
               }
             }
@@ -107,7 +243,10 @@ class Styles {
       }
     }
 
-    return checkedLayers;
+     */
+
+    return sortedFeatureLayers;
+    //return checkedLayers;
   }
 
   static TextPainter getNewTextPainter(String text, featureInfo, fontSize, strokeWidth) {
@@ -115,7 +254,7 @@ class Styles {
     var textSize = featureInfo['text-size'];
     var font = featureInfo['text-font'];
     var textHaloColorString = featureInfo['text-halo-color'];
-    var textHaloWidth = featureInfo['text-halo-width'] ?? 2.0;
+    var textHaloWidth = featureInfo['text-halo-width']?.toDouble() ?? 2.0;
 
     Color textHaloColor = Colors.grey;
     if(textHaloColorString != null) {
@@ -426,26 +565,26 @@ void checkMapboxFilters(Map<dynamic,dynamic> style, String layerString,String ty
 
 
 Color getColorFromString(colorString) {
-  //print("getting color $colorString");
   var colorMatches = Styles.colorRegex['isHexRgb'].allMatches(colorString).toList();
   if(colorMatches.length > 0) {
-   // print("got hex color");
     return hexToColor(colorMatches[0][1]);
   }
   colorMatches = Styles.colorRegex['isRgba'].allMatches(colorString).toList();
   if(colorMatches.length > 0) {
-    //print("got rgba $colorMatches");
-    return Color.fromRGBO(int.parse(colorMatches[0][1]), int.parse(colorMatches[0][2]), int.parse(colorMatches[0][3]), double.parse(colorMatches[0][4]));
+    var opacity = colorMatches[0][4] == "" ? "1.0" : colorMatches[0][4];
+    return Color.fromRGBO(int.parse(colorMatches[0][1]), int.parse(colorMatches[0][2]), int.parse(colorMatches[0][3]), double.parse(opacity));
   }
-  //print("got hsl");
   return hslStringToRgbColor(colorString);
 }
 
 List stringToHslColor(string) {
-  RegExp exp = Styles.colorRegex['isHsl']; //new RegExp(r"hsl\((\d+),\s*([\d.]+)%,\s*([\d.]+)%\)");
+  RegExp exp = Styles.colorRegex['isHsla']; //new RegExp(r"hsl\((\d+),\s*([\d.]+)%,\s*([\d.]+)%\)");
   var matches = exp.allMatches(string).toList();
-
-  return [double.parse(matches[0][1]!),double.parse(matches[0][2]!),double.parse(matches[0][3]!)];
+  var valueList = [double.parse(matches[0][1]!),double.parse(matches[0][2]!),double.parse(matches[0][3]!)];
+  if(matches[0][4] != null) {
+    valueList.add(double.parse(matches[0][4]!));
+  }
+  return valueList;
   //var color = HSLColor.fromAHSL(1,double.parse(matches[0][1]!),double.parse(matches[0][2]!),double.parse(matches[0][3]!));
  // return color.toColor();
 }

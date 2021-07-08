@@ -127,10 +127,18 @@ class MapboxTile {
     TileStats tileStats = new TileStats();
     cachedInfo.state = 'Decoding';
 
-    var jsonMap = cachedInfo.geoJson ?? {};
 
-    if(pathLayers == null )
-      pathLayers = Decoding.geomToCanvasObjects(jsonMap['layers'], vectorStyle, coordsKey, options, tileZoom, cachedInfo);
+    if(pathLayers == null || pathLayers.length <= 1) {
+      pathLayers = Decoding.geomToCanvasObjects(
+          cachedInfo.geoJson?['layers'], vectorStyle, coordsKey, options, tileZoom,
+          cachedInfo);
+    } else {
+      ///print("Already have pathLayers passed in (prob already saved by iso)");
+    }
+
+    if(pathLayers == null) {
+      print("No layers, something went wrong.");
+    }
 
     if(!options.containsKey('noLabels')) {
 

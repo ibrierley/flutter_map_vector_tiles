@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:math' as math;
@@ -162,23 +163,29 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   static late List<ReceivePort> isolateToMainStream = []; // = ReceivePort();
   static late List<SendPort> mainToIsolateStream = [];
   int lastIso = 0;
+  int isoRunNumber = 0;
   int numIso = Platform.numberOfProcessors > 2 ? Platform.numberOfProcessors - 2 : 1;
 
   static Future isolateRunCode (SendPort isolateToMainStream) async {
 
     ReceivePort mainToIsolateStream = new ReceivePort();
     isolateToMainStream.send(mainToIsolateStream.sendPort);
+    var myStyle;
 
     mainToIsolateStream.listen((val) async {
       var data = val[0];
       if(data is Map) {
+        if(data.containsKey('vectorStyle')) {
+          myStyle = data['vectorStyle'];
+        }
+
         if(data.containsKey('bytes')) {
           var start = DateTime.now();
           var decoded = await Decoding.decodeBytesToGeom(data['coordsKey'], data['bytes'], {}, data['tileZoom']);
           var diff = DateTime.now().difference(start).inMilliseconds;
           Log.out(L.decode, "decodebytesgeom took $diff millisecs");
           start = DateTime.now();
-          var checkedLayers = Styles.getMatchedStyleLayers(decoded, data['vectorStyle'],  data['tileZoom']);
+          LinkedHashMap checkedLayers = Styles.getMatchedStyleLayers(decoded, myStyle,  data['tileZoom']);
           diff = DateTime.now().difference(start).inMilliseconds;
           Log.out(L.decode, "stylematching took $diff millisecs");
 
@@ -204,7 +211,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           if(data['useImages']) {
             start = DateTime.now();
             var imageByteData = await Decoding.pathsToImage(
-                checkedLayers, data['vectorStyle'], data['coordsKey'], {},
+                checkedLayers, myStyle, data['coordsKey'], {},
                 data['tileZoom']);
             diff = DateTime.now().difference(start).inMilliseconds;
             Log.out(L.decode, "save paths2image $diff");
@@ -250,12 +257,11 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
         try {
           await DefaultCacheManager().getFileFromCache(
               coordsKey + "_layers.json", ).then((file) async {
-
-            var bytes = file!.file.readAsBytesSync();
-
-            var utf8String  = Utf8Decoder().convert(bytes);
-            json = jsonDecode(utf8String);
-
+                if(file?.file != null) {
+                  var bytes = file!.file.readAsBytesSync();
+                  var utf8String = Utf8Decoder().convert(bytes);
+                  json = jsonDecode(utf8String);
+                }
           }).catchError((err) {
             print("getfile error was $err");
           });
@@ -266,7 +272,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
         if(json != null)
           cache.geoJson = { 'layers': json };
 
-        if(true || vectorOptions.useCanvas) { // we still need to get labels even if using tiles as bottom layer? does mean we dupe a bit of processing
+        if(json != null) { // we still need to get labels even if using tiles as bottom layer? does mean we dupe a bit of processing
           MapboxTile.decodeGeoToNative( null,
               coordsKey, _cachedVectorData[coordsKey]!, {}, vectorOptions.vectorStyle, msg['tileZoom'],
               debugOptions);
@@ -280,12 +286,14 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           try {
             await DefaultCacheManager().getFileFromCache(
                 coordsKey + "_image.png").then((file) async {
-              ui.Codec codec2 = await ui.instantiateImageCodec(
-                  file!.file.readAsBytesSync());
-              ui.FrameInfo frameInfo = await codec2.getNextFrame();
-              cache.image = frameInfo.image;
-              _recentTilesCompleted[coordsKey] = DateTime.now();
-              _outstandingTileLoads.remove(coordsKey);
+                  if(file?.file != null) {
+                    ui.Codec codec2 = await ui.instantiateImageCodec(
+                        file!.file.readAsBytesSync());
+                    ui.FrameInfo frameInfo = await codec2.getNextFrame();
+                    cache.image = frameInfo.image;
+                    _recentTilesCompleted[coordsKey] = DateTime.now();
+                    _outstandingTileLoads.remove(coordsKey);
+                  }
             });
           } catch (e) {
             print("There was an error getting file from cache pt 4 $e");
@@ -341,6 +349,10 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
     var waitTime = isoRunning < 2 ? 5 : 0;
 
+    if(isoRunNumber > numIso * 2) {
+      tileMap.remove('vectorStyle'); //we've already sent it to all our isolates
+    }
+
     await Future.delayed(Duration(seconds: waitTime), () async {
       if(latestWantedCoordsKeys.containsKey(tileMap['coordsKey'])) {
         mainToIsolateStream[lastIso].send(
@@ -349,9 +361,11 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     });
 
     lastIso++;
+    isoRunNumber++;
     if(lastIso >= mainToIsolateStream.length) {
       lastIso = 0;
     }
+
 
     return tileMap['coordsKey'];
   }
@@ -483,10 +497,10 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
     int maxx = (tileRange.max.x + 0).toInt();
 
     //debug single tile 110/342/510 (mapbox xy opposite to o.smaps)
-    //minx=510;
-    //maxx = 510;
-    //miny = 342;
-    //maxy=342;
+    //minx=127;
+    //maxx = 127;
+    //miny = 85;
+    //maxy=85;
 
     _prevCenter ??= map.center;
 
