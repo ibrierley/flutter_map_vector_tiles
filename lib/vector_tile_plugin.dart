@@ -281,7 +281,7 @@ class VectorPainter extends CustomPainter {
       canvas.transform(m.storage);
     }
 
-    final Rect myRect = Offset(200,20) & Size(256.0,256.0);
+    final Rect myRect = Offset(0,0) & Size(256.0,256.0);
     /// Normal paths
     for (var tile in tilesToRender) {
       var usedPaintedImage = false;
