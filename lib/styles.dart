@@ -66,24 +66,25 @@ class Styles {
       //print("key $layerString");
       var layerFeatures = decodedGeom[layerString] ?? [];
       for(var feature in layerFeatures) {
-        STYLE_ENTRY: for(Map layerStyle in styleLinkedMap[layerString]) {
+        STYLE_ENTRY: for(final Map layerStyle in styleLinkedMap[layerString]) {
           //print("key $layerStyle ");
 
           var willAdd = false;
-          var minZoom = layerStyle['minZoom'];
-          var maxZoom = layerStyle['maxZoom'];
+          final minZoom = layerStyle['minZoom'];
+          final maxZoom = layerStyle['maxZoom'];
 
           if(minZoom != null && tileZoom < minZoom) {
             //print("skipping due to min $tileZoom vs $minZoom");
             continue;
           }
-          if(maxZoom != null && tileZoom > layerStyle['minZoom']) {
+          if(maxZoom != null && tileZoom > maxZoom) {
             //print("skipping due to max $tileZoom vs $maxZoom");
             continue;
           }
 
           final featureGeomType = feature['geometry']['type'];
           final styleLayerType = layerStyle['type'];
+
           if(styleLayerType == 'fill' && featureGeomType != 'POLYGON') {
             continue STYLE_ENTRY;
           }

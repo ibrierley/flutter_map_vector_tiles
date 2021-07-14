@@ -127,6 +127,9 @@ class MapboxTile {
     TileStats tileStats = new TileStats();
     cachedInfo.state = 'Decoding';
 
+    if(cachedInfo.geoJson?['layers'] == null || cachedInfo.geoJson?['layers'] == 0) {
+      print("decodegeotonative has no layers $coordsKey");
+    }
 
     if(pathLayers == null || pathLayers.length <= 1) {
       pathLayers = Decoding.geomToCanvasObjects(
@@ -287,9 +290,10 @@ class VectorPainter extends CustomPainter {
       var usedPaintedImage = false;
       final String tileCoordsKey = tileCoordsToKey(tile.coords);
       final PositionInfo? pos = cachedVectorDataMap[tileCoordsKey]?.positionInfo;
-
+      ///print("painttile $tileCoordsKey ${cachedVectorDataMap[tileCoordsKey]?.image}");
       if(useImages && cachedVectorDataMap[tileCoordsKey]?.image != null && tileZoom < highZoomCanvas) {
         if ((pos != null) && (cachedVectorDataMap[tileCoordsKey]?.image != null)) {
+          print("painttile2 $tileCoordsKey ${cachedVectorDataMap[tileCoordsKey]?.image}");
           paintTile(canvas, pos, cachedVectorDataMap[tileCoordsKey]?.image);
           usedPaintedImage = true;
         }
@@ -321,6 +325,7 @@ class VectorPainter extends CustomPainter {
 
       if(!usedPaintedImage && (useCanvas || (tileZoom >= highZoomCanvas))) {
 
+        //print("vpath $tileCoordsKey ${cachedVectorDataMap[tileCoordsKey]?.geomInfo?.pathStore.length}");
         final List<
             Map<String, PathInfo>> dataMap = cachedVectorDataMap[tileCoordsKey]
             ?.geomInfo?.pathStore ?? [];
@@ -636,7 +641,7 @@ class VectorPainter extends CustomPainter {
     canvas.drawPath(path, paint);
 
     final TextStyle textStyle = TextStyle(
-        color: Colors.green,
+        color: Colors.black,
         fontSize: 14 //scale == 1 ? scale : 16 / scale, // diffratio, ?
     );
     final TextSpan textSpan = TextSpan(

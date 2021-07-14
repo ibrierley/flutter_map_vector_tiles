@@ -166,6 +166,18 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
   int isoRunNumber = 0;
   int numIso = Platform.numberOfProcessors > 2 ? Platform.numberOfProcessors - 2 : 1;
 
+  static Future<LinkedHashMap> bytesToFilteredLayers( data, style ) async {
+    var start = DateTime.now();
+    var decoded = await Decoding.decodeBytesToGeom(data['coordsKey'], data['bytes'], {}, data['tileZoom']);
+    var diff = DateTime.now().difference(start).inMilliseconds;
+    Log.out(L.decode, "decodebytestogeom took $diff millisecs");
+    start = DateTime.now();
+    LinkedHashMap checkedLayers = Styles.getMatchedStyleLayers(decoded, style,  data['tileZoom']);
+    diff = DateTime.now().difference(start).inMilliseconds;
+    Log.out(L.decode, "getmatchedstylelayers took $diff millisecs");
+    return checkedLayers;
+  }
+
   static Future isolateRunCode (SendPort isolateToMainStream) async {
 
     ReceivePort mainToIsolateStream = new ReceivePort();
@@ -180,6 +192,7 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
         }
 
         if(data.containsKey('bytes')) {
+          /*
           var start = DateTime.now();
           var decoded = await Decoding.decodeBytesToGeom(data['coordsKey'], data['bytes'], {}, data['tileZoom']);
           var diff = DateTime.now().difference(start).inMilliseconds;
@@ -188,6 +201,10 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
           LinkedHashMap checkedLayers = Styles.getMatchedStyleLayers(decoded, myStyle,  data['tileZoom']);
           diff = DateTime.now().difference(start).inMilliseconds;
           Log.out(L.decode, "stylematching took $diff millisecs");
+
+           */
+
+          LinkedHashMap checkedLayers = await bytesToFilteredLayers(data, myStyle);
 
           var encoded = json.encode(checkedLayers);
           Uint8List utf8encoded = Utf8Encoder().convert(encoded);
@@ -208,10 +225,12 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
             print("There was an error with cachemanager pt2 $e");
           }
 
+          var start; var diff;
+
           if(data['useImages']) {
             start = DateTime.now();
             var imageByteData = await Decoding.pathsToImage(
-                checkedLayers, myStyle, data['coordsKey'], {},
+                checkedLayers, myStyle, data['coordsKey'], { 'hairlineOptimise' : data['hairlineOptimise'] },
                 data['tileZoom']);
             diff = DateTime.now().difference(start).inMilliseconds;
             Log.out(L.decode, "save paths2image $diff");
@@ -282,10 +301,12 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
       }
 
       if(msg.containsKey('savedImage')) {
+        print("Got image message for $coordsKey MSGMSGMSGMSGMSG $coordsKey");
         if(vectorOptions.useImages) {
           try {
             await DefaultCacheManager().getFileFromCache(
                 coordsKey + "_image.png").then((file) async {
+                  print("Got file for $coordsKey GGGGGGGGGGGGGGGGGGGGGGGGGGG $coordsKey");
                   if(file?.file != null) {
                     ui.Codec codec2 = await ui.instantiateImageCodec(
                         file!.file.readAsBytesSync());
@@ -293,6 +314,8 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
                     cache.image = frameInfo.image;
                     _recentTilesCompleted[coordsKey] = DateTime.now();
                     _outstandingTileLoads.remove(coordsKey);
+                  } else {
+                    print("File for $coordsKey was NULLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL $coordsKey");
                   }
             });
           } catch (e) {
@@ -585,10 +608,11 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
 
                   /// It shouldn't end up both completed && outstanding, but it
                   /// could be possible if was in cache but not any more...
+                  ///
                   if (_recentTilesCompleted.containsKey(backupTileKey) &&
                       !_outstandingTileLoads.containsKey(backupTileKey) || (
                       _recentTilesCompleted.containsKey(backupTileKey) &&
-                          (!vectorOptions.useImages && !vectorOptions.useCanvas)
+                          (!vectorOptions.useImages && !vectorOptions.useCanvas) // huh ?
                   )) {
 
                     /// careful here getting the different zoom level for the old key vs it needing a new zoom level to scale in new level...
@@ -624,7 +648,11 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
         if (!_cachedVectorData.containsKey(_tileCoordsToKey(tile.coords))) {
           fetchData(tile.coords);
         } else {
-          tilesToRender.add(tile);
+          final coordsKey = _tileCoordsToKey(tile.coords);
+
+          ///print("${tile.coords} $coordsKey ${vectorOptions.useImages} ${hasCompletedImage(tile.coords)}  and isrecently completed ${ _recentTilesCompleted.containsKey(tile.coords)}");
+          if((vectorOptions.useImages && hasCompletedImage(coordsKey)) || ((vectorOptions.useCanvas && hasCompletedGeo(coordsKey))))
+            tilesToRender.add(tile);
         }
         newWantedCoordsKeys[tileCoordsToKey(tile.coords)] = true;
       }
@@ -716,8 +744,33 @@ class _VectorTileLayerState extends State<VectorTilePluginLayer> with TickerProv
             var bytes = value.readAsBytesSync();
 
             cachedVectorData?.units = bytes;
-            runInIsolate( { 'bytes': bytes, 'coordsKey' : coordsKey,
-              'tileZoom': _tileZoom, 'usePerspective': vectorOptions.usePerspective, 'useImages': vectorOptions.useImages, 'vectorStyle': vectorStyle }, vectorOptions, debugOptions );
+            //print("using isolate...hairline is ${vectorOptions.optimisations} ${vectorOptions.optimisations?.hairlineOption}");
+            if(optimisations.useIsolates) {
+              runInIsolate({
+                'bytes': bytes,
+                'coordsKey': coordsKey,
+                'tileZoom': _tileZoom,
+                'usePerspective': vectorOptions.usePerspective,
+                'useImages': vectorOptions.useImages,
+                'vectorStyle': vectorStyle,
+                'hairlineOptimise': vectorOptions.optimisations?.hairlineOption,
+              }, vectorOptions, debugOptions);
+            } else { /// data['coordsKey'], data['bytes'], {}, data['tileZoom']
+              var start = DateTime.now();
+              LinkedHashMap geoMap = await bytesToFilteredLayers({ 'coordsKey': coordsKey, 'bytes': bytes, 'tileZoom': _tileZoom }, vectorStyle);
+              var diff = DateTime.now().difference(start).inMilliseconds;
+              Log.out(L.decode, "bytestofilteredlayers took $diff millisecs");
+
+              _cachedVectorData[coordsKey]?.geoJson = { 'layers': geoMap };
+              start = DateTime.now();
+              MapboxTile.decodeGeoToNative( null,
+                  coordsKey, _cachedVectorData[coordsKey]!, {}, vectorOptions.vectorStyle, _tileZoom,
+                  debugOptions);
+              diff = DateTime.now().difference(start).inMilliseconds;
+              Log.out(L.decode, "decodegeotonative took $diff millisecs");
+              _recentTilesCompleted[coordsKey] = DateTime.now();
+              _outstandingTileLoads.remove(coordsKey);
+            }
           } catch (e) {
             print("$e");
           }
@@ -1133,8 +1186,9 @@ class Optimisations {
   bool pinchZoomOption;
   bool hairline;
   bool hairlineOption;
+  bool useIsolates;
 
-  Optimisations( { this.pinchZoom = false, this.pinchZoomOption = false, this.hairline = false, this.hairlineOption = false });
+  Optimisations( { this.pinchZoom = false, this.pinchZoomOption = false, this.hairline = false, this.hairlineOption = false, this.useIsolates = false });
 }
 
 class DebugOptions {

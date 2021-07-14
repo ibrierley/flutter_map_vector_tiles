@@ -19,7 +19,7 @@ class Decoding {
     List pathLayers = [];
 
     if (checkedLayers == null) {
-      print("checkedLayer was null...");
+      print("checkedLayer was null....");
       checkedLayers = LinkedHashMap();
     }
 
@@ -59,6 +59,7 @@ class Decoding {
 
           labelPointlist.add(
               [ point, layerString, feature, dedupeKey, priority]);
+
         } else if (geomType == "LINESTRING") {
           var path = ui.Path();
           for (var coordsSet in geom['coordinates']) {
@@ -159,6 +160,11 @@ class Decoding {
       });
     }); // layer
 
+    if(checkedLayers.length == 0) {
+      print("0 length checkedLayers $coordsKey ${cachedInfo?.geomInfo?.pathStore.length} ${checkedLayers.length}");
+    }
+    //print("geomtocanvas $coordsKey ${cachedInfo?.geomInfo?.pathStore.length} ${checkedLayers.length}");
+
     return {
       'pathLayers': pathLayers,
       'roadLabelList': roadLabelList,
@@ -177,7 +183,7 @@ class Decoding {
         null, 'gettingHttp', coordsKey, tileZoom, GeomStore([], [], [], []),
         DateTime.now()
     );
-    vtc.geoJson = { 'layers': checkedLayers};
+    vtc.geoJson = { 'layers': checkedLayers };
 
     MapboxTile.decodeGeoToNative(
         pathLayers,
@@ -196,6 +202,12 @@ class Decoding {
 
     for (var pathInfo in pathLayers['pathLayers']) {
       pathInfo.style.isAntiAlias = true;
+
+      if(options.containsKey('hairlineOptimise') && options['hairlineOptimise']) {
+        if(tileZoom < 15 && pathInfo.style.strokeWidth < 4.0) {
+          pathInfo.style.strokeWidth = 0.0;
+        }
+      }
       canvas.drawPath(pathInfo.path, pathInfo.style);
     }
 
@@ -255,12 +267,8 @@ class Decoding {
           final layerObj = layer.values[valIndex];
           var val;
 
-          if (layerObj.hasIntValue()) {
+          if (layerObj.hasIntValue() || layerObj.hasUintValue() || layerObj.hasSintValue()) {
             val = layerObj.intValue.toInt();
-          } else if (layerObj.hasUintValue()) {
-            val = layerObj.uintValue.toInt();
-          } else if (layerObj.hasSintValue()) {
-            val = layerObj.sintValue.toInt();
           } else if (layerObj.hasDoubleValue()) {
             val = layerObj.doubleValue.toDouble();
           } else if (layerObj.hasStringValue()) {
@@ -340,7 +348,7 @@ class Decoding {
 
         if (coords.length != 0) coordinatesList.add(coords);
         coords = [];
-        if (geometryInfo['type'] == "POINT") {
+        if (type == "POINT") {
           geometryInfo['coordinates'] = coordinatesList[0][0];
         } else {
           geometryInfo['coordinates'] = coordinatesList;
@@ -356,4 +364,5 @@ class Decoding {
 
     return decoded;
   }
+
 }

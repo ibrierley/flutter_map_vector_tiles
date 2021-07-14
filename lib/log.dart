@@ -11,7 +11,7 @@ class Log {
 
   static void out(type, message) {
     if( logType == type) {
-      if(type == L.none)
+      if(type == L.decode)
         print("DECODE: $message");
     }
   }
