@@ -94,7 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
         useIsolates: false
     );
     DebugOptions debugOptions = DebugOptions(
-        tiles: true, // show a tile border
+        tiles: false, // show a tile border
         labels: false, // show a label border thats used for label collision checks
         decoding: false, // show http gets and when decoding is done
         featureSummary: false,
@@ -106,8 +106,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
     print("$mapController $mapControllerReady");
 
-    if(mapControllerReady && mapController != null)
-      print("mapready ${mapController?.center}");
+    //if(mapControllerReady && mapController != null)
+      //print("mapready ${mapController?.center}");
 
     var fmap =  FlutterMap(
       //key: ValueKey(MediaQuery.of(context).orientation),
