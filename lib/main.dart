@@ -89,7 +89,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
     Optimisations optimisations = Optimisations(
-        pinchZoomOption: false, // use hairlines for speed when zooming
+        pinchZoomOption: true, // use hairlines for speed when zooming
         hairlineOption: true, // use hairlines on paths at low zoom (true recommended)
         useIsolates: false
     );

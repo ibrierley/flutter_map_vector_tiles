@@ -158,9 +158,9 @@ class MapboxTile {
 
             var backPainter = Styles.getNewTextPainter(info.toString(), pointInfo[2], 12.0, 2.0);
             var backgroundLabel =
-              Label( text: info.toString(), point: pointInfo[0],
-                  textPainter: backPainter, dedupeKey: pointInfo[3] + '_b',
-                  priority: pointInfo[4], coordsKey: coordsKey );
+            Label( text: info.toString(), point: pointInfo[0],
+                textPainter: backPainter, dedupeKey: pointInfo[3] + '_b',
+                priority: pointInfo[4], coordsKey: coordsKey );
 
             cachedInfo.geomInfo?.labels.add(
                 Label( text: info.toString(), point: pointInfo[0],
@@ -303,7 +303,7 @@ class VectorPainter extends CustomPainter {
       final Matrix4 matrix = Matrix4.identity();
       if(pos != null)
         matrix..translate(pos.point.x.toDouble(), pos.point.y.toDouble())
-        ..scale(pos.scale);
+          ..scale(pos.scale);
 
       canvas.save();
       canvas.transform(matrix.storage);
@@ -395,9 +395,9 @@ class VectorPainter extends CustomPainter {
       if (!usePerspective) {
         matrix = Matrix4.identity();
         if( pos != null )
-        matrix
-          ..translate(pos.point.x.toDouble(), pos.point.y.toDouble())
-          ..scale(pos.scale);
+          matrix
+            ..translate(pos.point.x.toDouble(), pos.point.y.toDouble())
+            ..scale(pos.scale);
       } else {
         matrix = Matrix4.identity()
           ..rotateY(devicePerspectiveAngle * 0.0174)
@@ -405,9 +405,9 @@ class VectorPainter extends CustomPainter {
           ..rotateX(rotatePerspective);
 
         // normal position
-          if( pos != null )
-            matrix..translate(pos.point.x.toDouble(), pos.point.y.toDouble())
-              ..scale(pos.scale, pos.scale);
+        if( pos != null )
+          matrix..translate(pos.point.x.toDouble(), pos.point.y.toDouble())
+            ..scale(pos.scale, pos.scale);
       }
 
       /// There's a slight issue as labels aren't reverse transformed to account for
@@ -482,7 +482,7 @@ class VectorPainter extends CustomPainter {
       if (!label.isRoad)
         if( tp != null )
           canvas.drawPoints(
-            PointMode.points, [ tp ], pointPaint);
+              PointMode.points, [ tp ], pointPaint);
 
       _drawLabels(label, canvas, isRotated, widgetRotation);
 
@@ -533,7 +533,7 @@ class VectorPainter extends CustomPainter {
             .save(); // can we transform all first, as save is quite expensive...
         if( transformedPoint != null)
           canvas.translate(
-            transformedPoint.dx, transformedPoint.dy);
+              transformedPoint.dx, transformedPoint.dy);
         canvas.rotate(-widgetRotation * 0.0174533);
       }
 
@@ -667,10 +667,10 @@ class VectorPainter extends CustomPainter {
     var sex = label.boundSEx.toDouble();
     var sey = label.boundSEy.toDouble();
 
-      path.moveTo(nwx, nwy);
-      path.lineTo(sex, nwy);
-      path.lineTo(sex, sey);
-      path.lineTo(nwx, sey);
+    path.moveTo(nwx, nwy);
+    path.lineTo(sex, nwy);
+    path.lineTo(sex, sey);
+    path.lineTo(nwx, sey);
 
     path.close();
 
@@ -688,4 +688,3 @@ class VectorPainter extends CustomPainter {
           ///tileZoom != oldDelegate.tileZoom ||
           cachedVectorDataMap != oldDelegate.cachedVectorDataMap;
 }
-

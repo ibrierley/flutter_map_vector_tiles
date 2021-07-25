@@ -162,7 +162,7 @@ class Parser {
               //l("featureval is $featureVal");
               var checkList;
               if (args[2] is List) {
-                l("args2 is list ${args[2]}");
+                //l("args2 is list ${args[2]}");
                 checkList = parse(args[2]);
               } else {
                 //l("args2 is NOT list so working on parsing ${args.sublist(2)} args2 is ${args[2]}");
@@ -220,7 +220,7 @@ class Parser {
             } else if (args[c] is List) {
               //l("GOT HERE WANT TO DO [IN] $checkArg ${args[c]} (result would be ${args[c+1]})");
               if (parse(["in", checkArg, args[c]])) {
-                l("matches IN true $checkArg and parsed ${args[c]}, will return ${args[c+1]}");
+                //l("matches IN true $checkArg and parsed ${args[c]}, will return ${args[c+1]}");
                 return parse(args[c + 1]);
               } else {
               }
@@ -271,7 +271,7 @@ class Parser {
               break STEP;
             }
           }
-          l("STEP RES IS $result");
+          //l("STEP RES IS $result");
           break;
         case "stops":
           result = parse(args[1][1]);
@@ -342,7 +342,7 @@ class Parser {
   }
 
   bool allBool(list) {
-    l("ALLBOOL CHECK $list");
+    //l("ALLBOOL CHECK $list");
     for(var e in list) {
       if(!(parse(e) is bool)) {
         return false;
