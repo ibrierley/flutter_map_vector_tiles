@@ -1,5 +1,7 @@
 # flutter_map_vector_tile
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/F1F8E2YBE)
+
 Vector tiles for flutter_map
 
 SEE examples/main.dart for example of how to run it...  
